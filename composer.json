@@ -1,25 +1,9 @@
 {
-    "name": "rjsalas91/mvc-php",
-    "description": "Estructura básica de un proyecto mvc con php",
-    "type": "project",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "rjsalas91",
-            "email": "rjsalas91@gmail.com"
-        }
-    ],
-    "minimum-stability": "stable",
-	"require": {
-		"php": ">=7.0"
-	},
-    "autoload":
-    {
-        "psr-4":
-        {
-            "Core\\": "Core/",
-            "App\\" : "App/"
-        }
+    "require": {
+        "phpcfdi/cfditopdf": "^0.4.2",
+        "phpcfdi/sat-ws-descarga-masiva": "^1.1",
+        "phpcfdi/credentials": "^1.3",
+        "guzzlehttp/guzzle": "^7.10",
+        "mpdf/mpdf": "^8.2"
     }
 }
- 

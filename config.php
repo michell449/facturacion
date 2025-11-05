@@ -27,7 +27,7 @@ if (!defined('ABS_PATH')) {
 
 if (!defined('HOMEURL')) {
     // URL donde se aloja la aplicacion 
-    $base = 'localhost/app';
+    $base = 'localhost/facturacion';
     define('HOMEURL', "$uri$base");
 }
 

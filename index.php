@@ -20,10 +20,10 @@ if ($pagePath == 'index') {
 }
 
 if (empty($pagePath)) {
-   if ($_SESSION['USR_ID'] == '') {
-      $pagePath = 'login';
-  } else {
-      $pagePath = 'panel';
+        if ($_SESSION['USR_ID'] == '') {
+        $pagePath = 'facturar';
+    } else {
+        $pagePath = 'facturar';
     }
 }
 $pageInclude = "pages/$pagePath.inc.php";

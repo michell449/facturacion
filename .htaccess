@@ -1,6 +1,6 @@
 RewriteEngine On
 
-RewriteBase /app/
+RewriteBase /facturacion/
 RewriteCond %{REQUEST_FILENAME} !-l
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

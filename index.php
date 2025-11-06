@@ -11,9 +11,23 @@ $pagePath = substr($_SERVER['REQUEST_URI'], strlen($base));
 $pagePath = explode('?', $pagePath);
 $pagePath = $pagePath[0];
 #echo $pagePath ;
-// Trim any leading forward slash
 $pagePath = trim($pagePath, "/");
 $pagePath = str_replace(".php", "", $pagePath);
+
+$isPanelPage = ($pagePath == 'panel'); 
+
+if ($isPanelPage) {
+    if (isset($_GET['pg']) && !empty(trim($_GET['pg']))) {
+        
+        $pg = trim($_GET['pg']);
+        $pg = str_replace('..', '', $pg); 
+        $pg = trim($pg, '/'); 
+        $pagePath = $pg; 
+        
+    } else {
+        $pagePath = 'facturar-login'; 
+    }
+}
 
 if ($pagePath == 'index') {
     $pagePath = '';
@@ -38,10 +52,15 @@ $pageTitle = ucfirst($pageTitle);
 
 require_once 'pages/head.inc.php';
 
-if ($pagePath == 'panel') {
+if ($isPanelPage) {
     echo '<body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary">';
 } else {
     echo '<body class="d-flex flex-column min-vh-100">';
+}
+
+// Incluir header
+if ($pagePath !== 'facturar-login' && $pagePath !== 'facturar-invitado') {
+    require_once 'pages/header.inc.php';
 }
 
 require_once $pageInclude;

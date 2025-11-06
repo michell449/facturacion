@@ -134,49 +134,9 @@
             </div>
         </div>
     </div>
-    <!-- Modal de verificación de correo -->
+
+    <!-- Modal de creación de cuenta -->
     <div class="modal fade" id="crearCuentaModal" tabindex="-1" aria-labelledby="crearCuentaModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0">
-                <div class="modal-header bg-primary text-white rounded-top-4">
-                    <div class="w-100 text-center">
-                        <h4 class="modal-title fw-bold" id="verificacionCorreoModalLabel">Verificar Correo</h4>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body text-center p-4">
-                    <div class="mb-4">
-                            <i class="bi bi-envelope-check-fill text-primary" style="font-size: 4rem;"></i>
-                    </div>
-
-                    <h5 class="mb-3">¡Código enviado!</h5>
-                    <p class="text-muted mb-4">Hemos enviado un código de verificación a tu correo electrónico. Revisa tu bandeja de entrada o carpeta de spam.</p>
-
-                    <form id="formVerificacionCorreo">
-                        <div class="mb-4">
-                            <label for="codigoVerificacion" class="form-label fw-semibold">Código de verificación</label>
-                            <input type="text" class="form-control form-control-lg text-center fs-4 rounded-3" id="codigoVerificacion"
-                                placeholder="000000" required style="letter-spacing: 0.5rem;">
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
-                                Verificar
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="mt-3">
-                        <small class="text-muted">¿No recibiste el código? <a href="#" class="text-primary">Reenviar</a></small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de creación de cuenta -->
-<!-- <div class="modal fade" id="crearCuentaModal" tabindex="-1" aria-labelledby="crearCuentaModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-4 border-0">
                 <div class="modal-header bg-primary text-white rounded-top-4">
@@ -216,69 +176,61 @@
 
 
                         <div class="d-flex justify-content-end mb-3">
-                            <button type="button" class="btn btn-primary btn-lg rounded-3 fw-semibold" id="btnCrearCuenta" data-bs-toggle="modal" data-bs-target="#verificacionCorreoModal">
+                            <button type="button" class="btn btn-primary btn-lg rounded-3 fw-semibold" id="btnCrearCuenta">
                                 Crear Cuenta
                             </button>
                             <button type="button" class="btn btn-outline-secondary rounded-3 fw-semibold" data-bs-dismiss="modal">
                                 Cancelar
                             </button>
-                        <!--boton de preba para abrir el modal de verificacion-->
-<!-- <button type="button" class="btn btn-primary btn-lg rounded-3 fw-semibold" id="btnVerificarCorreo" data-bs-toggle="modal" data-bs-target="#verificacionCorreoModal">
-                                Verificar Correo
-                            </button>
                         </div>
                     </form>
                 </div>
             </div>
-        </div>  -->
+        </div> -
 
-<!-- Modal de verificación de correo -->
-<div class="modal fade" id="verificacionCorreoModal" tabindex="-1" aria-labelledby="verificacionCorreoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0">
-            <div class="modal-header bg-primary text-white rounded-top-4">
-                <div class="w-100 text-center">
-                    <div class="bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 60px; height: 60px;">
-                        <i class="bi bi-envelope-check-fill fs-4"></i>
+
+        <!-- Modal de verificación de correo -->
+        <div class="modal fade" id="verificacionCorreoModal" tabindex="-1" aria-labelledby="verificacionCorreoModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-4 border-0">
+                    <div class="modal-header bg-primary text-white rounded-top-4">
+                        <div class="w-100 text-center">
+                            <h4 class="modal-title fw-bold" id="verificacionCorreoModalLabel">Verificar Correo</h4>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
-                    <h4 class="modal-title fw-bold" id="verificacionCorreoModalLabel">Verificar Correo</h4>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body text-center p-4">
-                <div class="mb-4">
-                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px;">
-                        <i class="bi bi-envelope-fill fs-3"></i>
+                    <div class="modal-body text-center p-4">
+                        <div class="mb-4">
+                            <i class="bi bi-envelope-check-fill text-primary" style="font-size: 4rem;"></i>
+                        </div>
+
+                        <h5 class="mb-3">¡Código enviado!</h5>
+                        <p class="text-muted mb-4">Hemos enviado un código de verificación a tu correo electrónico. Revisa tu bandeja de entrada o carpeta de spam.</p>
+
+                        <form id="formVerificacionCorreo">
+                            <div class="mb-4">
+                                <label for="codigoVerificacion" class="form-label fw-semibold">Código de verificación</label>
+                                <input type="text" class="form-control form-control-lg text-center fs-4 rounded-3" id="codigoVerificacion"
+                                    placeholder="000000" required style="letter-spacing: 0.5rem;">
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
+                                    Verificar
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="mt-3">
+                            <small class="text-muted">¿No recibiste el código? <a href="#" class="text-primary">Reenviar</a></small>
+                        </div>
                     </div>
-                </div>
-
-                <h5 class="mb-3">¡Código enviado!</h5>
-                <p class="text-muted mb-4">Hemos enviado un código de verificación a tu correo electrónico. Revisa tu bandeja de entrada y carpeta de spam.</p>
-
-                <form id="formVerificacionCorreo">
-                    <div class="mb-4">
-                        <label for="codigoVerificacion" class="form-label fw-semibold">Código de verificación</label>
-                        <input type="text" class="form-control form-control-lg text-center fs-4 rounded-3" id="codigoVerificacion"
-                            placeholder="000000" required style="letter-spacing: 0.5rem;">
-                    </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
-                            <i class="bi bi-check-circle me-2"></i>Verificar Código
-                        </button>
-                    </div>
-                </form>
-
-                <div class="mt-3">
-                    <small class="text-muted">¿No recibiste el código? <a href="#" class="text-primary">Reenviar</a></small>
                 </div>
             </div>
         </div>
     </div>
-</div>
-</div>
-
-<!-- <script>
+<!-- 
+    <script>
         // conectar html con php registrar usuarios
         document.getElementById('btnCrearCuenta').addEventListener('click', async function() {
             const email = document.getElementById('nuevoEmail').value;
@@ -361,3 +313,22 @@
             }
         });
     </script> -->
+
+    <script>
+        // cuando el usuario de clic en crear cuenta en el modal de creación de cuenta, se cerrara el modal de creación de cuenta
+        document.getElementById('btnCrearCuenta').addEventListener('click', function() {
+            // Abrir el modal de verificación de correo
+            const verificacionCorreoModal = new bootstrap.Modal(document.getElementById('verificacionCorreoModal'));
+            verificacionCorreoModal.show();
+        });
+        //al dar clic al boton de verificar en el modal de verificacion de correo,aparecera una alerta de exito y se cerrara el modal de verificacion de correo
+        document.getElementById('formVerificacionCorreo').addEventListener('submit', function(event) {
+            event.preventDefault();
+            alert('¡Verificación exitosa! Redirigiendo al panel de facturación...');
+            // Cerrar el modal de verificación de correo
+            const verificacionCorreoModal = bootstrap.Modal.getInstance(document.getElementById('verificacionCorreoModal'));
+            verificacionCorreoModal.hide();
+            // Redirigir al panel de facturación
+            window.location.href = 'panel?pg=registro-info-usuarios';
+        });
+    </script>

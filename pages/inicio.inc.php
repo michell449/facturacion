@@ -33,7 +33,6 @@ $hora_actual = date('H:i');
 
 <!-- Main Dashboard Content -->
 <div class="container py-5">
-
     <!-- Statistics Cards -->
     <div class="row g-4 mb-5">
         <div class="col-lg-4 col-md-6">

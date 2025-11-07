@@ -59,7 +59,7 @@ if ($isPanelPage) {
 }
 
 // Incluir header
-if ($pagePath !== 'facturar-login' && $pagePath !== 'facturar-invitado') {
+if ($pagePath !== 'facturar-login' && $pagePath !== 'facturar-invitado' && $pagePath !== 'admin-login') {
     require_once 'pages/header.inc.php';
 }
 

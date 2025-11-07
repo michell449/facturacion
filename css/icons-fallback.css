@@ -1,0 +1,138 @@
+/* Iconos de respaldo usando caracteres Unicode cuando no se pueden cargar CDNs */
+
+.bi-fallback {
+  font-family: "Segoe UI Symbol", "Segoe UI", Arial, sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mapeo de iconos Bootstrap a caracteres Unicode seguros */
+.bi-person-check:not(.bi)::before,
+.bi-fallback.bi-person-check::before { content: "👤"; }
+
+.bi-envelope:not(.bi)::before,
+.bi-fallback.bi-envelope::before { content: "✉"; }
+
+.bi-lock:not(.bi)::before,
+.bi-fallback.bi-lock::before { content: "🔒"; }
+
+.bi-person-plus:not(.bi)::before,
+.bi-fallback.bi-person-plus::before { content: "👥"; }
+
+.bi-box-arrow-in-right:not(.bi)::before,
+.bi-fallback.bi-box-arrow-in-right::before { content: "↗"; }
+
+.bi-question-circle:not(.bi)::before,
+.bi-fallback.bi-question-circle::before { content: "❓"; }
+
+.bi-arrow-right-circle:not(.bi)::before,
+.bi-fallback.bi-arrow-right-circle::before { content: "▶"; }
+
+.bi-check-circle:not(.bi)::before,
+.bi-fallback.bi-check-circle::before { content: "✓"; }
+
+.bi-receipt-cutoff:not(.bi)::before,
+.bi-fallback.bi-receipt-cutoff::before { content: "🧾"; }
+
+.bi-telephone:not(.bi)::before,
+.bi-fallback.bi-telephone::before { content: "📞"; }
+
+.bi-info-circle:not(.bi)::before,
+.bi-fallback.bi-info-circle::before { content: "ℹ"; }
+
+.bi-clipboard-check:not(.bi)::before,
+.bi-fallback.bi-clipboard-check::before { content: "📋"; }
+
+.bi-receipt:not(.bi)::before,
+.bi-fallback.bi-receipt::before { content: "🧾"; }
+
+.bi-calendar:not(.bi)::before,
+.bi-fallback.bi-calendar::before { content: "📅"; }
+
+.bi-geo-alt:not(.bi)::before,
+.bi-fallback.bi-geo-alt::before { content: "📍"; }
+
+.bi-currency-dollar:not(.bi)::before,
+.bi-fallback.bi-currency-dollar::before { content: "💲"; }
+
+.bi-person-gear:not(.bi)::before,
+.bi-fallback.bi-person-gear::before { content: "⚙"; }
+
+.bi-shield-lock:not(.bi)::before,
+.bi-fallback.bi-shield-lock::before { content: "🛡"; }
+
+.bi-shield-lock-fill:not(.bi)::before,
+.bi-fallback.bi-shield-lock-fill::before { content: "🛡"; }
+
+.bi-key:not(.bi)::before,
+.bi-fallback.bi-key::before { content: "🔑"; }
+
+.bi-shield-plus:not(.bi)::before,
+.bi-fallback.bi-shield-plus::before { content: "🛡"; }
+
+.bi-shield-check:not(.bi)::before,
+.bi-fallback.bi-shield-check::before { content: "✅"; }
+
+.bi-envelope-check-fill:not(.bi)::before,
+.bi-fallback.bi-envelope-check-fill::before { content: "📧"; }
+
+.bi-exclamation-triangle-fill:not(.bi)::before,
+.bi-fallback.bi-exclamation-triangle-fill::before { content: "⚠"; }
+
+.bi-info-circle-fill:not(.bi)::before,
+.bi-fallback.bi-info-circle-fill::before { content: "ℹ"; }
+
+.bi-speedometer2:not(.bi)::before,
+.bi-fallback.bi-speedometer2::before { content: "📊"; }
+
+.bi-people-fill:not(.bi)::before,
+.bi-fallback.bi-people-fill::before { content: "👥"; }
+
+.bi-file-earmark-bar-graph:not(.bi)::before,
+.bi-fallback.bi-file-earmark-bar-graph::before { content: "📈"; }
+
+.bi-gear-fill:not(.bi)::before,
+.bi-fallback.bi-gear-fill::before { content: "⚙"; }
+
+.bi-shield-exclamation:not(.bi)::before,
+.bi-fallback.bi-shield-exclamation::before { content: "⚠"; }
+
+.bi-shield-fill-check:not(.bi)::before,
+.bi-fallback.bi-shield-fill-check::before { content: "✅"; }
+
+.bi-person-rolodex:not(.bi)::before,
+.bi-fallback.bi-person-rolodex::before { content: "👤"; }
+
+/* Asegurar que los fallbacks se vean correctamente */
+.bi-fallback::before {
+  font-size: 0.9em;
+  vertical-align: -0.1em;
+  margin-right: 0.2em;
+}
+
+/* Ocultar contenido de iconos cuando Bootstrap Icons está cargado */
+.bi::before {
+  font-family: bootstrap-icons !important;
+}
+
+/* Estilos adicionales para mejor compatibilidad */
+.icon-compatible {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2em;
+  height: 1.2em;
+  text-align: center;
+}
+
+/* Detectar si Bootstrap Icons no está disponible y aplicar fallbacks */
+@supports not (font-family: bootstrap-icons) {
+  .bi::before {
+    font-family: "Segoe UI Symbol", "Segoe UI", Arial, sans-serif !important;
+  }
+}

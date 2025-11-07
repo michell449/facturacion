@@ -1,5 +1,16 @@
 <?php
 ob_start();
+
+// Configurar headers de seguridad HTTP (corrección del problema X-Frame-Options)
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+
+// Headers adicionales para mejorar compatibilidad con tracking prevention
+header('Cache-Control: public, max-age=3600');
+header('Vary: Accept-Encoding');
+
 session_start();
 if (!isset($_SESSION)) {
     session_start();

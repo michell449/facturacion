@@ -1,6 +1,9 @@
 <!--begin::Header-->
 <nav class="navbar navbar-expand-lg bg-white shadow-sm py-3">
-    <div class="container-fluid ">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center text-decoration-none" href="panel?pg=facturar-login">
+            <span class="fw-bold text-primary">Facturación Electrónica</span>
+        </a>
 
         <!-- Mobile menu toggle -->
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -11,25 +14,20 @@
         <!-- Navbar content -->
         <div class="collapse navbar-collapse " id="navbarNav">
             <!-- Left side navigation -->
-            <ul class="navbar-nav me-auto ">
-                <li class="nav-item">
-                    <a class="nav-link d-flex align-items-center <?php echo ($pagePath == '' || $pagePath == 'inicio') ? 'active' : ''; ?>" href="<?php echo HOMEURL; ?>">
-                        <i class="bi bi-house me-1"></i> Inicio
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item mx-1">
+                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == '' || $pagePath == 'inicio') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="inicio">
+                        <i class="bi bi-house me-2"></i> Inicio
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link d-flex align-items-center <?php echo ($pagePath == 'facturar') ? 'active' : ''; ?>" href="facturar">
-                        <i class="bi bi-file-earmark-text me-1"></i> Facturar
+                <li class="nav-item mx-1">
+                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == 'facturar') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="facturar">
+                        <i class="bi bi-receipt-cutoff me-2"></i> Facturar
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link d-flex align-items-center <?php echo ($pagePath == 'historial') ? 'active' : ''; ?>" href="historial">
-                        <i class="bi bi-clock-history me-1"></i> Historial
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link d-flex align-items-center <?php echo ($pagePath == 'perfil') ? 'active' : ''; ?>" href="perfil">
-                        <i class="bi bi-person me-1"></i> Mi Perfil
+                <li class="nav-item mx-1">
+                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == 'historial') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="historial">
+                        <i class="bi bi-clock-history me-2"></i> Historial
                     </a>
                 </li>
             </ul>
@@ -38,19 +36,19 @@
             <ul class="navbar-nav">
                 <!-- Notifications -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button"
+                    <a class="nav-link position-relative rounded-circle p-2" href="#" id="notificationDropdown" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-bell fs-5"></i>
+                        <i class="bi bi-bell fs-5 text-primary"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             3
                             <span class="visually-hidden">notificaciones no leídas</span>
                         </span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="notificationDropdown">
                         <li>
-                            <h6 class="dropdown-header">Notificaciones</h6>
+                            <h6 class="dropdown-header text-primary fw-bold">Notificaciones</h6>
                         </li>
-                        <li><a class="dropdown-item" href="#">
+                        <li><a class="dropdown-item rounded-2 mx-2" href="#">
                                 <div class="d-flex">
                                     <div class="flex-shrink-0">
                                         <i class="bi bi-check-circle text-success"></i>
@@ -60,7 +58,7 @@
                                     </div>
                                 </div>
                             </a></li>
-                        <li><a class="dropdown-item" href="#">
+                        <li><a class="dropdown-item rounded-2 mx-2" href="#">
                                 <div class="d-flex">
                                     <div class="flex-shrink-0">
                                         <i class="bi bi-info-circle text-info"></i>
@@ -73,51 +71,51 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item text-center" href="#">Ver todas</a></li>
+                        <li><a class="dropdown-item text-center text-primary fw-semibold" href="#">Ver todas</a></li>
                     </ul>
                 </li>
 
                 <!-- Fullscreen toggle -->
                 <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="toggleFullscreen()">
-                        <i class="bi bi-arrows-fullscreen fs-5" id="fullscreenIcon"></i>
+                    <a class="nav-link rounded-circle p-2" href="#" onclick="toggleFullscreen()">
+                        <i class="bi bi-arrows-fullscreen fs-5 text-primary" id="fullscreenIcon"></i>
                     </a>
                 </li>
 
                 <!-- User dropdown -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
+                    <a class="nav-link dropdown-toggle d-flex align-items-center px-3 py-2" href="#" id="userDropdown"
                         role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <div class="bg-white bg-opacity-25 rounded-circle p-1 me-2">
-                            <i class="bi bi-person-fill text-white"></i>
+                        <div class="bg-primary rounded-circle p-2 me-2">
+                            <i class="bi bi-person-fill text-white fs-6"></i>
                         </div>
-                        <span class="d-none d-md-inline">
+                        <span class="d-none d-md-inline fw-semibold text-primary">
                             <?php echo !empty($_SESSION['USR_NAME']) ? $_SESSION['USR_NAME'] : 'Usuario'; ?>
                         </span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="userDropdown">
                         <li>
-                            <h6 class="dropdown-header">Mi Cuenta</h6>
+                            <h6 class="dropdown-header text-primary fw-bold">Mi Cuenta</h6>
                         </li>
-                        <li><a class="dropdown-item" href="#" onclick="mostrarPerfil()">
-                                <i class="bi bi-person me-2"></i> Mi Perfil
+                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarPerfil()">
+                                <i class="bi bi-person me-2 text-primary"></i> Mi Perfil
                             </a></li>
-                        <li><a class="dropdown-item" href="#" onclick="mostrarConfiguracion()">
-                                <i class="bi bi-gear me-2"></i> Configuración
+                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarConfiguracion()">
+                                <i class="bi bi-gear me-2 text-secondary"></i> Configuración
                             </a></li>
-                        <li><a class="dropdown-item" href="#" onclick="mostrarFacturas()">
-                                <i class="bi bi-file-earmark-text me-2"></i> Mis Facturas
-                            </a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="#" onclick="mostrarSoporte()">
-                                <i class="bi bi-question-circle me-2"></i> Soporte
+                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarFacturas()">
+                                <i class="bi bi-file-earmark-text me-2 text-info"></i> Mis Facturas
                             </a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()">
+                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarSoporte()">
+                                <i class="bi bi-question-circle me-2 text-warning"></i> Soporte
+                            </a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item rounded-2 mx-2 text-danger" href="#" onclick="cerrarSesion()">
                                 <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
                             </a></li>
                     </ul>
@@ -128,11 +126,15 @@
 </nav>
 <!--end::Header-->
 
-<nav aria-label="breadcrumb" class="bg-light py-2">
+<nav aria-label="breadcrumb" class="bg-light border-top py-2">
     <div class="container-fluid">
         <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="<?php echo HOMEURL; ?>" class="text-decoration-none">Inicio</a></li>
-            <li class="breadcrumb-item active" aria-current="page">
+            <li class="breadcrumb-item">
+                <a href="<?php echo HOMEURL; ?>" class="text-decoration-none text-primary">
+                    <i class="bi bi-house me-1"></i>Inicio
+                </a>
+            </li>
+            <li class="breadcrumb-item active text-primary fw-semibold" aria-current="page">
                 <?php echo ucfirst(str_replace('-', ' ', $pagePath)); ?>
             </li>
         </ol>
@@ -157,6 +159,7 @@
 // Funciones de navegación
 function mostrarHistorial() {
     window.location.href = 'historial';
+    
 }
 
 function mostrarPerfil() {

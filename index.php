@@ -37,7 +37,7 @@ if (empty($pagePath)) {
     if ($_SESSION['USR_ID'] == '') {
         $pagePath = 'facturar-login';
     } else {
-        $pagePath = 'facturar-login';
+        $pagePath = 'inicio';
     }
 }
 $pageInclude = "pages/$pagePath.inc.php";

@@ -9,10 +9,9 @@
                         <i class="bi bi-clock-history me-2"></i>
                         Historial de Facturas
                     </h2>
-                    <button class="btn btn-primary" onclick="window.location.href='facturar-invitado'">
-                        <i class="bi bi-plus-circle me-2"></i>
-                        Nueva Factura
-                    </button>
+                    <a href="panel?pg=facturar" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i> Nueva factura
+                            </a>
                 </div>
             </div>
         </div>

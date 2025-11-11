@@ -176,45 +176,5 @@
                 </div>
             </div>
         </div>
-
-        <!-- Resumen estadístico -->
-        <div class="row mt-4">
-            <div class="col-md-3">
-                <div class="card bg-primary text-white border-0">
-                    <div class="card-body text-center">
-                        <i class="bi bi-file-earmark-check fs-1 mb-2"></i>
-                        <h4>25</h4>
-                        <p class="mb-0">Facturas Exitosas</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-warning text-white border-0">
-                    <div class="card-body text-center">
-                        <i class="bi bi-clock fs-1 mb-2"></i>
-                        <h4>3</h4>
-                        <p class="mb-0">Pendientes</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-success text-white border-0">
-                    <div class="card-body text-center">
-                        <i class="bi bi-currency-dollar fs-1 mb-2"></i>
-                        <h4>$15,430</h4>
-                        <p class="mb-0">Total Facturado</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-info text-white border-0">
-                    <div class="card-body text-center">
-                        <i class="bi bi-calendar-month fs-1 mb-2"></i>
-                        <h4>Este Mes</h4>
-                        <p class="mb-0">Periodo Actual</p>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>

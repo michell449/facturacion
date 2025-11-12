@@ -4,7 +4,7 @@ require_once dirname(__DIR__,2 ) . '/config.php';
 
 class Database {
 
-   /**
+/**
  * Parámetros del MySQL  
  */
     private $host = DB_HOST;

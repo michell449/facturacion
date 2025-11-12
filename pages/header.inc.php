@@ -1,6 +1,5 @@
-<!--begin::Header-->
-<nav class="navbar navbar-expand-lg bg-white shadow-sm py-3">
-    <div class="container-fluid">
+<nav class="navbar navbar-expand-lg bg-white shadow-sm py-3 w-100" style="padding-left: 0; padding-right: 0;">
+    <div class="d-flex justify-content-between align-items-center w-100" style="padding-left: 1rem; padding-right: 1rem;">
         <a class="navbar-brand d-flex align-items-center text-decoration-none" href="panel?pg=facturar-login">
             <span class="fw-bold text-primary">Facturación Electrónica</span>
         </a>
@@ -12,21 +11,21 @@
         </button>
 
         <!-- Navbar content -->
-        <div class="collapse navbar-collapse " id="navbarNav">
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
             <!-- Left side navigation -->
             <ul class="navbar-nav me-auto">
                 <li class="nav-item mx-1">
-                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == '' || $pagePath == 'inicio') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="inicio">
+                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == '' || $pagePath == 'inicio') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="panel?pg=inicio">
                         <i class="bi bi-house me-2"></i> Inicio
                     </a>
                 </li>
                 <li class="nav-item mx-1">
-                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == 'facturar') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="facturar">
+                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == 'facturar') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="panel?pg=facturar">
                         <i class="bi bi-receipt-cutoff me-2"></i> Facturar
                     </a>
                 </li>
                 <li class="nav-item mx-1">
-                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == 'historial') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="historial">
+                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == 'historial') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="panel?pg=historial">
                         <i class="bi bi-clock-history me-2"></i> Historial
                     </a>
                 </li>
@@ -126,8 +125,8 @@
 </nav>
 <!--end::Header-->
 
-<nav aria-label="breadcrumb" class="bg-light border-top py-2">
-    <div class="container-fluid">
+<nav aria-label="breadcrumb" class="bg-light border-top py-2" style="padding-left: 1rem;">
+    <div class="w-100">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item">
                 <a href="<?php echo HOMEURL; ?>" class="text-decoration-none text-primary">
@@ -156,34 +155,34 @@
         }
     }
 
-// Funciones de navegación
-function mostrarHistorial() {
-    window.location.href = 'historial';
-    
-}
+    // Funciones de navegación
+    function mostrarHistorial() {
+        window.location.href = 'historial';
 
-function mostrarPerfil() {
-    window.location.href = 'perfil';
-}
-
-function mostrarConfiguracion() {
-    window.location.href = 'configuracion';
-}
-
-function mostrarFacturas() {
-    window.location.href = 'historial';
-}
-
-function mostrarSoporte() {
-    window.location.href = 'soporte';
-}
-
-function cerrarSesion() {
-    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-        // Aquí puedes agregar lógica de logout
-        window.location.href = 'facturar-login';
     }
-}    // Auto-hide navbar on scroll (opcional)
+
+    function mostrarPerfil() {
+        window.location.href = 'perfil';
+    }
+
+    function mostrarConfiguracion() {
+        window.location.href = 'configuracion';
+    }
+
+    function mostrarFacturas() {
+        window.location.href = 'historial';
+    }
+
+    function mostrarSoporte() {
+        window.location.href = 'soporte';
+    }
+
+    function cerrarSesion() {
+        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+            // Aquí puedes agregar lógica de logout
+            window.location.href = 'facturar-login';
+        }
+    } // Auto-hide navbar on scroll (opcional)
     let lastScrollTop = 0;
     const navbar = document.querySelector('.navbar');
 

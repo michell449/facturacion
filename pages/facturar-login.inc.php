@@ -175,7 +175,7 @@
                     </div>
                     <div class="d-flex justify-content-end mb-3">
                         <!-- boton para ingresar como administrador y abrir modal de creación de cuenta administrativa-->
-                        <button type="button" class="btn">
+                        <button type="button" class="btn" id="btnIngresarAdmin" data-bs-toggle="modal" data-bs-target="#crearCuentaAdminModal">
                             Ingresar como administrador
                         </button>
                         <button type="button" class="btn btn-primary btn-lg rounded-3 fw-semibold" id="btnCrearCuenta">
@@ -217,22 +217,20 @@
                 <form>
                     <div class="mb-4">
                         <label for="nuevoEmailAdmin" class="form-label fw-semibold">
-                            <i class="bi bi-envelope text-primary me-2"></i>Correo Electrónico
+                            Correo Electrónico
                         </label>
                         <input type="email" class="form-control form-control-lg rounded-3" id="nuevoEmailAdmin"
                             placeholder="admin@empresa.com" required>
                         <div class="form-text">
-                            <i class="bi bi-info-circle me-1"></i>
                             Se enviará un código de verificación a este correo
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <label for="nuevaContraseñaAdmin" class="form-label fw-semibold">
-                            <i class="bi bi-shield-lock text-primary me-2"></i>Contraseña
+                        <label for="nuevaContraseñaAdmin" class="form-label fw-semibold">Contraseña
                         </label>
                         <input type="password" id="nuevaContraseñaAdmin" class="form-control form-control-lg rounded-3"
-                            placeholder="Mínimo 12 caracteres" required>
+                            placeholder="Mínimo 8 caracteres" required>
                         <div class="form-text">
                             <i class="bi bi-shield-check me-1"></i>
                             Debe contener: Al menos 8 caracteres, mayúsculas, minúsculas, números y símbolos
@@ -241,7 +239,7 @@
 
                     <div class="mb-4">
                         <label for="confirmarContraseñaAdmin" class="form-label fw-semibold">
-                            <i class="bi bi-shield-lock-fill text-primary me-2"></i>Confirmar Contraseña
+                            Confirmar Contraseña
                         </label>
                         <input type="password" id="confirmarContraseñaAdmin" class="form-control form-control-lg rounded-3"
                             placeholder="Confirma la contraseña" required>
@@ -249,7 +247,7 @@
 
                     <div class="mb-4">
                         <label for="claveAutorizacion" class="form-label fw-semibold">
-                            <i class="bi bi-key text-primary me-2"></i>Clave de Autorización
+                            Clave de Autorización
                         </label>
                         <input type="password" id="claveAutorizacion" class="form-control form-control-lg rounded-3"
                             placeholder="Clave proporcionada por IT" required>
@@ -260,7 +258,7 @@
                             Cancelar
                         </button>
                         <button type="button" class="btn btn-primary btn-lg rounded-3 fw-semibold" id="btnCrearCuentaAdmin">
-                            <i class="bi bi-shield-plus me-2"></i>Crear Cuenta Admin
+                            Crear Cuenta Admin
                         </button>
                     </div>
                 </form>
@@ -291,11 +289,12 @@
                     <div class="mb-4">
                         <label for="codigoVerificacion" class="form-label fw-semibold">Código de verificación</label>
                         <input type="text" class="form-control form-control-lg text-center fs-4 rounded-3" id="codigoVerificacion"
-                            placeholder="000000" required style="letter-spacing: 0.5rem;">
+                            placeholder="000000" required style="letter-spacing: 0.5rem;" maxlength="6" pattern="\d{6}" title="Ingresa exactamente 6 dígitos">
+                        <div class="form-text">Ingresa los 6 dígitos que recibiste por correo</div>
                     </div>
 
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
+                        <button type="submit" id="btnVerificarToken" class="btn btn-primary btn-lg rounded-3 fw-semibold">
                             Verificar
                         </button>
                     </div>
@@ -309,195 +308,222 @@
     </div>
 </div>
 
-<!-- Modal de verificación de correo administrador -->
-<div class="modal fade" id="verificacionCorreoModalAdmin" tabindex="-1" aria-labelledby="verificacionCorreoModalAdminLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0">
-            <div class="modal-header bg-primary text-white rounded-top-4">
-                <div class="w-100 text-center">
-                    <h4 class="modal-title fw-bold" id="verificacionCorreoModalAdminLabel">Verificar Correo</h4>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body text-center p-4">
-                <div class="mb-4">
-                    <i class="bi bi-envelope-check-fill text-primary" style="font-size: 4rem;"></i>
-                </div>
-
-                <h5 class="mb-3">¡Código enviado!</h5>
-                <p class="text-muted mb-4">Hemos enviado un código de verificación a tu correo electrónico. Revisa tu bandeja de entrada o carpeta de spam.</p>
-
-                <form id="formVerificacionCorreoAdmin">
-                    <div class="mb-4">
-                        <label for="codigoVerificacionAdmin" class="form-label fw-semibold">Código de verificación</label>
-                        <input type="text" class="form-control form-control-lg text-center fs-4 rounded-3" id="codigoVerificacionAdmin"
-                            placeholder="000000" required style="letter-spacing: 0.5rem;">
-                    </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
-                            Verificar
-                        </button>
-                    </div>
-                </form>
-
-                <div class="mt-3">
-                    <small class="text-muted">¿No recibiste el código? <a href="#" class="text-primary">Reenviar</a></small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const btnCrearCuenta = document.getElementById('btnCrearCuenta');
-        const formVerificacionCorreo = document.getElementById('formVerificacionCorreo');
-        const btnIngresarAdmin = document.querySelector('#crearCuentaModal .btn:not(#btnCrearCuenta)');
-        //boton para crear cuenta en el modal crear cuenta y abrir modal de verificación de correo
-        if (btnCrearCuenta) {
-            btnCrearCuenta.addEventListener('click', () => {
-                const crearCuentaModal = bootstrap.Modal.getInstance(document.getElementById('crearCuentaModal'));
-                crearCuentaModal.hide();
+    // conectar html con php registrar usuarios facturacion
+    document.getElementById('btnCrearCuenta').addEventListener('click', async function() {
+        const email = document.getElementById('nuevoEmail').value;
+        const password = document.getElementById('nuevaContraseña').value;
+        const confirmPassword = document.getElementById('confirmarContraseña').value;
+        if (password !== confirmPassword) {
+            alert('Las contraseñas no coinciden.');
+            return;
+        }
+        //Validar contraseña (mínimo 8 caracteres, al menos una letra y un número)
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            alert('La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número.');
+            return;
+        }
+        const res = await fetch('core/registro-usuarios-facturacion.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                confirmPassword: confirmPassword
+            })
+        });
+        if (!res.ok) {
+            throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
+        }
 
+        const responseText = await res.text();
+
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('Respuesta del servidor no es JSON válido:', responseText);
+            throw new Error('El servidor devolvió una respuesta inválida');
+        }
+
+        console.log('Respuesta registro:', data);
+
+        if (data.success) {
+            const crearCuentaModal = bootstrap.Modal.getInstance(document.getElementById('crearCuentaModal'));
+            crearCuentaModal.hide();
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Cuenta creada!',
+                text: 'Revisa tu correo para el código de verificación.',
+                confirmButtonText: 'Continuar'
+            }).then(() => {
                 const verificacionCorreoModal = new bootstrap.Modal(document.getElementById('verificacionCorreoModal'));
                 verificacionCorreoModal.show();
             });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al crear cuenta',
+                text: data.message || 'Ocurrió un error inesperado'
+            });
         }
-        if (formVerificacionCorreo) {
-            formVerificacionCorreo.addEventListener('submit', (event) => {
-                event.preventDefault();
+    });
+
+    // Función para validar entrada solo números en el código de verificación
+    document.getElementById('codigoVerificacion').addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        if (e.target.value.length > 6) {
+            e.target.value = e.target.value.slice(0, 6);
+        }
+    });
+    //función para validar token de verificación enviado al correo
+    document.getElementById('formVerificacionCorreo').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const token = document.getElementById('codigoVerificacion').value.trim();
+        Swal.fire({
+            title: 'Verificando código...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        try {
+            const res = await fetch('core/verificacion-correo-usuario-fact.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
+                body: JSON.stringify({
+                    token: token
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
+            }
+            const responseText = await res.text();
+
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Respuesta del servidor no es JSON válido:', responseText);
+                throw new Error('El servidor devolvió una respuesta inválida');
+            }
+            console.log('Respuesta verificación:', data);
+            Swal.close();
+
+            if (data.success) {
+                // Cerrar modal de verificación
+                const verificacionCorreoModal = bootstrap.Modal.getInstance(document.getElementById('verificacionCorreoModal'));
+                verificacionCorreoModal.hide();
                 Swal.fire({
-                    title: '¡Verificación exitosa!',
-                    text: 'Redirigiendo al panel de facturación...',
                     icon: 'success',
-                    confirmButtonText: 'Aceptar'
+                    title: '¡Cuenta verificada!',
+                    text: data.message,
+                    confirmButtonText: 'Continuar',
+                    allowOutsideClick: false
                 }).then(() => {
-                    const verificacionCorreoModal = bootstrap.Modal.getInstance(document.getElementById('verificacionCorreoModal'));
-                    verificacionCorreoModal.hide();
+                    // Redirigir a la página de registro de información de usuarios
                     window.location.href = 'panel?pg=registro-info-usuarios';
                 });
-            });
-        }
-
-        if (btnIngresarAdmin) {
-            btnIngresarAdmin.addEventListener('click', () => {
-                const crearCuentaModal = bootstrap.Modal.getInstance(document.getElementById('crearCuentaModal'));
-                crearCuentaModal.hide();
-
-                const crearCuentaAdminModal = new bootstrap.Modal(document.getElementById('crearCuentaAdminModal'));
-                crearCuentaAdminModal.show();
-            });
-        }
-        const btnCrearCuentaAdmin = document.getElementById('btnCrearCuentaAdmin');
-        if (btnCrearCuentaAdmin) {
-            btnCrearCuentaAdmin.addEventListener('click', () => {
-                const crearCuentaAdminModal = bootstrap.Modal.getInstance(document.getElementById('crearCuentaAdminModal'));
-                crearCuentaAdminModal.hide();
-
-                const verificacionCorreoModal = new bootstrap.Modal(document.getElementById('verificacionCorreoModalAdmin'));
-                verificacionCorreoModal.show();
-            });
-        }
-        if (formVerificacionCorreoAdmin) {
-            formVerificacionCorreoAdmin.addEventListener('submit', (event) => {
-                event.preventDefault();
+            } else {
                 Swal.fire({
-                    title: '¡Verificación exitosa!',
-                    text: 'Redirigiendo al panel de administración...',
-                    icon: 'success',
-                    confirmButtonText: 'Aceptar'
-                }).then(() => {
-                    const verificacionCorreoModalAdmin = bootstrap.Modal.getInstance(document.getElementById('verificacionCorreoModalAdmin'));
-                    verificacionCorreoModalAdmin.hide();
-                    window.location.href = 'panel?pg=inicio-admin';
+                    icon: 'error',
+                    title: 'Error de verificación',
+                    text: data.message,
+                    footer: 'Verifica que el código sea correcto o solicita uno nuevo.'
                 });
+            }
+        } catch (error) {
+            console.error('Error en verificación:', error);
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo verificar el código. Inténtalo de nuevo.',
+                footer: error.message
             });
         }
     });
 </script>
-// <script>
-    //     // conectar html con php registrar usuarios
-    //     document.getElementById('btnCrearCuenta').addEventListener('click', async function() {
-    //         const email = document.getElementById('nuevoEmail').value;
-    //         const password = document.getElementById('nuevaContraseña').value;
-    //         const confirmPassword = document.getElementById('confirmarContraseña').value;
 
-    //         if (password !== confirmPassword) {
-    //             alert('Las contraseñas no coinciden.');
-    //             return;
-    //         }
+<script>
+    // Conectar el botón de crear cuenta administrativa
+    document.getElementById('btnCrearCuentaAdmin').addEventListener('click', async function() {
+        const email = document.getElementById('nuevoEmailAdmin').value;
+        const password = document.getElementById('nuevaContraseñaAdmin').value;
+        const confirmPassword = document.getElementById('confirmarContraseñaAdmin').value;
+        const claveAutorizacion = document.getElementById('claveAutorizacion').value;
 
-    //         //Validar contraseña (mínimo 8 caracteres, al menos una letra y un número)
-    //         const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    //         if (!passwordRegex.test(password)) {
-    //             alert('La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número.');
-    //             return;
-    //         }
+        if (password !== confirmPassword) {
+            alert('Las contraseñas no coinciden.');
+            return;
+        }
 
-    //         const res = await fetch('core/registro-usuarios-facturacion.php', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify({
-    //                 email: email,
-    //                 password: password,
-    //                 confirmPassword: confirmPassword
-    //             })
-    //         });
+        // Validar contraseña (mínimo 8 caracteres, mayúsculas, minúsculas y números)
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            alert('La contraseña debe tener al menos 8 caracteres, incluyendo mayúsculas, minúsculas y números.');
+            return;
+        }
 
-    //         try {
-    //             const data = await res.json();
-    //             console.log('Respuesta registro:', data);
-    //             if (data.success) {
-    //                 // Cerrar el modal de creación de cuenta
-    //                 const crearCuentaModal = bootstrap.Modal.getInstance(document.getElementById('crearCuentaModal'));
-    //                 crearCuentaModal.hide();
-    //                 // Mostrar mensaje de éxito
-    //                 alert('¡Cuenta creada exitosamente! Revisa tu correo para el código de verificación.');
-    //                 // Abrir el modal de verificación de correo si el registro fue exitoso
-    //                 const verificacionCorreoModal = new bootstrap.Modal(document.getElementById('verificacionCorreoModal'));
-    //                 verificacionCorreoModal.show();
-    //             } else {
-    //                 alert(data.message);
-    //             }
-    //         } catch (e) {
-    //             console.error('Error al procesar la respuesta:', e);
-    //             alert('Ocurrió un error inesperado al crear la cuenta.');
-    //         }
+        const res = await fetch('core/registro-usuarios-admin.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                confirmPassword: confirmPassword,
+                claveAutorizacion: claveAutorizacion
+            })
+        });
+        if (!res.ok) {
+            throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
+        }
 
-    //         // Limpiar los campos del formulario
-    //         document.getElementById('nuevoEmail').value = '';
-    //         document.getElementById('nuevaContraseña').value = '';
-    //         document.getElementById('confirmarContraseña').value = '';
-    //     });
+        const responseText = await res.text();
 
-    //     //validar el correo
-    //     document.getElementById('formVerificacionCorreo').addEventListener('submit', async function(event) {
-    //         event.preventDefault();
-    //         const codigoVerificacion = document.getElementById('codigoVerificacion').value;
-    //         const resVerificacion = await fetch(`core/verificacion-correo-usuario-fact.php?token=${encodeURIComponent(codigoVerificacion)}`);
-    //         try {
-    //             const dataVerificacion = await resVerificacion.json();
-    //             console.log('Respuesta verificación:', dataVerificacion);
-    //             if (dataVerificacion.success) {
-    //                 alert(dataVerificacion.message);
-    //                 // Cerrar el modal de verificación de correo
-    //                 const verificacionCorreoModal = bootstrap.Modal.getInstance(document.getElementById('verificacionCorreoModal'));
-    //                 verificacionCorreoModal.hide();
-    //                 // Redirigir al panel de facturación
-    //                 window.location.href = 'panel?pg=facturar';
-    //             } else {
-    //                 alert(dataVerificacion.message);
-    //                 window.location.href = 'panel?pg=inicio';
-    //             }
-    //         } catch (e) {
-    //             console.error('Error al procesar la respuesta de verificación:', e);
-    //             alert('Ocurrió un error inesperado durante la verificación.');
-    //             window.location.href = 'panel?pg=inicio';
-    //         }
-    //     });
-    // 
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('Respuesta del servidor no es JSON válido:', responseText);
+            throw new Error('El servidor devolvió una respuesta inválida');
+        }
+
+        console.log('Respuesta registro admin:', data);
+
+        if (data.success) {
+            const crearCuentaAdminModal = bootstrap.Modal.getInstance(document.getElementById('crearCuentaAdminModal'));
+            crearCuentaAdminModal.hide();
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Cuenta administrativa creada!',
+                text: 'Revisa tu correo para el código de verificación.',
+                confirmButtonText: 'Continuar'
+            }).then(() => {
+                const verificacionCorreoModal = new bootstrap.Modal(document.getElementById('verificacionCorreoModal'));
+                verificacionCorreoModal.show();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al crear cuenta administrativa',
+                text: data.message || 'Ocurrió un error inesperado'
+            });
+        }
+    });
+    
 </script>

@@ -28,7 +28,7 @@ if ($password !== $confirmPassword) {
     echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden.']);
     exit;
 }
-// lógica para registrar al usuario en la base de datos
+// registrar al usuario en la base de datos
 $db = new Database();
 $conn = $db->getConnection();
 $stmt = $conn->prepare("SELECT COUNT(*) FROM usuarios WHERE correo = ?");

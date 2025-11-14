@@ -32,7 +32,7 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
     
-    // Buscar usuario con el token (usar nombres de tabla y columna correctos)
+    // Buscar usuario con el token
     $stmt = $conn->prepare("SELECT correo, verificacion FROM usuarios WHERE token = ? AND verificacion = 0");
     $stmt->execute([$token]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);

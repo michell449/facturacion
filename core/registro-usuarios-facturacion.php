@@ -1,7 +1,7 @@
 <?php
 // core/registro-usuarios-facturacion.php
 // registro de usuarios para facturación electrónica
-require_once __DIR__ . '/autoload-phpcfdi.php';
+require_once __DIR__ . '/autoload-vendor.php';
 require_once __DIR__ . '/class/db.php';
 require_once __DIR__ . '/mail/class.phpmailer.php';
 require_once __DIR__ . '/mail/class.smtp.php';
@@ -44,15 +44,14 @@ $tipo_usuario = 'cliente';
 $verificacion = 0;
 $tipo_cliente = 'registrado';
 // Si el correo no está registrado, proceder con el registro
-        $stmt = $conn->prepare("INSERT INTO usuarios (correo, contrasena, tipo_usuario, verificacion, token, fecha_reg, tipo_cliente) VALUES (?, ?, ?, ?, ?, NOW(), ?)");
-        $stmt->execute([
+$stmt = $conn->prepare("INSERT INTO usuarios (correo, contrasena, tipo_usuario, verificacion, token, tipo_cliente) VALUES (?, ?, ?, ?, ?, ?)");
+$stmt->execute([
     $email,
     password_hash($password, PASSWORD_DEFAULT),
     $tipo_usuario,
     $verificacion,
     $token_verificacion,
-    $tipo_cliente,
-
+    $tipo_cliente
 ]);
 
 // Enviar correo con token de verificación

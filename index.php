@@ -34,10 +34,15 @@ if ($pagePath == 'index') {
 }
 
 if (empty($pagePath)) {
-    if ($_SESSION['USR_ID'] == '') {
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         $pagePath = 'facturar-login';
     } else {
-        $pagePath = 'inicio';
+        // Redirigir según tipo de usuario
+        if (isset($_SESSION['tipo_usuario']) && $_SESSION['tipo_usuario'] === 'admin') {
+            $pagePath = 'admin-dashboard';
+        } else {
+            $pagePath = 'inicio';
+        }
     }
 }
 $pageInclude = "pages/$pagePath.inc.php";

@@ -11,16 +11,23 @@ header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
 header('Cache-Control: public, max-age=3600');
 header('Vary: Accept-Encoding');
 
-session_start();
-if (!isset($_SESSION)) {
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
-    $_SESSION['USR_ID'] = '';
-    $_SESSION['USR_NAME'] = '';
-    $_SESSION['USR_TYPE'] = '';
-    $_SESSION['USR_MAIL'] = ''; 
-    $_SESSION['ERROR_MSG'] = '';
-    $_SESSION['DEFAULT_MSG'] = '';
 }
+
+// Inicializar variables de sesión si no existen
+if (!isset($_SESSION['USR_ID'])) $_SESSION['USR_ID'] = '';
+if (!isset($_SESSION['USR_NAME'])) $_SESSION['USR_NAME'] = '';
+if (!isset($_SESSION['USR_TYPE'])) $_SESSION['USR_TYPE'] = '';
+if (!isset($_SESSION['USR_MAIL'])) $_SESSION['USR_MAIL'] = '';
+if (!isset($_SESSION['ERROR_MSG'])) $_SESSION['ERROR_MSG'] = '';
+if (!isset($_SESSION['DEFAULT_MSG'])) $_SESSION['DEFAULT_MSG'] = '';
+
+// Variables de sesión nuevas del sistema de login
+if (!isset($_SESSION['usuario_id'])) $_SESSION['usuario_id'] = '';
+if (!isset($_SESSION['correo'])) $_SESSION['correo'] = '';
+if (!isset($_SESSION['tipo_usuario'])) $_SESSION['tipo_usuario'] = '';
+if (!isset($_SESSION['loggedin'])) $_SESSION['loggedin'] = false;
 
 // Check if SSL
 if (!empty($_SERVER['HTTPS']) && ('on' == $_SERVER['HTTPS'])) {

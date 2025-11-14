@@ -1,30 +1,27 @@
 <?php
+// require_once __DIR__ . '/db.php';
 
-// include_once 'db.php';
+// class users
+// {
 
-// /*
-//  * Class Users 
-//  * @Autor: Ing. Juan Becerril Avila
-//  */
-
-// class users {
-
-// // Connection
+//     // Connection
 //     private $conn;
 //     public $data;
 //     public $error;
 
-// // Db connection
-//     public function __construct($db) {
+//     // Db connection
+//     public function __construct($db)
+//     {
 //         $this->conn = $db;
 //         $this->error = '';
 //     }
 
-//     private function isUnique($email) {
-//         $sqlQuery = "select * from us_usuarios where email='$email'";
+//     private function isUnique($email)
+//     {
+//         $sqlQuery = "SELECT * FROM usuarios WHERE correo = ?";
 //         $stmt = $this->conn->prepare($sqlQuery);
 //         try {
-//             $stmt->execute();
+//             $stmt->execute([$email]);
 //             if ($stmt->rowCount() > 0) {
 //                 $this->error = 'Correo electrónico ya se encuentra registrado';
 //                 return false;
@@ -32,12 +29,13 @@
 //                 return true;
 //             }
 //         } catch (Exception $ex) {
-//             $this->error = 'Error al validr correo. ' . $ex;
+//             $this->error = 'Error al validar correo: ' . $ex->getMessage();
 //             return false;
 //         }
 //     }
 
-//     public function loginuser() {
+//     public function loginuser()
+//     {
 //         $data = $this->data;
 //         $email = '';
 //         $password = '';
@@ -53,25 +51,34 @@
 //             }
 //         }
 
-//         $sqlQuery = "select * from us_usuarios where email='$email' and password = '$password'";
+//         // Buscar usuario por correo primero
+//         $sqlQuery = "SELECT * FROM usuarios WHERE correo = ? AND verificacion = 1";
 //         $stmt = $this->conn->prepare($sqlQuery);
 
 //         try {
-//             $stmt->execute();
+//             $stmt->execute([$email]);
 //             if ($stmt->rowCount() == 0) {
-//                 $this->error = 'Usuario o Contraseña no válido';
+//                 $this->error = 'Usuario no encontrado o cuenta no verificada';
 //                 return false;
 //             } else {
-//                 $this->data = $stmt->fetch(PDO::FETCH_ASSOC);
-//                 return true;
+//                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
+//                 // Verificar contraseña hasheada
+//                 if (password_verify($password, $user['contrasena'])) {
+//                     $this->data = $user;
+//                     return true;
+//                 } else {
+//                     $this->error = 'Contraseña incorrecta';
+//                     return false;
+//                 }
 //             }
 //         } catch (Exception $ex) {
-//             $this->error = 'Error al inicar sesión. ' . $ex;
+//             $this->error = 'Error al iniciar sesión: ' . $ex->getMessage();
 //             return false;
 //         }
 //     }
 
-//     public function isValidEmail($email) {
+//     public function isValidEmail($email)
+//     {
 //         $matches = null;
 //         if (1 === preg_match('/^[A-z0-9\\._-]+@[A-z0-9][A-z0-9-]*(\\.[A-z0-9_-]+)*\\.([A-z]{2,6})$/', $email, $matches)) {
 //             return true;
@@ -81,7 +88,8 @@
 //         }
 //     }
 
-//     public function isValidPassword($password) {
+//     public function isValidPassword($password)
+//     {
 //         $matches = null;
 //         if (1 === preg_match('/^((?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\S+$)(?=.*[;:\.,!¡\?¿@#\$%\^&\-_+=\(\)\[\]\{\}])).{8,20}$/', $password, $matches)) {
 //             return true;
@@ -92,11 +100,12 @@
 //         }
 //     }
 
-//     public function isValidToken($key, $email) {
-//         // Validar token y expiración usando us_usuarios
-//         $sqlQuery = "SELECT email, modificacion FROM us_usuarios WHERE token_recuperacion = :token";
+//     public function isValidToken($key, $email)
+//     {
+//         // Validar token usando la tabla usuarios
+//         $sqlQuery = "SELECT correo, fecha_reg FROM usuarios WHERE token = ?";
 //         $querykey = $this->conn->prepare($sqlQuery);
-//         $querykey->bindParam(':token', $key);
+//         $querykey->execute([$key]);
 //         $querykey->execute();
 
 //         if ($querykey->rowCount() > 0) {
@@ -120,7 +129,8 @@
 //         }
 //     }
 
-//     public function resetpassword($email) {
+//     public function resetpassword($email)
+//     {
 //         if ($this->isUnique($email)) {
 //             $this->error = ' El correo electrónico ' . $email . ' no se encuentra registrado';
 //             return false;
@@ -160,7 +170,8 @@
 //         }
 //     }
 
-//     public function validate_key($key) {
+//     public function validate_key($key)
+//     {
 //         $sqlQuery = "UPDATE users SET status = 1 WHERE token = :token";
 //         $querykey = $this->conn->prepare($sqlQuery);
 //         $querykey->bindParam(':token', $key);
@@ -173,7 +184,8 @@
 //         }
 //     }
 
-//     public function changepassword() {
+//     public function changepassword()
+//     {
 //         if (!empty($this->data)) {
 //             $data = $this->data;
 //             $email = '';
@@ -238,7 +250,8 @@
 //         }
 //     }
 
-//     public function register() {
+//     public function register()
+//     {
 //         if (!empty($this->data)) {
 //             $data = $this->data;
 //             $email = '';
@@ -287,4 +300,172 @@
 //         }
 //     }
 
+//     // === FUNCIONES ESPECÍFICAS PARA LA ESTRUCTURA DE BD ACTUAL ===
+    
+//     // Función para crear usuario cliente
+//     public function createUsuarioCliente($email, $password, $token = null)
+//     {
+//         if (!$this->isUnique($email)) {
+//             return false;
+//         }
+
+//         if (!$this->isValidEmail($email)) {
+//             return false;
+//         }
+
+//         if (!$this->isValidPassword($password)) {
+//             return false;
+//         }
+
+//         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+//         $tokenVerificacion = $token ?? str_pad(strval(random_int(0, 999999)), 6, '0', STR_PAD_LEFT);
+
+//         $sqlQuery = "INSERT INTO usuarios (correo, contrasena, tipo_usuario, verificacion, token, tipo_cliente) VALUES (?, ?, 'cliente', 0, ?, 'registrado')";
+        
+//         try {
+//             $stmt = $this->conn->prepare($sqlQuery);
+//             $result = $stmt->execute([$email, $hashedPassword, $tokenVerificacion]);
+            
+//             if ($result) {
+//                 $this->data = [
+//                     'id_usuario' => $this->conn->lastInsertId(),
+//                     'correo' => $email,
+//                     'token' => $tokenVerificacion
+//                 ];
+//                 return true;
+//             } else {
+//                 $this->error = 'Error al crear usuario';
+//                 return false;
+//             }
+//         } catch (Exception $ex) {
+//             $this->error = 'Error al crear usuario: ' . $ex->getMessage();
+//             return false;
+//         }
+//     }
+
+//     // Función para crear usuario administrador
+//     public function createUsuarioAdmin($email, $password, $claveAuth, $token = null)
+//     {
+//         if (!$this->isUnique($email)) {
+//             return false;
+//         }
+
+//         if (!$this->isValidEmail($email)) {
+//             return false;
+//         }
+
+//         if (!$this->isValidPassword($password)) {
+//             return false;
+//         }
+
+//         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+//         $tokenVerificacion = $token ?? str_pad(strval(random_int(0, 999999)), 6, '0', STR_PAD_LEFT);
+
+//         $sqlQuery = "INSERT INTO usuarios (correo, contrasena, tipo_usuario, verificacion, token, tipo_cliente, clave_auth) VALUES (?, ?, 'admin', 0, ?, 'registrado', ?)";
+        
+//         try {
+//             $stmt = $this->conn->prepare($sqlQuery);
+//             $result = $stmt->execute([$email, $hashedPassword, $tokenVerificacion, $claveAuth]);
+            
+//             if ($result) {
+//                 $this->data = [
+//                     'id_usuario' => $this->conn->lastInsertId(),
+//                     'correo' => $email,
+//                     'token' => $tokenVerificacion,
+//                     'tipo_usuario' => 'admin'
+//                 ];
+//                 return true;
+//             } else {
+//                 $this->error = 'Error al crear usuario administrador';
+//                 return false;
+//             }
+//         } catch (Exception $ex) {
+//             $this->error = 'Error al crear usuario administrador: ' . $ex->getMessage();
+//             return false;
+//         }
+//     }
+
+//     // Función para verificar token y activar cuenta
+//     public function verificarToken($token)
+//     {
+//         $sqlQuery = "SELECT * FROM usuarios WHERE token = ? AND verificacion = 0";
+        
+//         try {
+//             $stmt = $this->conn->prepare($sqlQuery);
+//             $stmt->execute([$token]);
+            
+//             if ($stmt->rowCount() > 0) {
+//                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+//                 // Activar cuenta y limpiar token
+//                 $updateQuery = "UPDATE usuarios SET verificacion = 1, token = NULL WHERE id_usuario = ?";
+//                 $updateStmt = $this->conn->prepare($updateQuery);
+                
+//                 if ($updateStmt->execute([$user['id_usuario']])) {
+//                     $this->data = $user;
+//                     return true;
+//                 } else {
+//                     $this->error = 'Error al activar la cuenta';
+//                     return false;
+//                 }
+//             } else {
+//                 $this->error = 'Token inválido o ya utilizado';
+//                 return false;
+//             }
+//         } catch (Exception $ex) {
+//             $this->error = 'Error al verificar token: ' . $ex->getMessage();
+//             return false;
+//         }
+//     }
+
+//     // Función para obtener usuario por ID
+//     public function getUserById($id)
+//     {
+//         $sqlQuery = "SELECT * FROM usuarios WHERE id_usuario = ?";
+        
+//         try {
+//             $stmt = $this->conn->prepare($sqlQuery);
+//             $stmt->execute([$id]);
+            
+//             if ($stmt->rowCount() > 0) {
+//                 $this->data = $stmt->fetch(PDO::FETCH_ASSOC);
+//                 return true;
+//             } else {
+//                 $this->error = 'Usuario no encontrado';
+//                 return false;
+//             }
+//         } catch (Exception $ex) {
+//             $this->error = 'Error al obtener usuario: ' . $ex->getMessage();
+//             return false;
+//         }
+//     }
+
+//     // Función para obtener usuario por correo
+//     public function getUserByEmail($email)
+//     {
+//         $sqlQuery = "SELECT * FROM usuarios WHERE correo = ?";
+        
+//         try {
+//             $stmt = $this->conn->prepare($sqlQuery);
+//             $stmt->execute([$email]);
+            
+//             if ($stmt->rowCount() > 0) {
+//                 $this->data = $stmt->fetch(PDO::FETCH_ASSOC);
+//                 return true;
+//             } else {
+//                 $this->error = 'Usuario no encontrado';
+//                 return false;
+//             }
+//         } catch (Exception $ex) {
+//             $this->error = 'Error al obtener usuario: ' . $ex->getMessage();
+//             return false;
+//         }
+//     }
+
+//     // Función para validar clave de autorización de admin
+//     public function validateAuthKey($key)
+//     {
+//         $validKeys = ['565625']; // Puedes agregar más claves aquí
+//         return in_array($key, $validKeys);
+//     }
 // }

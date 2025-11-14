@@ -69,7 +69,7 @@
                 </div>
             </div>
 
-            <!-- Sección de login mejorada -->
+            <!-- Sección de login -->
             <div class="col-lg-6">
                 <div class="card shadow-lg border-0 rounded-4">
                     <div class="card-body p-4">
@@ -80,7 +80,7 @@
                             <h3 class="text-primary fw-bold">Iniciar Sesión</h3>
                         </div>
 
-                        <form>
+                        <form id="formLoginUsuario">
                             <!-- Campo de usuario -->
                             <div class="mb-3">
                                 <label for="inputEmail" class="form-label fw-semibold">
@@ -95,13 +95,19 @@
                                 <label for="inputPassword" class="form-label fw-semibold">
                                     <i class="bi bi-lock me-1 text-primary"></i> Contraseña
                                 </label>
-                                <input type="password" class="form-control form-control-lg rounded-3" id="inputPassword"
-                                    placeholder="Tu contraseña" required>
+                                <div class="position-relative">
+                                    <input type="password" class="form-control form-control-lg rounded-3 pe-5" id="inputPassword"
+                                        placeholder="Tu contraseña" required>
+                                    <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0" 
+                                            id="toggleLoginPassword" style="z-index: 10;">
+                                        <i class="bi bi-eye text-muted fs-5" id="iconLoginPassword"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Botones -->
                             <div class="d-grid gap-3">
-                                <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
+                                <button type="submit" id="btnLogin" class="btn btn-primary btn-lg rounded-3 fw-semibold">
                                     <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión
                                 </button>
                                 <button type="button" class="btn btn-outline-primary btn-lg rounded-3 fw-semibold"
@@ -120,7 +126,7 @@
                     </div>
                 </div>
 
-                <!-- Sección de "Ingresar como invitado" mejorada -->
+                <!-- Sección de ingresar como invitado -->
                 <div class="mt-4">
                     <div class="card shadow-lg border-0 rounded-4 bg-info">
                         <div class="card-body text-center p-4">
@@ -161,8 +167,14 @@
                         <label for="nuevaContraseña" class="form-label fw-semibold">
                             <i class="bi bi-lock text-primary me-2"></i>Contraseña
                         </label>
-                        <input type="password" id="nuevaContraseña" class="form-control form-control-lg rounded-3"
-                            placeholder="Mínimo 8 caracteres" required>
+                        <div class="position-relative">
+                            <input type="password" id="nuevaContraseña" class="form-control form-control-lg rounded-3 pe-5"
+                                placeholder="Mínimo 8 caracteres" required>
+                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0" 
+                                    id="toggleNewPassword" style="z-index: 10;">
+                                <i class="bi bi-eye text-muted fs-5" id="iconNewPassword"></i>
+                            </button>
+                        </div>
                         <div class="form-text">Debe contener al menos 8 caracteres, una letra y un número</div>
                     </div>
 
@@ -170,95 +182,21 @@
                         <label for="confirmarContraseña" class="form-label fw-semibold">
                             <i class="bi bi-lock-fill text-primary me-2"></i>Confirmar Contraseña
                         </label>
-                        <input type="password" id="confirmarContraseña" class="form-control form-control-lg rounded-3"
-                            placeholder="ingresa nuevamente tu contraseña" required>
+                        <div class="position-relative">
+                            <input type="password" id="confirmarContraseña" class="form-control form-control-lg rounded-3 pe-5"
+                                placeholder="ingresa nuevamente tu contraseña" required>
+                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0" 
+                                    id="toggleConfirmPassword" style="z-index: 10;">
+                                <i class="bi bi-eye text-muted fs-5" id="iconConfirmPassword"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="d-flex justify-content-end mb-3">
-                        <!-- boton para ingresar como administrador y abrir modal de creación de cuenta administrativa-->
-                        <button type="button" class="btn" id="btnIngresarAdmin" data-bs-toggle="modal" data-bs-target="#crearCuentaAdminModal">
-                            Ingresar como administrador
-                        </button>
                         <button type="button" class="btn btn-primary btn-lg rounded-3 fw-semibold" id="btnCrearCuenta">
                             Crear Cuenta
                         </button>
                         <button type="button" class="btn btn-outline-secondary rounded-3 fw-semibold" data-bs-dismiss="modal">
                             Cancelar
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de creación de cuenta administrativa -->
-<div class="modal fade" id="crearCuentaAdminModal" tabindex="-1" aria-labelledby="crearCuentaAdminModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header bg-primary text-white rounded-top-4">
-                <div class="w-100 text-center">
-                    <i class="bi bi-person-gear" style="font-size: 3.5rem;"></i>
-                    <h4 class="modal-title fw-bold" id="crearCuentaAdminModalLabel">Crear Cuenta Administrativa</h4>
-                    <small class="opacity-75">Solo para personal autorizado</small>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="alert alert-primary border-0 rounded-3 mb-4">
-                    <div class="d-flex">
-                        <i class="bi bi-exclamation-triangle-fill text-primary me-3 fs-5"></i>
-                        <div>
-                            <h6 class="mb-1">Cuenta Administrativa</h6>
-                            <small>Esta cuenta tendrá acceso completo al sistema. Solo crear si tienes autorización.</small>
-                        </div>
-                    </div>
-                </div>
-
-                <form>
-                    <div class="mb-4">
-                        <label for="nuevoEmailAdmin" class="form-label fw-semibold">
-                            Correo Electrónico
-                        </label>
-                        <input type="email" class="form-control form-control-lg rounded-3" id="nuevoEmailAdmin"
-                            placeholder="admin@empresa.com" required>
-                        <div class="form-text">
-                            Se enviará un código de verificación a este correo
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="nuevaContraseñaAdmin" class="form-label fw-semibold">Contraseña
-                        </label>
-                        <input type="password" id="nuevaContraseñaAdmin" class="form-control form-control-lg rounded-3"
-                            placeholder="Mínimo 8 caracteres" required>
-                        <div class="form-text">
-                            <i class="bi bi-shield-check me-1"></i>
-                            Debe contener: Al menos 8 caracteres, mayúsculas, minúsculas, números y símbolos
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="confirmarContraseñaAdmin" class="form-label fw-semibold">
-                            Confirmar Contraseña
-                        </label>
-                        <input type="password" id="confirmarContraseñaAdmin" class="form-control form-control-lg rounded-3"
-                            placeholder="Confirma la contraseña" required>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="claveAutorizacion" class="form-label fw-semibold">
-                            Clave de Autorización
-                        </label>
-                        <input type="password" id="claveAutorizacion" class="form-control form-control-lg rounded-3"
-                            placeholder="Clave proporcionada por IT" required>
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-outline-secondary btn-lg rounded-3" data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-                        <button type="button" class="btn btn-primary btn-lg rounded-3 fw-semibold" id="btnCrearCuentaAdmin">
-                            Crear Cuenta Admin
                         </button>
                     </div>
                 </form>
@@ -311,6 +249,47 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // Función para mostrar/ocultar contraseña
+    function togglePasswordVisibility(inputId, buttonId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(iconId);
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.className = 'bi bi-eye-slash text-muted fs-5';
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.className = 'bi bi-eye text-muted fs-5';
+        }
+    }
+
+    // Event listeners para los botones de mostrar/ocultar contraseña
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle para contraseña de login
+        const toggleLoginBtn = document.getElementById('toggleLoginPassword');
+        if (toggleLoginBtn) {
+            toggleLoginBtn.addEventListener('click', function() {
+                togglePasswordVisibility('inputPassword', 'toggleLoginPassword', 'iconLoginPassword');
+            });
+        }
+
+        // Toggle para nueva contraseña
+        const toggleNewBtn = document.getElementById('toggleNewPassword');
+        if (toggleNewBtn) {
+            toggleNewBtn.addEventListener('click', function() {
+                togglePasswordVisibility('nuevaContraseña', 'toggleNewPassword', 'iconNewPassword');
+            });
+        }
+
+        // Toggle para confirmar contraseña
+        const toggleConfirmBtn = document.getElementById('toggleConfirmPassword');
+        if (toggleConfirmBtn) {
+            toggleConfirmBtn.addEventListener('click', function() {
+                togglePasswordVisibility('confirmarContraseña', 'toggleConfirmPassword', 'iconConfirmPassword');
+            });
+        }
+    });
+
     // conectar html con php registrar usuarios facturacion
     document.getElementById('btnCrearCuenta').addEventListener('click', async function() {
         const email = document.getElementById('nuevoEmail').value;
@@ -320,7 +299,7 @@
             alert('Las contraseñas no coinciden.');
             return;
         }
-        //Validar contraseña (mínimo 8 caracteres, al menos una letra y un número)
+        //Validar contraseña
         const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
         if (!passwordRegex.test(password)) {
             alert('La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número.');
@@ -375,7 +354,6 @@
         }
     });
 
-    // Función para validar entrada solo números en el código de verificación
     document.getElementById('codigoVerificacion').addEventListener('input', function(e) {
         e.target.value = e.target.value.replace(/[^0-9]/g, '');
         if (e.target.value.length > 6) {
@@ -454,76 +432,87 @@
             });
         }
     });
-</script>
 
-<script>
-    // Conectar el botón de crear cuenta administrativa
-    document.getElementById('btnCrearCuentaAdmin').addEventListener('click', async function() {
-        const email = document.getElementById('nuevoEmailAdmin').value;
-        const password = document.getElementById('nuevaContraseñaAdmin').value;
-        const confirmPassword = document.getElementById('confirmarContraseñaAdmin').value;
-        const claveAutorizacion = document.getElementById('claveAutorizacion').value;
-
-        if (password !== confirmPassword) {
-            alert('Las contraseñas no coinciden.');
-            return;
-        }
-
-        // Validar contraseña (mínimo 8 caracteres, mayúsculas, minúsculas y números)
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
-        if (!passwordRegex.test(password)) {
-            alert('La contraseña debe tener al menos 8 caracteres, incluyendo mayúsculas, minúsculas y números.');
-            return;
-        }
-
-        const res = await fetch('core/registro-usuarios-admin.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password,
-                confirmPassword: confirmPassword,
-                claveAutorizacion: claveAutorizacion
-            })
-        });
-        if (!res.ok) {
-            throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
-        }
-
-        const responseText = await res.text();
-
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (parseError) {
-            console.error('Respuesta del servidor no es JSON válido:', responseText);
-            throw new Error('El servidor devolvió una respuesta inválida');
-        }
-
-        console.log('Respuesta registro admin:', data);
-
-        if (data.success) {
-            const crearCuentaAdminModal = bootstrap.Modal.getInstance(document.getElementById('crearCuentaAdminModal'));
-            crearCuentaAdminModal.hide();
-
+    //login
+    document.getElementById('btnLogin').addEventListener('click', async function(event) {
+        event.preventDefault();
+        
+        const email = document.getElementById('inputEmail').value.trim();
+        const password = document.getElementById('inputPassword').value;
+        
+        // Validar campos
+        if (!email || !password) {
             Swal.fire({
-                icon: 'success',
-                title: '¡Cuenta administrativa creada!',
-                text: 'Revisa tu correo para el código de verificación.',
-                confirmButtonText: 'Continuar'
-            }).then(() => {
-                const verificacionCorreoModal = new bootstrap.Modal(document.getElementById('verificacionCorreoModal'));
-                verificacionCorreoModal.show();
+                icon: 'warning',
+                title: 'Campos requeridos',
+                text: 'Por favor ingresa tu correo y contraseña'
             });
-        } else {
+            return;
+        }
+        Swal.fire({
+            title: 'Iniciando sesión...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        try {
+            const res = await fetch('core/login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            });
+            
+            if (!res.ok) {
+                throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
+            }
+            
+            const responseText = await res.text();
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Respuesta del servidor no es JSON válido:', responseText);
+                throw new Error('El servidor devolvió una respuesta inválida');
+            }
+            Swal.close();
+            
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: data.message,
+                    confirmButtonText: 'Continuar',
+                    allowOutsideClick: false
+                }).then(() => {
+                    // Redirigir según el tipo de usuario
+                    if (data.tipo_usuario === 'admin') {
+                        window.location.href = 'panel?pg=inicio-admin';
+                    } else {
+                        window.location.href = 'panel?pg=inicio';
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: data.message,
+                });
+            }
+        } catch (error) {
+            console.error('Error en login:', error);
+            Swal.close();
             Swal.fire({
                 icon: 'error',
-                title: 'Error al crear cuenta administrativa',
-                text: data.message || 'Ocurrió un error inesperado'
+                title: 'Error de conexión',
+                text: 'No se pudo iniciar sesión. Inténtalo de nuevo.',
+                footer: error.message
             });
         }
     });
-    
 </script>

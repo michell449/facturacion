@@ -22,6 +22,7 @@ spl_autoload_register(function ($class) {
         'GuzzleHttp\\Promise\\'          => __DIR__ . '/../vendor/guzzlehttp/promises/src/',
         'Eclipxe\\MicroCatalog\\'         => __DIR__ . '/../vendor/eclipxe/micro-catalog/src/',
         'PHPMailer\\PHPMailer\\'           => __DIR__ . '/../vendor/phpmailer/phpmailer/src/',
+        'SMALOT\\pdfparser\\'          => __DIR__ . '/../vendor/smalot/pdfparser/src/',
     ];
 
     foreach ($prefixes as $prefix => $baseDir) {

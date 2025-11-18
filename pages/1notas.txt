@@ -1,143 +1,35 @@
-<?php
-// core/registro-usuarios-facturacion.php
-// registro de usuarios para facturación electrónica
+// ... dentro de tu constanciaFiscal.addEventListener('change', function(event) { ...
 
-// Incluir configuración primero
-if (file_exists(__DIR__ . '/../config.php')) {
-    require_once __DIR__ . '/../config.php';
-}
+        // ...
 
-require_once __DIR__ . '/autoload-phpcfdi.php';
-require_once __DIR__ . '/class/db.php';
-require_once __DIR__ . '/mail/class.phpmailer.php';
-require_once __DIR__ . '/mail/class.smtp.php';
+        fetch('procesarConstancia.php', { 
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            // **PASO CLAVE: MOSTRAR TEXTO COMPLETO PARA REVISIÓN**
+            if (result.debug_raw_text) {
+                console.groupCollapsed('DEBUG: Texto Completo Extraído del PDF');
+                console.log(result.debug_raw_text);
+                console.groupEnd();
+                alert('¡Información extraída! Abre la Consola (F12) para revisar el "Texto Completo".');
+            }
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-ob_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 0); 
-ini_set('log_errors', 1); 
-
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-cache, must-revalidate');
-header('Pragma: no-cache');
-
-try {
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    if (!$data) {
-        throw new Exception('Datos JSON inválidos');
-    }
-    
-    $email = isset($data['email']) ? trim($data['email']) : '';
-    $password = isset($data['password']) ? $data['password'] : '';
-    $confirmPassword = isset($data['confirmPassword']) ? $data['confirmPassword'] : '';
-    
-    if (empty($email) || empty($password) || empty($confirmPassword)) {
-        ob_clean();
-        echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
-        exit;
-    }
-
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        ob_clean();
-        echo json_encode(['success' => false, 'message' => 'El correo electrónico no es válido.']);
-        exit;
-    }
-    
-    if ($password !== $confirmPassword) {
-        ob_clean();
-        echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden.']);
-        exit;
-    }
-    // lógica para registrar al usuario en la base de datos
-    $db = new Database();
-    $conn = $db->getConnection();
-    
-    // Verificar si el usuario ya existe (corregir nombre de columna)
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM usuarios WHERE correo = ?");
-    $stmt->execute([$email]);
-    $count = $stmt->fetchColumn();
-    if ($count > 0) {
-        ob_clean();
-        echo json_encode(['success' => false, 'message' => 'El correo electrónico ya está registrado.']);
-        exit;
-    }
-    
-    //generar token de verificacion
-    $token_verificacion = str_pad(strval(random_int(0, 999999)), 6, '0', STR_PAD_LEFT);
-    $tipo_usuario = 'cliente';
-    $verificacion = 0;
-    $tipo_cliente = 'registrado';
-    
-    // Si el correo no está registrado, proceder con el registro
-    $stmt = $conn->prepare("INSERT INTO usuarios (correo, contrasena, tipo_usuario, verificacion, token, fecha_reg, tipo_cliente) VALUES (?, ?, ?, ?, ?, NOW(), ?)");
-    $result = $stmt->execute([
-        $email,
-        password_hash($password, PASSWORD_DEFAULT),
-        $tipo_usuario,
-        $verificacion,
-        $token_verificacion,
-        $tipo_cliente
-    ]);
-    
-    if (!$result) {
-        throw new Exception('Error al registrar el usuario en la base de datos');
-    }
-
-
-    // Enviar correo con token de verificación (solo si las constantes existen)
-    $emailSent = false;
-    if (defined('MAIL_HOST') && defined('MAIL_USER') && defined('MAIL_PSWD')) {
-        $mail = new PHPMailer(true);
-        try {
-            $mail->IsSMTP();
-            $mail->isHTML(true);
-            $mail->SMTPDebug = 0;
-            $mail->SMTPAuth = true;
-            $mail->SMTPSecure = defined('MAIL_SEC') ? MAIL_SEC : 'tls';
-            $mail->Host = MAIL_HOST;
-            $mail->Port = defined('MAIL_PORT') ? MAIL_PORT : 587;
-            $mail->Username = MAIL_USER;
-            $mail->Password = MAIL_PSWD;
-            $mail->SetFrom(MAIL_USER, 'Facturación Electrónica');
-            $mail->AddReplyTo(MAIL_USER, "Facturación Electrónica");
-            $mail->Subject = 'Verificación de correo electrónico';
-            $mailContent = '<h2>Verifica tu correo electrónico</h2>' .
-                '<p>Gracias por registrarte. Para completar tu registro, ingresa el siguiente código de verificación en el portal:</p>' .
-                '<div style="font-size:1.5rem; font-weight:bold; color:#007bff; margin:1rem 0;">' . $token_verificacion . '</div>' .
-                '<p>Si no solicitaste este registro, ignora este mensaje.</p>';
-            $mail->Body = $mailContent;
-            $mail->AltBody = strip_tags($mailContent);
-            $mail->CharSet = "utf-8";
-            $mail->addAddress($email);
-            $mail->send();
-            $emailSent = true;
-        } catch (Exception $e) {
-            error_log("Error al enviar el correo de verificación: " . $e->getMessage());
-        }
-    } else {
-        error_log("Constantes de correo no definidas. Saltando envío de email.");
-    }
-    
-    ob_clean();
-    $message = 'Usuario registrado exitosamente.';
-    if ($emailSent) {
-        $message .= ' Revisa tu correo para el código de verificación.';
-    } else {
-        $message .= ' Tu código de verificación es: ' . $token_verificacion;
-    }
-    echo json_encode([
-        'success' => true, 
-        'message' => $message,
-        'token' => !$emailSent ? $token_verificacion : null
-    ]);
-    
-} catch (Exception $e) {
-    ob_clean();
-    error_log("Error en registro de usuario: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Error interno del servidor. Inténtalo de nuevo.']);
-}
-exit;
+            if (result.success) {
+                rellenarFormulario(result.data);
+                // Muestra un resumen de los datos rellenados
+                console.log('Datos Rellenados:', result.data); 
+            } else {
+                console.error('Error del servidor:', result.message);
+                alert(result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error de red o JSON inválido:', error);
+            alert('Ocurrió un error de conexión o el servidor devolvió un error inesperado.');
+        });
+        
+        this.value = '';
+    });
+    // ...

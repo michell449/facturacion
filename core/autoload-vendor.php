@@ -22,16 +22,19 @@ spl_autoload_register(function ($class) {
         'GuzzleHttp\\Promise\\'          => __DIR__ . '/../vendor/guzzlehttp/promises/src/',
         'Eclipxe\\MicroCatalog\\'         => __DIR__ . '/../vendor/eclipxe/micro-catalog/src/',
         'PHPMailer\\PHPMailer\\'           => __DIR__ . '/../vendor/phpmailer/phpmailer/src/',
-        'SMALOT\\pdfparser\\'          => __DIR__ . '/../vendor/smalot/pdfparser/src/',
+        'Smalot\\PdfParser\\'     => __DIR__ . '/../vendor/smalot/pdfparser/src/',
     ];
-
     foreach ($prefixes as $prefix => $baseDir) {
         $len = strlen($prefix);
+
         if (strncmp($prefix, $class, $len) !== 0) {
             continue;
         }
+
         $relativeClass = substr($class, $len);
+
         $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+
         if (file_exists($file)) {
             require_once $file;
             return;

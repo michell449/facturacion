@@ -80,15 +80,6 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="correoFiscal" class="form-label fw-semibold">
-                                        Correo Electrónico
-                                    </label>
-                                    <input type="email" class="form-control form-control-lg rounded-3" id="correoFiscal"
-                                        placeholder="ejemplo@correo.com" required>
-                                    <div class="form-text">Aquí recibirás tus facturas electrónicas</div>
-                                </div>
-
-                                <div class="col-md-6">
                                     <label for="cpFiscal" class="form-label fw-semibold">
                                         Código Postal
                                     </label>
@@ -102,27 +93,7 @@
                                         Régimen Fiscal
                                     </label>
                                     <select class="form-select form-select-lg rounded-3" id="regimenFiscal" required>
-                                        <option value="">Selecciona tu régimen fiscal</option>
-                                        <optgroup label="Personas Físicas">
-                                            <option value="605">Sueldos y Salarios</option>
-                                            <option value="612">Actividades Empresariales y Profesionales</option>
-                                            <option value="606">Arrendamiento</option>
-                                            <option value="608">Demás ingresos</option>
-                                            <option value="611">Ingresos por Dividendos</option>
-                                            <option value="614">Ingresos por intereses</option>
-                                            <option value="622">Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
-                                            <option value="626">Régimen Simplificado de Confianza</option>
-                                        </optgroup>
-                                        <optgroup label="Personas Morales">
-                                            <option value="601">General de Ley Personas Morales</option>
-                                            <option value="603">Personas Morales con Fines no Lucrativos</option>
-                                            <option value="620">Sociedades Cooperativas de Producción</option>
-                                            <option value="623">Opcional para Grupos de Sociedades</option>
-                                        </optgroup>
-                                        <optgroup label="Otros">
-                                            <option value="616">Sin obligaciones fiscales</option>
-                                            <option value="625">Régimen de Plataformas Tecnológicas</option>
-                                        </optgroup>
+                                        <option value="">Cargando regímenes fiscales...</option>
                                     </select>
                                     <div class="form-text">Selecciona el régimen que corresponde a tu situación fiscal</div>
                                 </div>
@@ -196,36 +167,69 @@
     </div>
 
 
-
     <script>
-        // Toggle dirección fiscal
+        // Función para cargar regímenes fiscales desde la API
+        async function cargarRegimenesFiscales() {
+            try {
+                const response = await fetch('core/listar-regimen-fiscal.php');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const select = document.getElementById('regimenFiscal');
+                    // Limpiar opciones existentes
+                    select.innerHTML = '<option value="">Selecciona tu régimen fiscal</option>';
+                    
+                    // Agregar las opciones de regímenes fiscales
+                    result.data.forEach(regimen => {
+                        const option = document.createElement('option');
+                        option.value = regimen.codigo;
+                        option.textContent = `${regimen.codigo} - ${regimen.descripcion}`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    console.error('Error al cargar regímenes fiscales:', result.message || 'Respuesta inválida');
+                    const select = document.getElementById('regimenFiscal');
+                    select.innerHTML = '<option value="">Error al cargar regímenes</option>';
+                }
+            } catch (error) {
+                console.error('Error al obtener regímenes fiscales:', error);
+                const select = document.getElementById('regimenFiscal');
+                select.innerHTML = '<option value="">Error al cargar regímenes</option>';
+            }
+        }
+
+        // Cargar regímenes fiscales al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarRegimenesFiscales();
+        });
+
         document.getElementById('agregarDireccion').addEventListener('change', function() {
             const direccionSection = document.getElementById('direccionFiscalSection');
             direccionSection.style.display = this.checked ? 'block' : 'none';
         });
 
-        // Formatear RFC en mayúsculas
         document.getElementById('rfcFiscal').addEventListener('input', function() {
             this.value = this.value.toUpperCase();
         });
 
-        // Validación del código postal
+
         document.getElementById('cpFiscal').addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '').substring(0, 5);
         });
 
-        // Manejo del formulario
         document.getElementById('formInfoFiscal').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // Validar campos requeridos
-            const requiredFields = ['nombreFiscal', 'rfcFiscal', 'correoFiscal', 'cpFiscal', 'regimenFiscal', 'usoCfdi'];
+            const requiredFields = ['nombreFiscal', 'rfcFiscal', 'correoFiscal', 'cpFiscal', 'regimenFiscal'];
             let isValid = true;
 
             requiredFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
-                if (!field.value.trim()) {
-                    field.classList.add('is-invalid');
+                if (!field || !field.value.trim()) {
+                    if (field) field.classList.add('is-invalid');
                     isValid = false;
                 } else {
                     field.classList.remove('is-invalid');
@@ -233,20 +237,70 @@
             });
 
             if (isValid) {
-                // Aquí iría la lógica para enviar los datos
-                alert('Información fiscal guardada correctamente. Redirigiendo...');
-                // window.location.href = 'dashboard'; // O la siguiente página
+                alert('Información fiscal guardada correctamente.');
             } else {
                 alert('Por favor completa todos los campos requeridos.');
             }
         });
 
-        // Manejo de carga de archivos
-        document.getElementById('constanciaFiscal').addEventListener('change', function() {
-            const fileName = this.files[0]?.name;
-            if (fileName) {
-                alert(`Archivo seleccionado: ${fileName}`);
-                // Aquí podrías agregar lógica para procesar el archivo
+        document.getElementById('constanciaFiscal').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
             }
+
+            if (file.type !== "application/pdf") {
+                alert('Por favor, selecciona un archivo PDF.');
+                this.value = '';
+                return;
+            }
+
+            alert(`Procesando archivo: ${file.name}...`);
+
+            const formData = new FormData();
+            formData.append('constanciaFile', file);
+
+            fetch('core/procesar_csf.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.debug_raw_text) {
+                        console.groupCollapsed('DEBUG: Texto Completo Extraído del PDF');
+                        console.log(result.debug_raw_text);
+                        console.groupEnd();
+                        alert('¡Información extraída! Abre la Consola (F12) para revisar el "Texto Completo".');
+                    }
+
+                    if (result.success) {
+                        rellenarFormulario(result.data);
+                        console.log('Datos Rellenados:', result.data);
+                    } else {
+                        console.error('Error del servidor:', result.message);
+                        alert(result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error de red o JSON inválido:', error);
+                    alert('Ocurrió un error de conexión o el servidor devolvió un error inesperado.');
+                });
+
+            this.value = '';
         });
+
+        function rellenarFormulario(data) {
+            if (data.nombreFiscal) {
+                document.getElementById('nombreFiscal').value = data.nombreFiscal;
+            }
+            if (data.rfcFiscal) {
+                document.getElementById('rfcFiscal').value = data.rfcFiscal;
+            }
+            if (data.cpFiscal) {
+                document.getElementById('cpFiscal').value = data.cpFiscal;
+            }
+            if (data.regimenFiscal) {
+                document.getElementById('regimenFiscal').value = data.regimenFiscal;
+            }
+        }
     </script>

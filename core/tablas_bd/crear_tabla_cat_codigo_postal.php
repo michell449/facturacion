@@ -16,6 +16,12 @@ $sql = "CREATE TABLE IF NOT EXISTS `cat_codigo_postal` (
 
 try {
     $pdo->exec($sql);
+    echo "Tabla cat_codigo_postal creada correctamente.<br>";
+    
+    // Reiniciar el AUTO_INCREMENT para que empiece desde 1
+    $pdo->exec("ALTER TABLE cat_codigo_postal AUTO_INCREMENT = 1;");
+    echo "AUTO_INCREMENT configurado correctamente.<br>";
+    
 } catch (PDOException $e) {
     echo "Error al crear la tabla cat_codigo_postal: " . $e->getMessage();
 }   

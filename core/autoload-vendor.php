@@ -23,6 +23,7 @@ spl_autoload_register(function ($class) {
         'Eclipxe\\MicroCatalog\\'         => __DIR__ . '/../vendor/eclipxe/micro-catalog/src/',
         'PHPMailer\\PHPMailer\\'           => __DIR__ . '/../vendor/phpmailer/phpmailer/src/',
         'Smalot\\PdfParser\\'     => __DIR__ . '/../vendor/smalot/pdfparser/src/',
+        'Spatie\\PdfToText'  => __DIR__ . '/../vendor/spatie/pdf-to-text/src/',
     ];
     foreach ($prefixes as $prefix => $baseDir) {
         $len = strlen($prefix);

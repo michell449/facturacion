@@ -1,35 +1,104 @@
-// ... dentro de tu constanciaFiscal.addEventListener('change', function(event) { ...
+<?php
+// procesarConstancia.php
 
-        // ...
+require_once __DIR__ . '/autoload-vendor.php';
+require_once __DIR__ . '/class/db.php';
 
-        fetch('procesarConstancia.php', { 
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(result => {
-            // **PASO CLAVE: MOSTRAR TEXTO COMPLETO PARA REVISIÓN**
-            if (result.debug_raw_text) {
-                console.groupCollapsed('DEBUG: Texto Completo Extraído del PDF');
-                console.log(result.debug_raw_text);
-                console.groupEnd();
-                alert('¡Información extraída! Abre la Consola (F12) para revisar el "Texto Completo".');
-            }
+use Spatie\PdfToText\Pdf; // Usamos la clase Spatie
 
-            if (result.success) {
-                rellenarFormulario(result.data);
-                // Muestra un resumen de los datos rellenados
-                console.log('Datos Rellenados:', result.data); 
-            } else {
-                console.error('Error del servidor:', result.message);
-                alert(result.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error de red o JSON inválido:', error);
-            alert('Ocurrió un error de conexión o el servidor devolvió un error inesperado.');
-        });
+header('Content-Type: application/json; charset=utf-8');
+ini_set('display_errors', 0); 
+
+$respuesta = [
+    'success' => false,
+    'data'    => [],
+    'message' => 'Error desconocido.'
+];
+
+try {
+    if (!isset($_FILES['constanciaFile']) || $_FILES['constanciaFile']['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('No se ha subido ningún archivo o hubo un error en la subida.');
+    }
+
+    $sourceFilePath = $_FILES['constanciaFile']['tmp_name'];
+    
+    // --- PASO CLAVE: CONFIGURAR Y EXTRAER EL TEXTO ---
+    
+    // 1. Instanciar la clase Spatie
+    $pdf = new Pdf($sourceFilePath);
+    
+    // 2. IMPORTANTE: Definir la ruta del ejecutable pdftotext.exe
+    // Reemplaza esta ruta con la ubicación real en tu sistema.
+    $pdf->setPdfToTextPath('C:\poppler-utils\bin\pdftotext.exe'); 
+    
+    // 3. Extraer el texto limpio
+    $textoCompleto = $pdf->text(); 
+    
+    // Si la extracción falla, Spatie lanza una excepción, que será capturada.
+    
+    $datosEncontrados = [];
+
+    // --- RE-USAMOS LAS REGEX QUE ASUMEN ESPACIOS ---
+
+    // RFC: (Debe funcionar ya que la RegEx es robusta)
+    if (preg_match('/RFC:\s*([A-Z&Ñ]{3,4}\d{6}[A-Z\d]{3})/', $textoCompleto, $matches)) {
+        $datosEncontrados['rfcFiscal'] = trim($matches[1]);
+    }
+
+    // Nombre/Razón Social: (Ahora buscamos el texto limpio con espacios)
+    // Buscamos 'Razón Social' o 'Denominación' y capturamos hasta el RFC (o el siguiente marcador).
+    if (preg_match('/Nombre, denominación o razón social\s*(.*?)\s*idCIF/s', $textoCompleto, $matches)) {
+        $nombreCrudo = trim($matches[1]); 
+        // Eliminamos saltos de línea y espacios dobles
+        $datosEncontrados['nombreFiscal'] = trim(preg_replace('/\s+/', ' ', $nombreCrudo));
+    }
+    
+    // Código Postal: (El espaciado ahora es correcto)
+    if (preg_match('/Código Postal:\s*(\d{5})/', $textoCompleto, $matches)) {
+        // La expresión 'C(ó|o)digo\s*Postal[\s:]*(\d{5})' es más segura
+        if (preg_match('/C(ó|o)digo\s*Postal:\s*(\d{5})/', $textoCompleto, $matchesCP)) {
+            $datosEncontrados['cpFiscal'] = trim($matchesCP[2]);
+        }
+    }
+
+    // Lógica del Régimen Fiscal (Usando tu lógica DB, ya que el texto es limpio)
+    // El texto completo será más legible en la sección 'Regímenes'
+    if (preg_match('/Regímenes:(.*?)\s*Obligaciones:/s', $textoCompleto, $matches)) {
+        $regimenTexto = trim($matches[1]);
         
-        this.value = '';
-    });
-    // ...
+        // --- TU LÓGICA DE CONEXIÓN A DB Y SIMILAR_TEXT VA AQUÍ ---
+        try {
+            $db = new Database();
+            $conn = $db->getConnection();
+            $stmt = $conn->prepare("SELECT codigo, descr FROM cat_regimen_fiscal ORDER BY codigo ASC");
+            $stmt->execute();
+            $regimenes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // ... (Tu código completo de similar_text y palabras clave) ...
+            
+            // Reemplazar con el código extraído de la DB
+            // $datosEncontrados['regimenFiscal'] = $codigoEncontrado; 
+            
+        } catch (Exception $e) {
+            error_log('Error de base de datos en Régimen Fiscal: ' . $e->getMessage());
+        }
+    }
+    
+    // --- FIN DE EXTRACCIÓN DE DATOS ---
+    
+    if (!empty($datosEncontrados)) {
+        $respuesta['success'] = true;
+        $respuesta['data'] = $datosEncontrados;
+        $respuesta['message'] = 'Datos extraídos correctamente con pdftotext.';
+    } else {
+        $respuesta['message'] = 'pdftotext leyó el PDF, pero no se encontraron datos.';
+    }
+
+    $respuesta['debug_raw_text'] = substr($textoCompleto, 0, 5000);
+    
+} catch (Exception $e) {
+    // Si pdftotext no se encuentra, el error será capturado aquí.
+    $respuesta['message'] = 'Error de procesamiento (Poppler/Spatie): ' . $e->getMessage();
+}
+
+echo json_encode($respuesta);

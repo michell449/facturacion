@@ -85,7 +85,7 @@
                                     </label>
                                     <input type="text" class="form-control form-control-lg rounded-3" id="cpFiscal"
                                         placeholder="12345" maxlength="5" pattern="[0-9]{5}" required>
-                                    <div class="form-text">Código postal de su domicilio fiscal</div>
+                                    <div class="form-text" id="cpFiscalStatus">Código postal de su domicilio fiscal</div>
                                 </div>
 
                                 <div class="col-md-6">
@@ -98,17 +98,27 @@
                                     <div class="form-text">Selecciona el régimen que corresponde a tu situación fiscal</div>
                                 </div>
 
-                                <!-- Dirección fiscal (opcional) -->
-                                <div class="col-12 mt-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="agregarDireccion">
-                                        <label class="form-check-label fw-semibold" for="agregarDireccion">
-                                            Agregar dirección fiscal completa
-                                        </label>
+                                <!-- Información de ubicación (se llena automáticamente) -->
+                                <div class="col-12" id="infoUbicacion" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-geo-alt-fill me-2"></i>
+                                            <div>
+                                                <strong>Ubicación fiscal:</strong>
+                                                <span id="ubicacionTexto"></span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="col-12" id="direccionFiscalSection" style="display: none;">
+                                <!-- Dirección fiscal obligatoria -->
+                                <div class="col-12 mt-4">
+                                    <h5 class="text-primary mb-3">Datos de dirección Fiscal
+                                    </h5>
+                                </div>
+
+                                <div class="col-12" id="direccionFiscalSection">
+
                                     <div class="card bg-light border-0 rounded-3">
                                         <div class="card-body">
                                             <div class="row g-3">
@@ -122,22 +132,17 @@
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="colonia" class="form-label">Colonia</label>
-                                                    <input type="text" class="form-control rounded-3" id="colonia" placeholder="Nombre de la colonia">
+                                                    <select class="form-select rounded-3" id="colonia">
+                                                        <option value="">Selecciona una colonia</option>
+                                                    </select>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="municipio" class="form-label">Municipio/Alcaldía</label>
-                                                    <input type="text" class="form-control rounded-3" id="municipio" placeholder="Nombre del municipio">
+                                                    <input type="text" class="form-control rounded-3" id="municipio" placeholder="Se llenará automáticamente" readonly>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="estado" class="form-label">Estado</label>
-                                                    <select class="form-select rounded-3" id="estado">
-                                                        <option value="">Selecciona un estado</option>
-                                                        <option value="Ciudad de México">Ciudad de México</option>
-                                                        <option value="Estado de México">Estado de México</option>
-                                                        <option value="Jalisco">Jalisco</option>
-                                                        <option value="Nuevo León">Nuevo León</option>
-                                                        <!-- Agregar más estados según sea necesario -->
-                                                    </select>
+                                                    <input type="text" class="form-control rounded-3" id="estado" placeholder="Se llenará automáticamente" readonly>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="pais" class="form-label">País</label>
@@ -176,12 +181,12 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const result = await response.json();
-                
+
                 if (result.success && result.data) {
                     const select = document.getElementById('regimenFiscal');
                     // Limpiar opciones existentes
                     select.innerHTML = '<option value="">Selecciona tu régimen fiscal</option>';
-                    
+
                     // Agregar las opciones de regímenes fiscales
                     result.data.forEach(regimen => {
                         const option = document.createElement('option');
@@ -201,29 +206,203 @@
             }
         }
 
+        // Función para verificar que todos los elementos del formulario estén disponibles
+        function verificarElementosFormulario() {
+            const elementos = [
+                'nombreFiscal', 'rfcFiscal', 'cpFiscal', 'regimenFiscal',
+                'colonia', 'municipio', 'estado', 'calle', 'numeroExterior'
+            ];
+            
+            elementos.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    console.log(`✅ Elemento '${id}' disponible`);
+                } else {
+                    console.warn(`❌ Elemento '${id}' NO encontrado`);
+                }
+            });
+        }
+
         // Cargar regímenes fiscales al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             cargarRegimenesFiscales();
+            
+            // Verificar elementos solo en modo debug (comentar en producción)
+            // setTimeout(() => {
+            //     console.log('🔍 Verificando elementos del formulario:');
+            //     verificarElementosFormulario();
+            // }, 500);
         });
 
-        document.getElementById('agregarDireccion').addEventListener('change', function() {
-            const direccionSection = document.getElementById('direccionFiscalSection');
-            direccionSection.style.display = this.checked ? 'block' : 'none';
-        });
+        // Función para llenar los campos de dirección fiscal
+        function llenarDireccionFiscal(data) {
+            if (data.colonias && data.colonias.length > 0) {
+                const coloniaSelect = document.getElementById('colonia');
+                if (coloniaSelect) {
+                    coloniaSelect.innerHTML = '<option value="">Selecciona una colonia</option>';
+
+                    data.colonias.forEach(colonia => {
+                        const option = document.createElement('option');
+                        option.value = colonia.d_asenta;
+                        option.textContent = `${colonia.d_asenta} (${colonia.tipo_asenta})`;
+                        coloniaSelect.appendChild(option);
+                    });
+                    console.log(`✅ ${data.colonias.length} colonias cargadas en dirección fiscal`);
+                }
+            }
+
+            if (data.municipio) {
+                const municipioInput = document.getElementById('municipio');
+                if (municipioInput) {
+                    municipioInput.value = data.municipio;
+                }
+            }
+
+            if (data.estado) {
+                const estadoInput = document.getElementById('estado');
+                if (estadoInput) {
+                    estadoInput.value = data.estado;
+                }
+            }
+        }
+
+        // La sección de dirección fiscal ahora es obligatoria y siempre visible
+        // No necesita evento de checkbox
 
         document.getElementById('rfcFiscal').addEventListener('input', function() {
             this.value = this.value.toUpperCase();
         });
 
 
+        // Función para cargar colonias basadas en código postal
+        async function cargarColoniasPorCP(codigoPostal) {
+            const selectColonias = document.getElementById('colonia');
+            const statusDiv = document.getElementById('cpFiscalStatus');
+            const infoUbicacion = document.getElementById('infoUbicacion');
+
+            // Validar que los elementos existan
+            if (!selectColonias) {
+                console.warn('❌ Campo colonia no disponible para cargar colonias');
+                return;
+            }
+            if (!statusDiv) {
+                console.warn('❌ StatusDiv no disponible');
+            }
+            if (!infoUbicacion) {
+                console.warn('❌ InfoUbicacion no disponible');
+            }
+
+            if (codigoPostal.length !== 5) {
+                selectColonias.innerHTML = '<option value="">Ingresa un código postal válido</option>';
+                statusDiv.textContent = 'Código postal de su domicilio fiscal';
+                statusDiv.className = 'form-text';
+                infoUbicacion.style.display = 'none';
+                return;
+            }
+
+            try {
+                statusDiv.textContent = 'Buscando colonias...';
+                statusDiv.className = 'form-text text-primary';
+                selectColonias.innerHTML = '<option value="">Cargando colonias...</option>';
+
+                const response = await fetch('core/obtener-colonias-cp.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        codigo_postal: codigoPostal
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success && result.data.colonias) {
+                    if (selectColonias) {
+                        selectColonias.innerHTML = '<option value="">Selecciona tu colonia</option>';
+
+                        result.data.colonias.forEach(colonia => {
+                            const option = document.createElement('option');
+                            option.value = colonia.d_asenta;
+                            option.textContent = `${colonia.d_asenta} (${colonia.tipo_asenta})`;
+                            selectColonias.appendChild(option);
+                        });
+                    }
+
+                    if (statusDiv) {
+                        statusDiv.textContent = `${result.data.total_colonias} colonias encontradas`;
+                        statusDiv.className = 'form-text text-success';
+                    }
+
+                    // Mostrar información de ubicación
+                    const ubicacionTexto = document.getElementById('ubicacionTexto');
+                    if (ubicacionTexto && infoUbicacion) {
+                        ubicacionTexto.textContent = `${result.data.municipio}, ${result.data.estado}`;
+                        infoUbicacion.style.display = 'block';
+                    }
+
+                    // Llenar los campos de dirección fiscal (ahora obligatoria)
+                    llenarDireccionFiscal(result.data);
+
+                } else {
+                    if (selectColonias) {
+                        selectColonias.innerHTML = '<option value="">No se encontraron colonias</option>';
+                    }
+                    if (statusDiv) {
+                        statusDiv.textContent = result.message || 'Código postal no encontrado';
+                        statusDiv.className = 'form-text text-danger';
+                    }
+                    if (infoUbicacion) {
+                        infoUbicacion.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error al obtener colonias:', error);
+                if (selectColonias) {
+                    selectColonias.innerHTML = '<option value="">Error al cargar colonias</option>';
+                }
+                if (statusDiv) {
+                    statusDiv.textContent = 'Error al buscar colonias';
+                    statusDiv.className = 'form-text text-danger';
+                }
+                if (infoUbicacion) {
+                    infoUbicacion.style.display = 'none';
+                }
+            }
+        }
+
         document.getElementById('cpFiscal').addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '').substring(0, 5);
+
+            // Cargar colonias cuando se complete el código postal
+            if (this.value.length === 5) {
+                cargarColoniasPorCP(this.value);
+            } else {
+                const selectColonias = document.getElementById('colonia');
+                const statusDiv = document.getElementById('cpFiscalStatus');
+                const infoUbicacion = document.getElementById('infoUbicacion');
+
+                if (selectColonias) {
+                    selectColonias.innerHTML = '<option value="">Ingresa primero el código postal</option>';
+                }
+                if (statusDiv) {
+                    statusDiv.textContent = 'Código postal de su domicilio fiscal';
+                    statusDiv.className = 'form-text';
+                }
+                if (infoUbicacion) {
+                    infoUbicacion.style.display = 'none';
+                }
+            }
         });
 
         document.getElementById('formInfoFiscal').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const requiredFields = ['nombreFiscal', 'rfcFiscal', 'correoFiscal', 'cpFiscal', 'regimenFiscal'];
+            const requiredFields = ['nombreFiscal', 'rfcFiscal', 'cpFiscal', 'regimenFiscal', 'calle', 'numeroExterior', 'colonia', 'municipio', 'estado'];
             let isValid = true;
 
             requiredFields.forEach(fieldId => {
@@ -298,9 +477,65 @@
             }
             if (data.cpFiscal) {
                 document.getElementById('cpFiscal').value = data.cpFiscal;
+                
+                // Llenar directamente los datos de dirección si están disponibles
+                if (data.ciudadFiscal || data.estadoFiscal || data.municipioFiscal) {
+                    llenarDireccionDirecta(data);
+                }
+                
+                // Cargar colonias para el código postal extraído con un pequeño delay
+                setTimeout(() => {
+                    cargarColoniasPorCP(data.cpFiscal);
+                }, 100);
             }
             if (data.regimenFiscal) {
                 document.getElementById('regimenFiscal').value = data.regimenFiscal;
+            }
+
+            // Si hay información de colonias en los datos extraídos
+            if (data.colonias && data.colonias.length > 0) {
+                console.log('Colonias disponibles:', data.colonias);
+                // Llenar directamente las colonias de dirección
+                setTimeout(() => {
+                    llenarColoniasDirecta(data.colonias);
+                    console.log(`Se encontraron ${data.colonias.length} colonias para el CP ${data.cpFiscal}`);
+                }, 200);
+            }
+        }
+
+        // Función para llenar directamente los datos de dirección desde el PDF
+        function llenarDireccionDirecta(data) {
+            // Llenar municipio si está disponible
+            if (data.municipioFiscal) {
+                const municipioInput = document.getElementById('municipio');
+                if (municipioInput) {
+                    municipioInput.value = data.municipioFiscal;
+                }
+            }
+            
+            // Llenar estado si está disponible
+            if (data.estadoFiscal) {
+                const estadoInput = document.getElementById('estado');
+                if (estadoInput) {
+                    estadoInput.value = data.estadoFiscal;
+                }
+            }
+        }
+
+        // Función para llenar directamente las colonias de dirección
+        function llenarColoniasDirecta(colonias) {
+            const coloniaSelect = document.getElementById('colonia');
+            if (coloniaSelect && colonias && colonias.length > 0) {
+                coloniaSelect.innerHTML = '<option value="">Selecciona una colonia</option>';
+                
+                colonias.forEach(colonia => {
+                    const option = document.createElement('option');
+                    option.value = colonia.d_asenta;
+                    option.textContent = `${colonia.d_asenta} (${colonia.tipo_asenta})`;
+                    coloniaSelect.appendChild(option);
+                });
+                
+                console.log(`Colonias de dirección cargadas: ${colonias.length}`);
             }
         }
     </script>

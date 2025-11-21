@@ -265,7 +265,6 @@
 
     // Event listeners para los botones de mostrar/ocultar contraseña
     document.addEventListener('DOMContentLoaded', function() {
-        // Toggle para contraseña de login
         const toggleLoginBtn = document.getElementById('toggleLoginPassword');
         if (toggleLoginBtn) {
             toggleLoginBtn.addEventListener('click', function() {
@@ -273,7 +272,6 @@
             });
         }
 
-        // Toggle para nueva contraseña
         const toggleNewBtn = document.getElementById('toggleNewPassword');
         if (toggleNewBtn) {
             toggleNewBtn.addEventListener('click', function() {
@@ -281,7 +279,6 @@
             });
         }
 
-        // Toggle para confirmar contraseña
         const toggleConfirmBtn = document.getElementById('toggleConfirmPassword');
         if (toggleConfirmBtn) {
             toggleConfirmBtn.addEventListener('click', function() {
@@ -299,7 +296,6 @@
             alert('Las contraseñas no coinciden.');
             return;
         }
-        //Validar contraseña
         const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
         if (!passwordRegex.test(password)) {
             alert('La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número.');

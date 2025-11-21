@@ -17,8 +17,8 @@ class Database {
     public function getConnection() {
         $this->conn = null;
         try {
-            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->database_name, $this->username, $this->password);
-            $this->conn->exec("set names utf8");
+            $this->conn = new PDO("mysql:host=" . $this->host . "; charset=utf8mb4; dbname=" . $this->database_name, $this->username, $this->password);
+            $this->conn->exec("set names utf8mb4");
             $sqlQuery = "SHOW TABLES FROM  " . $this->database_name . "";
             $stmt = $this->conn->prepare($sqlQuery);
             $stmt->execute();

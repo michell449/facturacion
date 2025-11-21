@@ -39,13 +39,13 @@
                             <div class="card-body text-center py-4">
                                 <i class="bi bi-cloud-upload text-primary mb-3" style="font-size: 3rem;"></i>
                                 <h5 class="text-primary mb-3">Cargar Constancia de Situación Fiscal</h5>
-                                <p class="text-muted mb-3">Arrastra tu archivo aquí o haz clic para seleccionar</p>
-                                <input type="file" class="form-control d-none" id="constanciaFiscal" accept="application/pdf,image/*">
+                                <p class="text-muted mb-3">Haz clic para seleccionar</p>
+                                <input type="file" class="form-control d-none" id="constanciaFiscal" accept="application/pdf">
                                 <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('constanciaFiscal').click()">
                                     <i class="bi bi-file-earmark-plus me-2"></i>Seleccionar Archivo
                                 </button>
                                 <div class="mt-2">
-                                    <small class="text-muted">Formatos permitidos: PDF, JPG, PNG (Máx. 5MB)</small>
+                                    <small class="text-muted">Solo archivos PDF</small>
                                 </div>
                             </div>
                         </div>
@@ -98,15 +98,11 @@
                                     <div class="form-text">Selecciona el régimen que corresponde a tu situación fiscal</div>
                                 </div>
 
-                                <!-- Información de ubicación (se llena automáticamente) -->
+
                                 <div class="col-12" id="infoUbicacion" style="display: none;">
                                     <div class="alert alert-info">
                                         <div class="d-flex align-items-center">
                                             <i class="bi bi-geo-alt-fill me-2"></i>
-                                            <div>
-                                                <strong>Ubicación fiscal:</strong>
-                                                <span id="ubicacionTexto"></span>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -122,13 +118,18 @@
                                     <div class="card bg-light border-0 rounded-3">
                                         <div class="card-body">
                                             <div class="row g-3">
-                                                <div class="col-md-8">
+                                                <div class="col-md-12">
                                                     <label for="calle" class="form-label">Calle</label>
                                                     <input type="text" class="form-control rounded-3" id="calle" placeholder="Nombre de la calle">
                                                 </div>
-                                                <div class="col-md-4">
+                                                <div class="col-md-3">
                                                     <label for="numeroExterior" class="form-label">No. Exterior</label>
                                                     <input type="text" class="form-control rounded-3" id="numeroExterior" placeholder="123">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label for="numeroInterior" class="form-label">No. Interior</label>
+                                                    <input type="text" class="form-control rounded-3" id="numeroInterior" placeholder="Opcional">
+
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="colonia" class="form-label">Colonia</label>
@@ -138,15 +139,11 @@
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="municipio" class="form-label">Municipio/Alcaldía</label>
-                                                    <input type="text" class="form-control rounded-3" id="municipio" placeholder="Se llenará automáticamente" readonly>
+                                                    <input type="text" class="form-control rounded-3" id="municipio" placeholder="Se llenará automáticamente">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="estado" class="form-label">Estado</label>
-                                                    <input type="text" class="form-control rounded-3" id="estado" placeholder="Se llenará automáticamente" readonly>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="pais" class="form-label">País</label>
-                                                    <input type="text" class="form-control rounded-3" id="pais" value="México" readonly>
+                                                    <input type="text" class="form-control rounded-3" id="estado" placeholder="Se llenará automáticamente">
                                                 </div>
                                             </div>
                                         </div>
@@ -159,7 +156,7 @@
                                 <button type="button" class="btn btn-outline-secondary btn-lg rounded-3" onclick="window.history.back()">
                                     <i class="bi bi-arrow-left me-2"></i>Regresar
                                 </button>
-                                <button type="submit" class="btn btn-primary btn-lg rounded-3 px-5">
+                                <button type="submit" id="btnGuardarInformacion" class="btn btn-primary btn-lg rounded-3 px-5">
                                     <i class="bi bi-check-circle me-2"></i>Guardar
                                 </button>
                             </div>
@@ -173,7 +170,7 @@
 
 
     <script>
-        // Función para cargar regímenes fiscales desde la API
+        // Función para cargar regímenes fiscales
         async function cargarRegimenesFiscales() {
             try {
                 const response = await fetch('core/listar-regimen-fiscal.php');
@@ -184,10 +181,8 @@
 
                 if (result.success && result.data) {
                     const select = document.getElementById('regimenFiscal');
-                    // Limpiar opciones existentes
                     select.innerHTML = '<option value="">Selecciona tu régimen fiscal</option>';
 
-                    // Agregar las opciones de regímenes fiscales
                     result.data.forEach(regimen => {
                         const option = document.createElement('option');
                         option.value = regimen.codigo;
@@ -206,35 +201,27 @@
             }
         }
 
-        // Función para verificar que todos los elementos del formulario estén disponibles
         function verificarElementosFormulario() {
             const elementos = [
                 'nombreFiscal', 'rfcFiscal', 'cpFiscal', 'regimenFiscal',
                 'colonia', 'municipio', 'estado', 'calle', 'numeroExterior'
             ];
-            
+
             elementos.forEach(id => {
                 const elemento = document.getElementById(id);
                 if (elemento) {
-                    console.log(`✅ Elemento '${id}' disponible`);
+                    console.log(`Elemento '${id}' disponible`);
                 } else {
-                    console.warn(`❌ Elemento '${id}' NO encontrado`);
+                    console.warn(`Elemento '${id}' NO encontrado`);
                 }
             });
         }
 
-        // Cargar regímenes fiscales al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             cargarRegimenesFiscales();
-            
-            // Verificar elementos solo en modo debug (comentar en producción)
-            // setTimeout(() => {
-            //     console.log('🔍 Verificando elementos del formulario:');
-            //     verificarElementosFormulario();
-            // }, 500);
         });
 
-        // Función para llenar los campos de dirección fiscal
+        // funcion para llenar los campos de dirección 
         function llenarDireccionFiscal(data) {
             if (data.colonias && data.colonias.length > 0) {
                 const coloniaSelect = document.getElementById('colonia');
@@ -247,7 +234,6 @@
                         option.textContent = `${colonia.d_asenta} (${colonia.tipo_asenta})`;
                         coloniaSelect.appendChild(option);
                     });
-                    console.log(`✅ ${data.colonias.length} colonias cargadas en dirección fiscal`);
                 }
             }
 
@@ -266,30 +252,22 @@
             }
         }
 
-        // La sección de dirección fiscal ahora es obligatoria y siempre visible
-        // No necesita evento de checkbox
-
         document.getElementById('rfcFiscal').addEventListener('input', function() {
             this.value = this.value.toUpperCase();
         });
 
-
-        // Función para cargar colonias basadas en código postal
         async function cargarColoniasPorCP(codigoPostal) {
             const selectColonias = document.getElementById('colonia');
             const statusDiv = document.getElementById('cpFiscalStatus');
             const infoUbicacion = document.getElementById('infoUbicacion');
 
-            // Validar que los elementos existan
             if (!selectColonias) {
-                console.warn('❌ Campo colonia no disponible para cargar colonias');
+                console.warn('Colonia no disponible para cargar colonias');
                 return;
             }
-            if (!statusDiv) {
-                console.warn('❌ StatusDiv no disponible');
-            }
+
             if (!infoUbicacion) {
-                console.warn('❌ InfoUbicacion no disponible');
+                console.warn('InfoUbicacion no disponible');
             }
 
             if (codigoPostal.length !== 5) {
@@ -301,8 +279,6 @@
             }
 
             try {
-                statusDiv.textContent = 'Buscando colonias...';
-                statusDiv.className = 'form-text text-primary';
                 selectColonias.innerHTML = '<option value="">Cargando colonias...</option>';
 
                 const response = await fetch('core/obtener-colonias-cp.php', {
@@ -332,20 +308,16 @@
                             selectColonias.appendChild(option);
                         });
                     }
+                }
+                if (statusDiv) {
 
-                    if (statusDiv) {
-                        statusDiv.textContent = `${result.data.total_colonias} colonias encontradas`;
-                        statusDiv.className = 'form-text text-success';
-                    }
 
-                    // Mostrar información de ubicación
                     const ubicacionTexto = document.getElementById('ubicacionTexto');
                     if (ubicacionTexto && infoUbicacion) {
                         ubicacionTexto.textContent = `${result.data.municipio}, ${result.data.estado}`;
                         infoUbicacion.style.display = 'block';
                     }
 
-                    // Llenar los campos de dirección fiscal (ahora obligatoria)
                     llenarDireccionFiscal(result.data);
 
                 } else {
@@ -378,7 +350,7 @@
         document.getElementById('cpFiscal').addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '').substring(0, 5);
 
-            // Cargar colonias cuando se complete el código postal
+            // cargart las colonias 
             if (this.value.length === 5) {
                 cargarColoniasPorCP(this.value);
             } else {
@@ -449,7 +421,6 @@
                         console.groupCollapsed('DEBUG: Texto Completo Extraído del PDF');
                         console.log(result.debug_raw_text);
                         console.groupEnd();
-                        alert('¡Información extraída! Abre la Consola (F12) para revisar el "Texto Completo".');
                     }
 
                     if (result.success) {
@@ -477,43 +448,33 @@
             }
             if (data.cpFiscal) {
                 document.getElementById('cpFiscal').value = data.cpFiscal;
-                
-                // Llenar directamente los datos de dirección si están disponibles
+
                 if (data.ciudadFiscal || data.estadoFiscal || data.municipioFiscal) {
                     llenarDireccionDirecta(data);
                 }
-                
-                // Cargar colonias para el código postal extraído con un pequeño delay
+
                 setTimeout(() => {
                     cargarColoniasPorCP(data.cpFiscal);
                 }, 100);
             }
-            if (data.regimenFiscal) {
-                document.getElementById('regimenFiscal').value = data.regimenFiscal;
-            }
 
-            // Si hay información de colonias en los datos extraídos
-            if (data.colonias && data.colonias.length > 0) {
-                console.log('Colonias disponibles:', data.colonias);
-                // Llenar directamente las colonias de dirección
-                setTimeout(() => {
-                    llenarColoniasDirecta(data.colonias);
-                    console.log(`Se encontraron ${data.colonias.length} colonias para el CP ${data.cpFiscal}`);
-                }, 200);
+            const regimenSelect = document.getElementById('regimenFiscal');
+            if (regimenSelect && data.regimenFiscalCodigo) {
+                regimenSelect.value = data.regimenFiscalCodigo;
+                console.log('Régimen Fiscal rellenado con código:', data.regimenFiscalCodigo);
+            } else if (data.regimenFiscal) {
+                console.warn('Régimen Fiscal extraído: ' + data.regimenFiscal + '. No se encontró código de régimen en la BD para auto-selección.');
             }
         }
 
-        // Función para llenar directamente los datos de dirección desde el PDF
         function llenarDireccionDirecta(data) {
-            // Llenar municipio si está disponible
             if (data.municipioFiscal) {
                 const municipioInput = document.getElementById('municipio');
                 if (municipioInput) {
                     municipioInput.value = data.municipioFiscal;
                 }
             }
-            
-            // Llenar estado si está disponible
+
             if (data.estadoFiscal) {
                 const estadoInput = document.getElementById('estado');
                 if (estadoInput) {
@@ -522,20 +483,74 @@
             }
         }
 
-        // Función para llenar directamente las colonias de dirección
         function llenarColoniasDirecta(colonias) {
             const coloniaSelect = document.getElementById('colonia');
             if (coloniaSelect && colonias && colonias.length > 0) {
                 coloniaSelect.innerHTML = '<option value="">Selecciona una colonia</option>';
-                
+
                 colonias.forEach(colonia => {
                     const option = document.createElement('option');
                     option.value = colonia.d_asenta;
                     option.textContent = `${colonia.d_asenta} (${colonia.tipo_asenta})`;
                     coloniaSelect.appendChild(option);
                 });
-                
+
                 console.log(`Colonias de dirección cargadas: ${colonias.length}`);
             }
         }
+
+        //registrar los campos del formulario, conectarlo con el php de registro-info-usuarios-fiscales.php
+        document.getElementById('btnGuardarInformacion').addEventListener('click', function(event) {
+            event.preventDefault();
+
+            const requiredFields = ['nombreFiscal', 'rfcFiscal', 'cpFiscal', 'regimenFiscal', 'calle', 'numeroExterior', 'colonia', 'municipio', 'estado'];
+            let isValid = true;
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field || !field.value.trim()) {
+                    if (field) field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                alert('Por favor completa todos los campos requeridos.');
+                return; 
+            }
+
+            const data = {
+                nombre_fiscal: document.getElementById('nombreFiscal').value.trim(),
+                rfc_fiscal: document.getElementById('rfcFiscal').value.trim(),
+                cp_fiscal: document.getElementById('cpFiscal').value.trim(),
+                regimen_fiscal: document.getElementById('regimenFiscal').value.trim(),
+                calle: document.getElementById('calle').value.trim(),
+                numero_exterior: document.getElementById('numeroExterior').value.trim(),
+                numero_interior: document.getElementById('numeroInterior').value.trim(),
+                colonia: document.getElementById('colonia').value.trim(),
+                municipio: document.getElementById('municipio').value.trim(),
+                estado: document.getElementById('estado').value.trim()
+            };
+
+            fetch('core/registro-info-fiscal.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert('Información fiscal registrada correctamente.');
+                    } else {
+                        alert('Error al registrar información fiscal: ' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error de red o JSON inválido:', error);
+                    alert('Ocurrió un error de conexión o el servidor devolvió un error inesperado.');
+                });
+        });
     </script>

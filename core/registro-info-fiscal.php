@@ -89,6 +89,13 @@ try {
 
     $respuesta['success'] = true;
     $respuesta['message'] = 'Datos fiscales ' . $action . ' correctamente.';
+    
+    // Limpiar caché de estado fiscal para forzar actualización
+    if (isset($_SESSION['FISCAL_COMPLETE'])) {
+        unset($_SESSION['FISCAL_COMPLETE']);
+    }
+    // Actualizar estado fiscal inmediatamente
+    $_SESSION['FISCAL_COMPLETE'] = 1;
 
 } catch (Exception $e) {
     $respuesta['message'] = $e->getMessage();

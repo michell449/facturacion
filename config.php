@@ -29,6 +29,8 @@ if (!isset($_SESSION['correo'])) $_SESSION['correo'] = '';
 if (!isset($_SESSION['tipo_usuario'])) $_SESSION['tipo_usuario'] = '';
 if (!isset($_SESSION['loggedin'])) $_SESSION['loggedin'] = false;
 
+$_SESSION['FISCAL_COMPLETE'] = $_SESSION['FISCAL_COMPLETE'] ?? 0;
+
 // Check if SSL
 if (!empty($_SERVER['HTTPS']) && ('on' == $_SERVER['HTTPS'])) {
     $uri = 'https://';

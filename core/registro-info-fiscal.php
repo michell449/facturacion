@@ -13,22 +13,10 @@ $respuesta = [
 ];
 
 try {
-    if (!isset($_SESSION['correo']) || empty($_SESSION['correo'])) {
-        throw new Exception('Sesión de usuario no válida. No se puede obtener el correo de sesión.');
+    if (!isset($_SESSION['usuario_id']) || empty($_SESSION['usuario_id'])) {
+        throw new Exception('Sesión de usuario no válida. ID de usuario no encontrado en la sesión.');
     }
-    $correo_sesion = trim($_SESSION['correo']);
-
-    $db = new Database();
-    $conn = $db->getConnection();
-
-    $stmt_user = $conn->prepare("SELECT id_usuario FROM usuarios WHERE correo = ? AND tipo_cliente = 'registrado' LIMIT 1");
-    $stmt_user->execute([$correo_sesion]);
-    $user_data = $stmt_user->fetch(PDO::FETCH_ASSOC);
-
-    if (!$user_data) {
-        throw new Exception('No se encontró un usuario registrado con la sesión activa.');
-    }
-    $id_usuario = (int)$user_data['id_usuario'];
+    $id_usuario = (int)$_SESSION['usuario_id'];
 
 
     $json_data = file_get_contents('php://input');
@@ -38,19 +26,22 @@ try {
         throw new Exception('Datos JSON inválidos: ' . json_last_error_msg());
     }
 
-    $required_fields = ['rfc_fiscal', 'nombre_fiscal', 'regimen_fiscal', 'cp_fiscal'];
+    $required_fields = ['rfc_fiscal', 'nombre_fiscal', 'regimen_fiscal', 'cp_fiscal', 'calle', 'numero_exterior', 'colonia'];
     foreach ($required_fields as $field) {
         if (empty($data[$field])) {
             throw new Exception('Falta el campo requerido: ' . $field);
         }
     }
 
-    $rfc = mb_strtoupper(trim($data['rfc_fiscal']));
+    $rfc = mb_strtoupper(trim($data['rfcFiscal']));
     $razon_social = trim($data['nombre_fiscal']);
     $reg_fiscal = trim($data['regimen_fiscal']); 
     $cp = (int)trim($data['cp_fiscal']);
-    
-    // Determinar tipo de persona
+    $calle = trim($data['calle']);
+    $numero_exterior = trim($data['numero_exterior']);
+    $numero_interior = isset($data['numero_interior']) ? trim($data['numero_interior']) : '';
+
+    // Determinar tipo de persona 
     $rfc_length = strlen($rfc);
     if ($rfc_length === 13) {
         $tipo_pers = 'Fisica';
@@ -60,26 +51,30 @@ try {
         throw new Exception('La longitud del RFC (' . $rfc_length . ') no es válida (debe ser 12 o 13 caracteres).');
     }
 
+    $db = new Database();
+    $conn = $db->getConnection();
+
     $stmt_check = $conn->prepare("SELECT id_df FROM datos_fiscales_usuario WHERE id_usuario = ? LIMIT 1");
     $stmt_check->execute([$id_usuario]);
     $existing_record = $stmt_check->fetch(PDO::FETCH_ASSOC);
 
-    $sql_fields = 'rfc = ?, razon_social = ?, reg_fiscal = ?, cp = ?, tipo_pers = ?';
+    $sql_fields = 'rfc = ?, razon_social = ?, reg_fiscal = ?, cp = ?, tipo_pers = ?, calle = ?, num_ext = ?, num_int = ?';
     $params = [$rfc, $razon_social, $reg_fiscal, $cp, $tipo_pers];
 
     if ($existing_record) {
+        // UPDATE
         $sql = "UPDATE datos_fiscales_usuario SET $sql_fields WHERE id_usuario = ?";
         $params[] = $id_usuario;
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
         $action = 'actualizados';
     } else {
+        // INSERT
         $sql_fields_insert = 'id_usuario, ' . str_replace(' = ?', '', $sql_fields);
         $placeholders = array_fill(0, count($params) + 1, '?');
         $placeholders_str = implode(', ', $placeholders);
 
         $sql = "INSERT INTO datos_fiscales_usuario ($sql_fields_insert) VALUES ($placeholders_str)";
-        
         array_unshift($params, $id_usuario); 
         
         $stmt = $conn->prepare($sql);
@@ -89,17 +84,9 @@ try {
 
     $respuesta['success'] = true;
     $respuesta['message'] = 'Datos fiscales ' . $action . ' correctamente.';
-    
-    // Limpiar caché de estado fiscal para forzar actualización
-    if (isset($_SESSION['FISCAL_COMPLETE'])) {
-        unset($_SESSION['FISCAL_COMPLETE']);
-    }
-    // Actualizar estado fiscal inmediatamente
-    $_SESSION['FISCAL_COMPLETE'] = 1;
 
 } catch (Exception $e) {
     $respuesta['message'] = $e->getMessage();
 }
 
 echo json_encode($respuesta);
-?>

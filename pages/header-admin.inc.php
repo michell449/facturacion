@@ -5,12 +5,8 @@
             <!-- Brand Admin -->
             <div class="col-auto">
                 <a class="navbar-brand d-flex align-items-center text-decoration-none mb-0" href="panel?pg=facturar-login">
-                    <div class="bg-primary rounded-circle p-2 me-3">
-                        <i class="bi bi-speedometer2 text-white fs-5"></i>
-                    </div>
                     <div>
-                        <span class="fw-bold text-primary">Administración</span>
-                        <small class="d-block text-muted">Facturación Electrónica</small>
+                        <span class="fw-bold text-primary">Facturación Electrónica</span>
                     </div>
                 </a>
             </div>
@@ -31,7 +27,7 @@
                             <ul class="navbar-nav flex-row flex-lg-row justify-content-center justify-content-lg-start mb-2 mb-lg-0">
                                 <li class="nav-item mx-1">
                                     <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == 'inicio-admin' || $pagePath == '') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="panel?pg=inicio-admin">
-                                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                                        <i class="bi bi-house me-2"></i> Inicio
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown mx-1">
@@ -135,36 +131,6 @@
                                     </ul>
                                 </li>
 
-                                <!-- Quick Actions -->
-                                <li class="nav-item dropdown mx-1">
-                                    <a class="nav-link rounded-circle p-2" href="#" id="quickActionsDropdown" role="button"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-lightning fs-5 text-primary"></i>
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="quickActionsDropdown">
-                                        <li>
-                                            <h6 class="dropdown-header text-primary fw-bold">
-                                                <i class="bi bi-lightning me-2"></i>Acciones Rápidas
-                                            </h6>
-                                        </li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=nueva-sucursal-admin">
-                                                <i class="bi bi-plus-circle me-2 text-success"></i> Nueva Sucursal
-                                            </a></li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=tickets-por-facturar">
-                                                <i class="bi bi-clock me-2 text-warning"></i> Procesar Tickets
-                                            </a></li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="generarReporte()">
-                                                <i class="bi bi-graph-up me-2 text-info"></i> Generar Reporte
-                                            </a></li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="backupSistema()">
-                                                <i class="bi bi-download me-2 text-primary"></i> Backup Sistema
-                                            </a></li>
-                                    </ul>
-                                </li>
-
                                 <!-- Fullscreen toggle -->
                                 <li class="nav-item mx-1">
                                     <a class="nav-link rounded-circle p-2" href="#" onclick="toggleFullscreen()">
@@ -201,9 +167,6 @@
                                         <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarUsuariosSistema()">
                                                 <i class="bi bi-people me-2 text-info"></i> Gestión de Usuarios
                                             </a></li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarReportes()">
-                                                <i class="bi bi-graph-up me-2 text-success"></i> Reportes y Analytics
-                                            </a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
@@ -216,8 +179,8 @@
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li><a class="dropdown-item rounded-2 mx-2 text-danger" href="#" onclick="cerrarSesionAdmin()">
-                                                <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión Admin
+                                        <li><a class="dropdown-item rounded-2 mx-2 text-danger" href="#" onclick="cerrarSesion()">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
                                             </a></li>
                                     </ul>
                                 </li>
@@ -237,7 +200,7 @@
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item">
                         <a href="panel?pg=inicio-admin" class="text-decoration-none text-primary fw-semibold">
-                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                            <i class="bi bi-house me-1"></i>Inicio
                         </a>
                     </li>
                     <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">
@@ -264,7 +227,6 @@
 </nav>
 
 <script>
-    // Reloj en tiempo real para el panel admin
     function actualizarRelojAdmin() {
         const ahora = new Date();
         const horas = String(ahora.getHours()).padStart(2, '0');
@@ -278,11 +240,9 @@
         }
     }
 
-    // Actualizar reloj cada segundo
     setInterval(actualizarRelojAdmin, 1000);
-    actualizarRelojAdmin(); // Ejecutar inmediatamente
+    actualizarRelojAdmin(); 
 
-    // Función para toggle fullscreen mejorada
     function toggleFullscreen() {
         const icon = document.getElementById('fullscreenIcon');
         if (!document.fullscreenElement) {
@@ -296,9 +256,7 @@
         }
     }
 
-    // Funciones específicas de administración
     function generarReporte() {
-        // Aquí iría la lógica para generar reportes
         alert('Generando reporte del sistema...');
     }
 
@@ -332,14 +290,64 @@
         window.location.href = 'panel?pg=logs-sistema';
     }
 
-    function cerrarSesionAdmin() {
-        if (confirm('¿Estás seguro de que deseas cerrar la sesión de administrador?')) {
-            // Aquí iría la lógica de logout admin
-            window.location.href = 'panel?pg=admin-login';
+    async function cerrarSesion() {
+        const result = await Swal.fire({
+            title: '¿Cerrar sesión?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Continuar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Cerrando sesión...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch('core/logout.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sesión cerrada',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = data.redirect || 'index.php?pg=facturar-login';
+                    });
+                } else {
+                    throw new Error(data.message || 'Error al cerrar sesión');
+                }
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un problema al cerrar sesión. Inténtalo de nuevo.'
+                });
+            }
         }
     }
 
-    // Navbar auto-hide mejorado para admin
     let lastScrollTop = 0;
     const navbar = document.querySelector('.navbar');
 
@@ -347,11 +355,9 @@
         let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
         if (scrollTop > lastScrollTop && scrollTop > 200) {
-            // Scrolling down - hide navbar
             navbar.style.transform = 'translateY(-100%)';
             navbar.style.transition = 'transform 0.3s ease-in-out';
         } else {
-            // Scrolling up - show navbar
             navbar.style.transform = 'translateY(0)';
             navbar.style.transition = 'transform 0.3s ease-in-out';
         }
@@ -359,15 +365,11 @@
         lastScrollTop = scrollTop;
     });
 
-    // Notificaciones automáticas admin
     document.addEventListener('DOMContentLoaded', function() {
-        // Simulación de verificación de estado del sistema
         setTimeout(function() {
             const statusIcon = document.querySelector('.bi-activity');
             if (statusIcon) {
-                // Cambiar color según el estado del sistema
                 setInterval(function() {
-                    // Aquí se podría hacer una consulta AJAX al servidor
                     console.log('Verificando estado del sistema...');
                 }, 60000); // Cada minuto
             }

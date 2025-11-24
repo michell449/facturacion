@@ -119,7 +119,7 @@
                                         <div class="card-body">
                                             <div class="row g-3">
                                                 <div class="col-md-12">
-                                                    <label for="calle" class="form-label">Calle</label>
+                                                    <label for="calle" class="form-label">Direccion</label>
                                                     <input type="text" class="form-control rounded-3" id="calle" placeholder="Nombre de la calle">
                                                 </div>
                                                 <div class="col-md-3">
@@ -167,7 +167,6 @@
 
         </div>
     </div>
-
 
     <script>
         // Función para cargar regímenes fiscales
@@ -446,6 +445,30 @@
             if (data.rfcFiscal) {
                 document.getElementById('rfcFiscal').value = data.rfcFiscal;
             }
+
+            if (data.calleFiscal) {
+                document.getElementById('calle').value = data.calleFiscal;
+            }
+            if (data.numeroExteriorFiscal) {
+                document.getElementById('numeroExterior').value = data.numeroExteriorFiscal;
+            }
+            if (data.numeroInteriorFiscal) {
+                const numeroInterior = document.getElementById('numeroInterior');
+                if (numeroInterior) {
+                    numeroInterior.value = data.numeroInteriorFiscal;
+                }
+            }
+
+
+            const regimenSelect = document.getElementById('regimenFiscal');
+            if (regimenSelect && data.regimenFiscalCodigo) {
+                regimenSelect.value = data.regimenFiscalCodigo;
+                console.log('Régimen Fiscal rellenado con código:', data.regimenFiscalCodigo);
+            } else if (data.regimenFiscal) {
+                console.warn('Régimen Fiscal extraído: ' + data.regimenFiscal + '. No se encontró código de régimen en la BD para auto-selección.');
+            }
+
+
             if (data.cpFiscal) {
                 document.getElementById('cpFiscal').value = data.cpFiscal;
 
@@ -454,16 +477,8 @@
                 }
 
                 setTimeout(() => {
-                    cargarColoniasPorCP(data.cpFiscal);
+                    cargarColoniasPorCP(data.cpFiscal, data.coloniaFiscalSeleccionada || null);
                 }, 100);
-            }
-
-            const regimenSelect = document.getElementById('regimenFiscal');
-            if (regimenSelect && data.regimenFiscalCodigo) {
-                regimenSelect.value = data.regimenFiscalCodigo;
-                console.log('Régimen Fiscal rellenado con código:', data.regimenFiscalCodigo);
-            } else if (data.regimenFiscal) {
-                console.warn('Régimen Fiscal extraído: ' + data.regimenFiscal + '. No se encontró código de régimen en la BD para auto-selección.');
             }
         }
 
@@ -499,7 +514,6 @@
             }
         }
 
-        //registrar los campos del formulario, conectarlo con el php de registro-info-usuarios-fiscales.php
         document.getElementById('btnGuardarInformacion').addEventListener('click', function(event) {
             event.preventDefault();
 
@@ -517,7 +531,7 @@
 
             if (!isValid) {
                 alert('Por favor completa todos los campos requeridos.');
-                return; 
+                return;
             }
 
             const data = {

@@ -110,8 +110,7 @@
                                 <button type="submit" id="btnLogin" class="btn btn-primary btn-lg rounded-3 fw-semibold">
                                     <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión
                                 </button>
-                                <button type="button" class="btn btn-outline-primary btn-lg rounded-3 fw-semibold"
-                                    data-bs-toggle="modal" data-bs-target="#crearCuentaModal">
+                                <button type="button" id="btnCrearCuentaModal" class="btn btn-outline-primary btn-lg rounded-3 fw-semibold">
                                     <i class="bi bi-person-plus me-2"></i> Crear Cuenta
                                 </button>
                             </div>
@@ -246,10 +245,100 @@
     </div>
 </div>
 
+<!-- Librerías necesarias para la página -->
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Scripts necesarios -->
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js"></script>
+
+<!-- SweetAlert2 con fallback local -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js" 
+        onerror="this.onerror=null; this.src='js/sweetalert2.min.js';"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+      onerror="this.onerror=null; this.href='css/sweetalert2.min.css';">
 <script>
-    // Función para mostrar/ocultar contraseña
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar que las librerías estén cargadas
+        if (typeof Swal === 'undefined') {
+            console.warn('SweetAlert2 no está disponible, usando alertas nativas');
+        }
+        if (typeof bootstrap === 'undefined') {
+            console.warn('Bootstrap no está disponible, funcionalidad de modales limitada');
+        }
+        
+        // Función helper para SweetAlert2 con fallback
+        window.showAlert = function(options) {
+            if (typeof Swal !== 'undefined') {
+                return Swal.fire(options);
+            } else {
+                // Fallback a alert nativo
+                let message = options.title || '';
+                if (options.text) {
+                    message += (message ? '\\n\\n' : '') + options.text;
+                }
+                alert(message);
+                return Promise.resolve({ isConfirmed: true });
+            }
+        };
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.has('expired')) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión Expirada',
+                text: 'Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente.',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#0d6efd'
+            });
+        } else if (urlParams.has('error')) {
+            const errorType = urlParams.get('error');
+            let title = 'Error de Autenticación';
+            let message = 'Hubo un problema con tu sesión.';
+            
+            switch(errorType) {
+                case 'session_invalid':
+                    title = 'Sesión Inválida';
+                    message = 'Tu sesión no es válida. Por favor, inicia sesión nuevamente.';
+                    break;
+                case 'ip_changed':
+                    title = 'Cambio de Ubicación Detectado';
+                    message = 'Se detectó un cambio en tu ubicación por seguridad. Por favor, inicia sesión nuevamente.';
+                    break;
+                case 'access_denied':
+                    title = 'Acceso Denegado';
+                    message = 'No tienes permisos para acceder a esa página.';
+                    break;
+            }
+            
+            Swal.fire({
+                icon: 'error',
+                title: title,
+                text: message,
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc3545'
+            });
+        } else if (urlParams.has('logout')) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Sesión Cerrada',
+                text: 'Has cerrado sesión correctamente.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+        
+        if (urlParams.has('expired') || urlParams.has('error') || urlParams.has('logout')) {
+            const cleanUrl = window.location.pathname + '?pg=facturar-login';
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    });
+
     function togglePasswordVisibility(inputId, buttonId, iconId) {
         const passwordInput = document.getElementById(inputId);
         const toggleIcon = document.getElementById(iconId);
@@ -263,7 +352,6 @@
         }
     }
 
-    // Event listeners para los botones de mostrar/ocultar contraseña
     document.addEventListener('DOMContentLoaded', function() {
         const toggleLoginBtn = document.getElementById('toggleLoginPassword');
         if (toggleLoginBtn) {
@@ -287,7 +375,15 @@
         }
     });
 
-    // conectar html con php registrar usuarios facturacion
+    document.getElementById('btnCrearCuentaModal').addEventListener('click', function() {
+        if (typeof bootstrap !== 'undefined') {
+            const crearCuentaModal = new bootstrap.Modal(document.getElementById('crearCuentaModal'));
+            crearCuentaModal.show();
+        } else {
+            console.error('Bootstrap no está cargado');
+            alert('Error: Las librerías necesarias no se han cargado correctamente.');
+        }
+    });
     document.getElementById('btnCrearCuenta').addEventListener('click', async function() {
         const email = document.getElementById('nuevoEmail').value;
         const password = document.getElementById('nuevaContraseña').value;
@@ -296,9 +392,9 @@
             alert('Las contraseñas no coinciden.');
             return;
         }
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d]{8,}$/;
         if (!passwordRegex.test(password)) {
-            alert('La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra y un número.');
+            alert('La contraseña debe tener al menos 8 caracteres, incluyendo al menos una letra mayuscula, minuscula y un número.');
             return;
         }
         const res = await fetch('core/registro-usuarios-facturacion.php', {
@@ -329,8 +425,12 @@
         console.log('Respuesta registro:', data);
 
         if (data.success) {
-            const crearCuentaModal = bootstrap.Modal.getInstance(document.getElementById('crearCuentaModal'));
-            crearCuentaModal.hide();
+            if (typeof bootstrap !== 'undefined') {
+                const crearCuentaModal = bootstrap.Modal.getInstance(document.getElementById('crearCuentaModal'));
+                if (crearCuentaModal) {
+                    crearCuentaModal.hide();
+                }
+            }
 
             Swal.fire({
                 icon: 'success',
@@ -338,8 +438,12 @@
                 text: 'Revisa tu correo para el código de verificación.',
                 confirmButtonText: 'Continuar'
             }).then(() => {
-                const verificacionCorreoModal = new bootstrap.Modal(document.getElementById('verificacionCorreoModal'));
-                verificacionCorreoModal.show();
+                if (typeof bootstrap !== 'undefined') {
+                    const verificacionCorreoModal = new bootstrap.Modal(document.getElementById('verificacionCorreoModal'));
+                    verificacionCorreoModal.show();
+                } else {
+                    console.error('Bootstrap no está disponible para mostrar modal');
+                }
             });
         } else {
             Swal.fire({
@@ -356,7 +460,6 @@
             e.target.value = e.target.value.slice(0, 6);
         }
     });
-    //función para validar token de verificación enviado al correo
     document.getElementById('formVerificacionCorreo').addEventListener('submit', async function(event) {
         event.preventDefault();
         const token = document.getElementById('codigoVerificacion').value.trim();
@@ -397,8 +500,12 @@
 
             if (data.success) {
                 // Cerrar modal de verificación
-                const verificacionCorreoModal = bootstrap.Modal.getInstance(document.getElementById('verificacionCorreoModal'));
-                verificacionCorreoModal.hide();
+                if (typeof bootstrap !== 'undefined') {
+                    const verificacionCorreoModal = bootstrap.Modal.getInstance(document.getElementById('verificacionCorreoModal'));
+                    if (verificacionCorreoModal) {
+                        verificacionCorreoModal.hide();
+                    }
+                }
                 Swal.fire({
                     icon: 'success',
                     title: '¡Cuenta verificada!',

@@ -177,12 +177,62 @@
         window.location.href = 'soporte';
     }
 
-    function cerrarSesion() {
-        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-            // Aquí puedes agregar lógica de logout
-            window.location.href = 'facturar-login';
+    async function cerrarSesion() {
+        const result = await Swal.fire({
+            title: '¿Cerrar sesión?',
+            icon: 'question',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Continuar'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                Swal.fire({
+                    title: 'Cerrando sesión...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch('core/logout.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sesión cerrada',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = data.redirect || 'index.php?pg=facturar-login';
+                    });
+                } else {
+                    throw new Error(data.message || 'Error al cerrar sesión');
+                }
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un problema al cerrar sesión. Inténtalo de nuevo.'
+                });
+            }
         }
-    } // Auto-hide navbar on scroll (opcional)
+    } 
     let lastScrollTop = 0;
     const navbar = document.querySelector('.navbar');
 

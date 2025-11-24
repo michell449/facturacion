@@ -1,4 +1,5 @@
 <?php
+// Contenido de core/procesar_csf.php
 
 require_once __DIR__ . '/autoload-vendor.php';
 require_once __DIR__ . '/class/db.php';
@@ -33,6 +34,7 @@ try {
     if (preg_match('/Denominación\/RazónSocial:\s*(.+?)(?=RégimenCapital|Régimen|Fechainicio)/s', $textoCompleto, $matches)) {
         $datosEncontrados['nombreFiscal'] = trim($matches[1]);
     }
+    
     // Extraer régimen fiscal
     $patternRegimen = '/(Régimen|Regímenes)\s*[:\s].*?Régimen\s+Fecha\s*InicioFecha\s*Fin\s*(.+?)(?:\s+\d{2}\/\d{2}\/\d{4}|\s+Obligaciones:|$)/is';
 
@@ -49,6 +51,23 @@ try {
         $datosEncontrados['cpFiscal'] = trim($matches[1]);
     }
 
+    if (preg_match('/NombredeVialidad:\s*(.+?)(?=NúmeroExterior|NúmeroInterior|Colonia|CódigoPostal)/s', $textoCompleto, $matches)) {
+        $datosEncontrados['calleFiscal'] = trim($matches[1]);
+    }
+    if (preg_match('/NúmeroExterior:\s*(.+?)(?=NúmeroInterior|NombredelaColonia|CódigoPostal)/s', $textoCompleto, $matches)) {
+        $datosEncontrados['numeroExteriorFiscal'] = trim($matches[1]);
+    }
+    if (preg_match('/NúmeroInterior:\s*(.+?)(?=NombredelaColonia|CódigoPostal)/s', $textoCompleto, $matches)) {
+        $rawInterior = trim($matches[1]);
+        if (!empty($rawInterior)) {
+            $datosEncontrados['numeroInteriorFiscal'] = $rawInterior;
+        }
+    }
+    if (preg_match('/NombredelaColonia:\s*(.+?)(?=NombredelaLocalidad|NombredelMunicipiooDemarcaciónTerritorial|NombredelaEntidadFederativa)/s', $textoCompleto, $matches)) {
+        $datosEncontrados['coloniaFiscalTexto'] = preg_replace('/\s+/', ' ', trim($matches[1])); 
+    }
+
+
     $dbNeeded = !empty($datosEncontrados['cpFiscal']) || !empty($datosEncontrados['regimenFiscal']);
 
     if ($dbNeeded) {
@@ -58,17 +77,11 @@ try {
 
             if (!empty($datosEncontrados['regimenFiscal'])) {
                 $cleanedRegimen = $datosEncontrados['regimenFiscal'];
-                $normalizedRegimen = mb_strtoupper(str_replace('é', 'e', $cleanedRegimen), 'UTF-8');
+                $normalizedRegimen = mb_strtoupper(str_replace(['É', 'é', 'Á', 'á'], ['E', 'e', 'A', 'a'], $cleanedRegimen), 'UTF-8');
                 $searchRegimen = '%' . trim($normalizedRegimen) . '%';
                 $stmtRegimen = $conn->prepare("SELECT codigo, descr FROM cat_regimen_fiscal WHERE descr LIKE ? LIMIT 1");
                 $stmtRegimen->execute([$searchRegimen]);
                 $regimenData = $stmtRegimen->fetch(PDO::FETCH_ASSOC);
-
-                if (!$regimenData) {
-                    $stmtRegimen = $conn->prepare("SELECT codigo, descr FROM cat_regimen_fiscal WHERE descr LIKE ? LIMIT 1");
-                    $stmtRegimen->execute(['%' . mb_strtoupper($cleanedRegimen, 'UTF-8') . '%']);
-                    $regimenData = $stmtRegimen->fetch(PDO::FETCH_ASSOC);
-                }
 
                 if ($regimenData) {
                     $datosEncontrados['regimenFiscal'] = $regimenData['descr'];
@@ -76,65 +89,60 @@ try {
                     $respuesta['debug_regimen'] = ['codigo_encontrado' => $regimenData['codigo'], 'descripcion_bd' => $regimenData['descr']];
                 } else {
                     $datosEncontrados['regimenFiscal_message'] = 'Régimen fiscal extraído no validado: ' . $cleanedRegimen;
-                    $respuesta['debug_regimen'] = [
-                        'regimen_extraido' => $cleanedRegimen,
-                        'validacion_fallida' => true,
-                        'normalized_attempt' => $normalizedRegimen
-                    ];
+                    $respuesta['debug_regimen'] = ['regimen_extraido' => $cleanedRegimen, 'validacion_fallida' => true];
                 }
             }
-        } catch (Exception $e) {
-            $respuesta['debug_regimen'] = [
-                'error' => 'Error de BD al validar régimen fiscal: ' . $e->getMessage(),
-                'regimen_extraido' => $datosEncontrados['regimenFiscal'] ?? 'No disponible'
-            ];
-        }
-    }
-    if (preg_match('/CódigoPostal:(\d{5})/', $textoCompleto, $matches)) {
-        $datosEncontrados['cpFiscal'] = trim($matches[1]);
-    }
 
-    if (!empty($datosEncontrados['cpFiscal'])) {
-        try {
-            $db = new Database();
-            $conn = $db->getConnection();
-            $stmt = $conn->prepare("SELECT d_ciudad, d_estado, d_mnpio FROM cat_codigo_postal WHERE d_codigo = ? LIMIT 1");
-            $stmt->execute([$datosEncontrados['cpFiscal']]);
-            $ubicacion = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!empty($datosEncontrados['cpFiscal'])) {
+                $stmt = $conn->prepare("SELECT d_ciudad, d_estado, d_mnpio FROM cat_codigo_postal WHERE d_codigo = ? LIMIT 1");
+                $stmt->execute([$datosEncontrados['cpFiscal']]);
+                $ubicacion = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($ubicacion) {
-                $datosEncontrados['ciudadFiscal'] = $ubicacion['d_ciudad'];
-                $datosEncontrados['estadoFiscal'] = $ubicacion['d_estado'];
-                $datosEncontrados['municipioFiscal'] = $ubicacion['d_mnpio'];
+                if ($ubicacion) {
+                    $datosEncontrados['ciudadFiscal'] = $ubicacion['d_ciudad'];
+                    $datosEncontrados['estadoFiscal'] = $ubicacion['d_estado'];
+                    $datosEncontrados['municipioFiscal'] = $ubicacion['d_mnpio'];
+                }
+
+                $stmtColonias = $conn->prepare("SELECT d_asenta, tipo_asenta FROM cat_codigo_postal WHERE d_codigo = ? ORDER BY d_asenta ASC");
+                $stmtColonias->execute([$datosEncontrados['cpFiscal']]);
+                $colonias = $stmtColonias->fetchAll(PDO::FETCH_ASSOC);
+
+                if ($colonias) {
+                    $datosEncontrados['colonias'] = $colonias;
+                    $datosEncontrados['listaColonias'] = array_map(function ($colonia) {
+                        return $colonia['d_asenta'];
+                    }, $colonias);
+                    
+                    if (!empty($datosEncontrados['coloniaFiscalTexto'])) {
+                        $coloniaBuscada = mb_strtoupper(str_replace(['É', 'é', 'Á', 'á'], ['E', 'e', 'A', 'a'], $datosEncontrados['coloniaFiscalTexto']), 'UTF-8');
+
+                        foreach ($colonias as $colonia) {
+                            $coloniaDB = mb_strtoupper(str_replace(['É', 'é', 'Á', 'á'], ['E', 'e', 'A', 'a'], $colonia['d_asenta']), 'UTF-8');
+                            
+                            if (str_contains($coloniaDB, $coloniaBuscada) || str_contains($coloniaBuscada, $coloniaDB)) {
+                                $datosEncontrados['coloniaFiscalSeleccionada'] = $colonia['d_asenta'];
+                                break;
+                            }
+                        }
+                    }
+                }
+                $respuesta['debug_cp'] = [
+                    'codigo_postal' => $datosEncontrados['cpFiscal'],
+                    'colonias_encontradas' => count($colonias ?? []),
+                    'ubicacion_encontrada' => !empty($ubicacion)
+                ];
             }
-
-            $stmtColonias = $conn->prepare("SELECT d_asenta, tipo_asenta FROM cat_codigo_postal WHERE d_codigo = ? ORDER BY d_asenta ASC");
-            $stmtColonias->execute([$datosEncontrados['cpFiscal']]);
-            $colonias = $stmtColonias->fetchAll(PDO::FETCH_ASSOC);
-
-            if ($colonias) {
-                $datosEncontrados['colonias'] = $colonias;
-                $datosEncontrados['listaColonias'] = array_map(function ($colonia) {
-                    return $colonia['d_asenta'];
-                }, $colonias);
-            }
-            $respuesta['debug_cp'] = [
-                'codigo_postal' => $datosEncontrados['cpFiscal'],
-                'colonias_encontradas' => count($colonias ?? []),
-                'ubicacion_encontrada' => !empty($ubicacion)
-            ];
         } catch (Exception $e) {
-            $respuesta['debug_cp'] = [
-                'error' => 'Error de BD al obtener ubicación: ' . $e->getMessage(),
-                'codigo_postal' => $datosEncontrados['cpFiscal'] ?? 'No disponible'
-            ];
+            $respuesta['message'] = 'Error de base de datos: ' . $e->getMessage();
+            $respuesta['debug_db_error'] = $e->getMessage();
         }
     }
 
     if (!empty($datosEncontrados)) {
         $respuesta['success'] = true;
         $respuesta['data'] = $datosEncontrados;
-        $respuesta['message'] = 'Datos extraídos correctamente.';
+        $respuesta['message'] = 'Datos extraídos y validados correctamente.';
     } else {
         $respuesta['message'] = 'Se leyó el PDF, pero no se pudieron extraer datos.';
     }

@@ -194,23 +194,26 @@
 </nav>
 <!--end::Header Admin-->
 
-<nav aria-label="breadcrumb" class="bg-light border-top" style="padding-left: 1rem;">
+<nav aria-label="breadcrumb" class="bg-light border-top py-2" style="padding-left: 1rem;">
     <div class="w-100">
         <div class="row align-items-center">
-                <ol class="breadcrumb mb-0">
+            <div class="col-md-10">
+            <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item">
                         <a href="panel?pg=inicio-admin" class="text-decoration-none text-primary fw-semibold">
                             <i class="bi bi-house me-1"></i>Inicio
                         </a>
                     </li>
-                    <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">
+                    <li class="breadcrumb-item active text-primary fw-bold" aria-current="page">
                         <?php
                         $pageTitle = ucfirst(str_replace(['-', '_'], ' ', $pagePath));
                         echo $pageTitle === 'Inicio admin' ? 'Panel Principal' : $pageTitle;
                         ?>
                     </li>
                 </ol>
-            <div class="col-auto ms-auto">
+            </div>
+                
+            <div class="col-md-2 ms-auto d-flex align-items-center">
                 <div class="d-flex align-items-center">
                     <small class="text-muted me-3">
                         <i class="bi bi-clock me-1"></i>
@@ -222,6 +225,7 @@
                     </small>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </nav>

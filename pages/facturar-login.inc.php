@@ -98,8 +98,8 @@
                                 <div class="position-relative">
                                     <input type="password" class="form-control form-control-lg rounded-3 pe-5" id="inputPassword"
                                         placeholder="Tu contraseña" required>
-                                    <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0" 
-                                            id="toggleLoginPassword" style="z-index: 10;">
+                                    <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0"
+                                        id="toggleLoginPassword" style="z-index: 10;">
                                         <i class="bi bi-eye text-muted fs-5" id="iconLoginPassword"></i>
                                     </button>
                                 </div>
@@ -169,8 +169,8 @@
                         <div class="position-relative">
                             <input type="password" id="nuevaContraseña" class="form-control form-control-lg rounded-3 pe-5"
                                 placeholder="Mínimo 8 caracteres" required>
-                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0" 
-                                    id="toggleNewPassword" style="z-index: 10;">
+                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0"
+                                id="toggleNewPassword" style="z-index: 10;">
                                 <i class="bi bi-eye text-muted fs-5" id="iconNewPassword"></i>
                             </button>
                         </div>
@@ -184,8 +184,8 @@
                         <div class="position-relative">
                             <input type="password" id="confirmarContraseña" class="form-control form-control-lg rounded-3 pe-5"
                                 placeholder="ingresa nuevamente tu contraseña" required>
-                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0" 
-                                    id="toggleConfirmPassword" style="z-index: 10;">
+                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0"
+                                id="toggleConfirmPassword" style="z-index: 10;">
                                 <i class="bi bi-eye text-muted fs-5" id="iconConfirmPassword"></i>
                             </button>
                         </div>
@@ -257,10 +257,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js"></script>
 
 <!-- SweetAlert2 con fallback local -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js" 
-        onerror="this.onerror=null; this.src='js/sweetalert2.min.js';"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"
+    onerror="this.onerror=null; this.src='js/sweetalert2.min.js';"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
-      onerror="this.onerror=null; this.href='css/sweetalert2.min.css';">
+    onerror="this.onerror=null; this.href='css/sweetalert2.min.css';">
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Verificar que las librerías estén cargadas
@@ -270,24 +270,24 @@
         if (typeof bootstrap === 'undefined') {
             console.warn('Bootstrap no está disponible, funcionalidad de modales limitada');
         }
-        
-        // Función helper para SweetAlert2 con fallback
+
         window.showAlert = function(options) {
             if (typeof Swal !== 'undefined') {
                 return Swal.fire(options);
             } else {
-                // Fallback a alert nativo
                 let message = options.title || '';
                 if (options.text) {
                     message += (message ? '\\n\\n' : '') + options.text;
                 }
                 alert(message);
-                return Promise.resolve({ isConfirmed: true });
+                return Promise.resolve({
+                    isConfirmed: true
+                });
             }
         };
-        
+
         const urlParams = new URLSearchParams(window.location.search);
-        
+
         if (urlParams.has('expired')) {
             Swal.fire({
                 icon: 'warning',
@@ -300,8 +300,8 @@
             const errorType = urlParams.get('error');
             let title = 'Error de Autenticación';
             let message = 'Hubo un problema con tu sesión.';
-            
-            switch(errorType) {
+
+            switch (errorType) {
                 case 'session_invalid':
                     title = 'Sesión Inválida';
                     message = 'Tu sesión no es válida. Por favor, inicia sesión nuevamente.';
@@ -315,13 +315,12 @@
                     message = 'No tienes permisos para acceder a esa página.';
                     break;
             }
-            
+
             Swal.fire({
                 icon: 'error',
                 title: title,
                 text: message,
                 confirmButtonText: 'Entendido',
-                confirmButtonColor: '#dc3545'
             });
         } else if (urlParams.has('logout')) {
             Swal.fire({
@@ -332,7 +331,7 @@
                 showConfirmButton: false
             });
         }
-        
+
         if (urlParams.has('expired') || urlParams.has('error') || urlParams.has('logout')) {
             const cleanUrl = window.location.pathname + '?pg=facturar-login';
             window.history.replaceState({}, document.title, cleanUrl);
@@ -342,7 +341,7 @@
     function togglePasswordVisibility(inputId, buttonId, iconId) {
         const passwordInput = document.getElementById(inputId);
         const toggleIcon = document.getElementById(iconId);
-        
+
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
             toggleIcon.className = 'bi bi-eye-slash text-muted fs-5';
@@ -513,7 +512,6 @@
                     confirmButtonText: 'Continuar',
                     allowOutsideClick: false
                 }).then(() => {
-                    // Redirigir a la página de registro de información de usuarios
                     window.location.href = 'panel?pg=registro-info-usuarios';
                 });
             } else {
@@ -539,10 +537,10 @@
     //login
     document.getElementById('btnLogin').addEventListener('click', async function(event) {
         event.preventDefault();
-        
+
         const email = document.getElementById('inputEmail').value.trim();
         const password = document.getElementById('inputPassword').value;
-        
+
         // Validar campos
         if (!email || !password) {
             Swal.fire({
@@ -559,7 +557,7 @@
                 Swal.showLoading();
             }
         });
-        
+
         try {
             const res = await fetch('core/login.php', {
                 method: 'POST',
@@ -572,11 +570,11 @@
                     password: password
                 })
             });
-            
+
             if (!res.ok) {
                 throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
             }
-            
+
             const responseText = await res.text();
             let data;
             try {
@@ -586,7 +584,7 @@
                 throw new Error('El servidor devolvió una respuesta inválida');
             }
             Swal.close();
-            
+
             if (data.success) {
                 Swal.fire({
                     icon: 'success',

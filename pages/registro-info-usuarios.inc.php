@@ -1,4 +1,5 @@
 <!-- Contenedor principal -->
+<meta charset="UTF-8">
 <div class="content-wrapper bg-light">
     <div class="container py-5">
         <!-- Título de la página -->
@@ -220,7 +221,6 @@
             cargarRegimenesFiscales();
         });
 
-        // funcion para llenar los campos de dirección 
         function llenarDireccionFiscal(data) {
             if (data.colonias && data.colonias.length > 0) {
                 const coloniaSelect = document.getElementById('colonia');
@@ -255,7 +255,7 @@
             this.value = this.value.toUpperCase();
         });
 
-        async function cargarColoniasPorCP(codigoPostal) {
+        async function cargarColoniasPorCP(codigoPostal, coloniaSeleccionada = null) {
             const selectColonias = document.getElementById('colonia');
             const statusDiv = document.getElementById('cpFiscalStatus');
             const infoUbicacion = document.getElementById('infoUbicacion');
@@ -304,13 +304,17 @@
                             const option = document.createElement('option');
                             option.value = colonia.d_asenta;
                             option.textContent = `${colonia.d_asenta} (${colonia.tipo_asenta})`;
+
+                            if (coloniaSeleccionada && colonia.d_asenta === coloniaSeleccionada) {
+                                option.selected = true;
+                                console.log('Colonia seleccionada automáticamente:', coloniaSeleccionada);
+                            }
+
                             selectColonias.appendChild(option);
                         });
                     }
                 }
                 if (statusDiv) {
-
-
                     const ubicacionTexto = document.getElementById('ubicacionTexto');
                     if (ubicacionTexto && infoUbicacion) {
                         ubicacionTexto.textContent = `${result.data.municipio}, ${result.data.estado}`;
@@ -482,89 +486,91 @@
             }
         }
 
-        function llenarDireccionDirecta(data) {
-            if (data.municipioFiscal) {
-                const municipioInput = document.getElementById('municipio');
-                if (municipioInput) {
-                    municipioInput.value = data.municipioFiscal;
-                }
-            }
-
-            if (data.estadoFiscal) {
-                const estadoInput = document.getElementById('estado');
-                if (estadoInput) {
-                    estadoInput.value = data.estadoFiscal;
-                }
-            }
-        }
-
-        function llenarColoniasDirecta(colonias) {
-            const coloniaSelect = document.getElementById('colonia');
-            if (coloniaSelect && colonias && colonias.length > 0) {
-                coloniaSelect.innerHTML = '<option value="">Selecciona una colonia</option>';
-
-                colonias.forEach(colonia => {
-                    const option = document.createElement('option');
-                    option.value = colonia.d_asenta;
-                    option.textContent = `${colonia.d_asenta} (${colonia.tipo_asenta})`;
-                    coloniaSelect.appendChild(option);
-                });
-
-                console.log(`Colonias de dirección cargadas: ${colonias.length}`);
-            }
-        }
-
-        document.getElementById('btnGuardarInformacion').addEventListener('click', function(event) {
-            event.preventDefault();
-
-            const requiredFields = ['nombreFiscal', 'rfcFiscal', 'cpFiscal', 'regimenFiscal', 'calle', 'numeroExterior', 'colonia', 'municipio', 'estado'];
-            let isValid = true;
-            requiredFields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (!field || !field.value.trim()) {
-                    if (field) field.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    field.classList.remove('is-invalid');
-                }
-            });
-
-            if (!isValid) {
-                alert('Por favor completa todos los campos requeridos.');
-                return;
-            }
-
-            const data = {
-                nombre_fiscal: document.getElementById('nombreFiscal').value.trim(),
-                rfc_fiscal: document.getElementById('rfcFiscal').value.trim(),
-                cp_fiscal: document.getElementById('cpFiscal').value.trim(),
-                regimen_fiscal: document.getElementById('regimenFiscal').value.trim(),
-                calle: document.getElementById('calle').value.trim(),
-                numero_exterior: document.getElementById('numeroExterior').value.trim(),
-                numero_interior: document.getElementById('numeroInterior').value.trim(),
-                colonia: document.getElementById('colonia').value.trim(),
-                municipio: document.getElementById('municipio').value.trim(),
-                estado: document.getElementById('estado').value.trim()
-            };
-
-            fetch('core/registro-info-fiscal.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        alert('Información fiscal registrada correctamente.');
-                    } else {
-                        alert('Error al registrar información fiscal: ' + result.message);
+            function llenarDireccionDirecta(data) {
+                if (data.municipioFiscal) {
+                    const municipioInput = document.getElementById('municipio');
+                    if (municipioInput) {
+                        municipioInput.value = data.municipioFiscal;
                     }
-                })
-                .catch(error => {
-                    console.error('Error de red o JSON inválido:', error);
-                    alert('Ocurrió un error de conexión o el servidor devolvió un error inesperado.');
+                }
+
+                if (data.estadoFiscal) {
+                    const estadoInput = document.getElementById('estado');
+                    if (estadoInput) {
+                        estadoInput.value = data.estadoFiscal;
+                    }
+                }
+            }
+
+            function llenarColoniasDirecta(colonias) {
+                const coloniaSelect = document.getElementById('colonia');
+                if (coloniaSelect && colonias && colonias.length > 0) {
+                    coloniaSelect.innerHTML = '<option value="">Selecciona una colonia</option>';
+
+                    colonias.forEach(colonia => {
+                        const option = document.createElement('option');
+                        option.value = colonia.d_asenta;
+                        option.textContent = `${colonia.d_asenta} (${colonia.tipo_asenta})`;
+                        coloniaSelect.appendChild(option);
+                    });
+
+                    console.log(`Colonias de dirección cargadas: ${colonias.length}`);
+                }
+            }
+
+            document.getElementById('btnGuardarInformacion').addEventListener('click', function(event) {
+                event.preventDefault();
+
+                const requiredFields = ['nombreFiscal', 'rfcFiscal', 'cpFiscal', 'regimenFiscal', 'calle', 'numeroExterior', 'colonia', 'municipio', 'estado'];
+                let isValid = true;
+                requiredFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (!field || !field.value.trim()) {
+                        if (field) field.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
                 });
-        });
+
+                if (!isValid) {
+                    alert('Por favor completa todos los campos requeridos.');
+                    return;
+                }
+
+                const data = {
+                    nombre_fiscal: document.getElementById('nombreFiscal').value.trim(),
+                    rfc_fiscal: document.getElementById('rfcFiscal').value.trim(),
+                    cp_fiscal: document.getElementById('cpFiscal').value.trim(),
+                    regimen_fiscal: document.getElementById('regimenFiscal').value.trim(),
+                    calle: document.getElementById('calle').value.trim(),
+                    numero_exterior: document.getElementById('numeroExterior').value.trim(),
+                    numero_interior: document.getElementById('numeroInterior').value.trim(),
+                    colonia: document.getElementById('colonia').value.trim(),
+                    municipio: document.getElementById('municipio').value.trim(),
+                    estado: document.getElementById('estado').value.trim()
+                };
+
+                fetch('core/registro-info-fiscal.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+
+                        if (result.success) {
+                            alert('Información fiscal registrada correctamente.');
+                            window.location.href = 'panel?pg=inicio';
+                        } else {
+                            alert('Error al registrar información fiscal: ' + result.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error de red o JSON inválido:', error);
+                        alert('Ocurrió un error de conexión o el servidor devolvió un error inesperado.');
+                    });
+            });
     </script>

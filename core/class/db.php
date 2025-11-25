@@ -1,51 +1,60 @@
 <?php
 // core/class/db.php
-require_once dirname(__DIR__,2 ) . '/config.php';
+require_once dirname(__DIR__, 2) . '/config.php';
 
 class Database {
 
-/**
- * Parámetros del MySQL  
- */
     private $host = DB_HOST;
     private $database_name = DB_NAME;
-    private $username= DB_USER;
+    private $username = DB_USER;
     private $password = DB_PASSWORD;
+
     public $conn;
     public $tables;
 
     public function getConnection() {
         $this->conn = null;
+
         try {
-            $this->conn = new PDO("mysql:host=" . $this->host . "; charset=utf8mb4; dbname=" . $this->database_name, $this->username, $this->password);
-            $this->conn->exec("set names utf8mb4");
-            $sqlQuery = "SHOW TABLES FROM  " . $this->database_name . "";
+            $this->conn = new PDO(
+                "mysql:host={$this->host};dbname={$this->database_name};charset=utf8mb4",
+                $this->username,
+                $this->password,
+                [
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4",
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+                ]
+            );
+
+            // cargar tablas
+            $sqlQuery = "SHOW TABLES FROM  {$this->database_name}";
             $stmt = $this->conn->prepare($sqlQuery);
             $stmt->execute();
+
             $record = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $record[] = $row;
             }
+
             $this->tables = $record;
+            
         } catch (PDOException $exception) {
             echo "Database could not be connected: " . $exception->getMessage();
         }
+
         return $this->conn;
     }
-    
+
     public function chktable($tabla) {
         $result = false;
         if (!empty($this->tables)) {
-            foreach ($this->tables as $llave => $valor) {
-                foreach ($valor as $table => $field) {
-                    if ($tabla == $field) {
-                        $result = true;
-                    }
+            foreach ($this->tables as $valor) {
+                foreach ($valor as $field) {
+                    if ($tabla == $field) return true;
                 }
             }
         }
-        return $result;
+        return false;
     }
 }
-
 ?>

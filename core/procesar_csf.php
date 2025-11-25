@@ -26,18 +26,13 @@ try {
     $textoCompleto = $pdf->getText();
     $datosEncontrados = [];
 
-
     if (preg_match('/RFC:\s*([A-Z&Ñ]{3,4}\d{6}[A-Z\d]{3})/', $textoCompleto, $matches)) {
         $datosEncontrados['rfcFiscal'] = trim($matches[1]);
     }
-
     if (preg_match('/Denominación\/RazónSocial:\s*(.+?)(?=RégimenCapital|Régimen|Fechainicio)/s', $textoCompleto, $matches)) {
         $datosEncontrados['nombreFiscal'] = trim($matches[1]);
     }
-    
-    // Extraer régimen fiscal
     $patternRegimen = '/(Régimen|Regímenes)\s*[:\s].*?Régimen\s+Fecha\s*InicioFecha\s*Fin\s*(.+?)(?:\s+\d{2}\/\d{2}\/\d{4}|\s+Obligaciones:|$)/is';
-
     if (preg_match($patternRegimen, $textoCompleto, $matches)) {
         $extractedRegimen = trim($matches[2]);
         $datosEncontrados['regimenFiscal'] = preg_replace('/\s+/', ' ', $extractedRegimen);
@@ -46,11 +41,9 @@ try {
             $datosEncontrados['regimenFiscal'] = trim($matches[1]);
         }
     }
-
     if (preg_match('/CódigoPostal:(\d{5})/', $textoCompleto, $matches)) {
         $datosEncontrados['cpFiscal'] = trim($matches[1]);
     }
-
     if (preg_match('/NombredeVialidad:\s*(.+?)(?=NúmeroExterior|NúmeroInterior|Colonia|CódigoPostal)/s', $textoCompleto, $matches)) {
         $datosEncontrados['calleFiscal'] = trim($matches[1]);
     }
@@ -66,7 +59,6 @@ try {
     if (preg_match('/NombredelaColonia:\s*(.+?)(?=NombredelaLocalidad|NombredelMunicipiooDemarcaciónTerritorial|NombredelaEntidadFederativa)/s', $textoCompleto, $matches)) {
         $datosEncontrados['coloniaFiscalTexto'] = preg_replace('/\s+/', ' ', trim($matches[1])); 
     }
-
 
     $dbNeeded = !empty($datosEncontrados['cpFiscal']) || !empty($datosEncontrados['regimenFiscal']);
 
@@ -92,7 +84,7 @@ try {
                     $respuesta['debug_regimen'] = ['regimen_extraido' => $cleanedRegimen, 'validacion_fallida' => true];
                 }
             }
-
+            
             if (!empty($datosEncontrados['cpFiscal'])) {
                 $stmt = $conn->prepare("SELECT d_ciudad, d_estado, d_mnpio FROM cat_codigo_postal WHERE d_codigo = ? LIMIT 1");
                 $stmt->execute([$datosEncontrados['cpFiscal']]);
@@ -115,13 +107,14 @@ try {
                     }, $colonias);
                     
                     if (!empty($datosEncontrados['coloniaFiscalTexto'])) {
-                        $coloniaBuscada = mb_strtoupper(str_replace(['É', 'é', 'Á', 'á'], ['E', 'e', 'A', 'a'], $datosEncontrados['coloniaFiscalTexto']), 'UTF-8');
-
+                        $coloniaBuscada = ($datosEncontrados['coloniaFiscalTexto']);
+                        
                         foreach ($colonias as $colonia) {
-                            $coloniaDB = mb_strtoupper(str_replace(['É', 'é', 'Á', 'á'], ['E', 'e', 'A', 'a'], $colonia['d_asenta']), 'UTF-8');
+                            $coloniaDB = ($colonia['d_asenta']);
                             
-                            if (str_contains($coloniaDB, $coloniaBuscada) || str_contains($coloniaBuscada, $coloniaDB)) {
+                            if ($coloniaDB === $coloniaBuscada) {
                                 $datosEncontrados['coloniaFiscalSeleccionada'] = $colonia['d_asenta'];
+                                $respuesta['debug_colonia'] = ['seleccionada' => $colonia['d_asenta'], 'normalizada' => $coloniaDB];
                                 break;
                             }
                         }

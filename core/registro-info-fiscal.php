@@ -1,8 +1,8 @@
 <?php
 
-session_start();
 require_once __DIR__ . '/autoload-vendor.php';
 require_once __DIR__ . '/class/db.php';
+require_once __DIR__ . '/../config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 

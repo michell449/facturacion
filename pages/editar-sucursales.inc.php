@@ -9,8 +9,8 @@
                     <div class="col-md-8">
                         <div class="d-flex align-items-center">
                             <div>
-                                <h2 class="mb-1 fw-bold text-primary"><i class="bi bi-building-fill text-primary fs-2"></i>Nueva Sucursal</h2>
-                                <p class="text-muted mb-0">Registra una nueva sucursal para tu empresa</p>
+                                <h2 class="mb-1 fw-bold text-primary"><i class="bi bi-pencil-square text-primary fs-2"></i>Editar Sucursal</h2>
+                                <p class="text-muted mb-0">Modifica la información de la sucursal seleccionada</p>
                             </div>
                         </div>
                     </div>
@@ -26,7 +26,8 @@
         <!-- Información Básica -->
         <div class="row mb-4">
             <div class="col-12">
-                <form id="formNuevaSucursal">
+                <form id="formEditarSucursal">
+                    <input type="hidden" id="idSucursal" value="">
                     <div class="card border-0 shadow-sm rounded-4">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -238,8 +239,8 @@
                     <div class="card-body p-4">
                         <div class="row align-items-center">
                             <div class="col-md-6">
-                                <h6 class="mb-1 fw-bold">¿Listo para crear la sucursal?</h6>
-                                <small class="text-muted">Verifica que toda la información sea correcta antes de continuar</small>
+                                <h6 class="mb-1 fw-bold">¿Listo para actualizar la sucursal?</h6>
+                                <small class="text-muted">Verifica que todos los cambios sean correctos antes de guardar</small>
                             </div>
                             <div class="col-md-6">
                                 <div class="d-flex gap-2 justify-content-md-end mt-3 mt-md-0">
@@ -247,8 +248,8 @@
                                         onclick="window.history.back()">
                                         <i class="bi bi-x-circle me-2"></i>Cancelar
                                     </button>
-                                    <button type="submit" class="btn btn-primary rounded-3 fw-semibold" id="btnCrearSucursal">
-                                        <i class="bi bi-plus-circle me-2"></i>Crear Sucursal
+                                    <button type="submit" class="btn btn-success rounded-3 fw-semibold" id="btnActualizarSucursal">
+                                        <i class="bi bi-check-circle me-2"></i>Actualizar Sucursal
                                     </button>
                                 </div>
                             </div>
@@ -442,6 +443,83 @@
 </div>
 
 <script>
+    let sucursalData = null;
+
+    function obtenerIdSucursal() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        if (!id) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se proporcionó el ID de la sucursal',
+                showConfirmButton: true
+            }).then(() => {
+                window.location.href = 'panel?pg=gestion-sucursales';
+            });
+            return null;
+        }
+        return id;
+    }
+
+    // Cargar datos de la sucursal
+    async function cargarDatosSucursal(id) {
+        try {
+            const response = await fetch(`core/obtener-sucursal.php?id=${id}`);
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                sucursalData = result.data;
+                llenarFormulario(result.data);
+                return true;
+            } else {
+                throw new Error(result.message || 'Error al cargar datos de la sucursal');
+            }
+        } catch (error) {
+            console.error('Error al cargar sucursal:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al cargar sucursal',
+                text: error.message,
+                showConfirmButton: true
+            }).then(() => {
+                window.location.href = 'panel?pg=gestion-sucursales';
+            });
+            return false;
+        }
+    }
+
+    // Llenar el formulario con los datos de la sucursal
+    function llenarFormulario(data) {
+        console.log('Datos recibidos para llenar formulario:', data);
+        
+        // Agregar campo oculto con ID de empresa
+        document.getElementById('idSucursal').value = data.id_empresa;
+        
+        // Llenar campos del formulario
+        document.getElementById('razonSocial').value = data.razon_social || '';
+        document.getElementById('codigoSucursal').value = data.codigo_suc || '';
+        document.getElementById('rfcSucursal').value = data.rfc || '';
+        document.getElementById('estadoSucursal').value = data.estatus == 1 ? 'activa' : 'inactiva';
+        document.getElementById('regimenFiscal').value = data.reg_fiscal || '';
+        document.getElementById('calleSucursal').value = data.calle || '';
+        document.getElementById('codigoPostal').value = data.cp || '';
+        document.getElementById('numExterior').value = data.num_ext || '';
+        document.getElementById('numInterior').value = data.num_int || '';
+        
+        // Si hay código postal, cargar datos automáticos
+        if (data.cp) {
+            cargarDatosCP(data.cp).then(() => {
+                // Después de cargar las colonias, seleccionar la correcta
+                setTimeout(() => {
+                    if (data.colonia) {
+                        document.getElementById('colonia').value = data.colonia;
+                    }
+                }, 500);
+            });
+        }
+    }
+
     // Cargar regímenes fiscales
     async function cargarRegimenesFiscales() {
         try {
@@ -456,6 +534,11 @@
                     option.textContent = `${regimen.codigo} - ${regimen.descripcion}`;
                     select.appendChild(option);
                 });
+
+                // Si ya tenemos datos de sucursal, seleccionar el régimen correcto
+                if (sucursalData && sucursalData.reg_fiscal) {
+                    select.value = sucursalData.reg_fiscal;
+                }
             } else {
                 console.error('Error al cargar regímenes fiscales:', result.message || 'Respuesta inválida');
                 document.getElementById('regimenFiscal').innerHTML = '<option value="">Error al cargar regímenes</option>';
@@ -589,9 +672,19 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        cargarRegimenesFiscales();
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Obtener ID de la sucursal de la URL
+        const sucursalId = obtenerIdSucursal();
+        if (!sucursalId) return;
 
+        // Cargar regímenes fiscales primero
+        await cargarRegimenesFiscales();
+
+        // Luego cargar los datos de la sucursal
+        const datosCargados = await cargarDatosSucursal(sucursalId);
+        if (!datosCargados) return;
+
+        // Configurar event listeners
         setupEventListeners();
 
         let selloValidado = false;
@@ -609,7 +702,7 @@
             }
         });
 
-        document.getElementById('btnCrearSucursal').addEventListener('click', function(event) {
+        document.getElementById('btnActualizarSucursal').addEventListener('click', function(event) {
             event.preventDefault();
 
             const requiredFields = [
@@ -628,16 +721,14 @@
                 }
             });
 
-            if (allValid) {
-                console.log('Todos los campos requeridos están completos.');
-            } else {
-                console.log('Faltan campos requeridos.');
+            if (!allValid) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Campos incompletos',
                     text: 'Por favor, completa todos los campos requeridos antes de continuar.',
                     showConfirmButton: true
                 });
+                return;
             }
 
             // Validar que los campos automáticos estén llenos
@@ -653,6 +744,7 @@
             }
 
             const data = {
+                id_empresa: document.getElementById('idSucursal').value,
                 razon_social: document.getElementById('razonSocial').value.trim(),
                 codigo_sucursal: document.getElementById('codigoSucursal').value.trim(),
                 rfc_fiscal: document.getElementById('rfcSucursal').value.trim(),
@@ -665,7 +757,15 @@
                 colonia: document.getElementById('colonia').value
             };
 
-            fetch('core/registro-sucursal.php', {
+            console.log('Datos a enviar para actualización:', data);
+
+            // Mostrar loading
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Actualizando...';
+
+            fetch('core/actualizar-sucursal.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -673,21 +773,23 @@
                     body: JSON.stringify(data)
                 }).then(response => response.json())
                 .then(result => {
+                    console.log('Respuesta del servidor:', result);
+                    
                     if (result.success) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Sucursal creada',
-                            text: result.message || 'La sucursal se ha creado correctamente.',
-                            timer: 1000,
+                            title: 'Sucursal actualizada',
+                            text: result.message || 'La sucursal se ha actualizado correctamente.',
+                            timer: 1500,
                             showConfirmButton: false
                         }).then(() => {
-                            window.location.href = 'gestion-sucursales.php';
+                            window.location.href = 'panel?pg=gestion-sucursales';
                         });
                     } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error al crear sucursal',
-                            text: result.message || 'Ocurrió un error al crear la sucursal.',
+                            title: 'Error al actualizar sucursal',
+                            text: result.message || 'Ocurrió un error al actualizar la sucursal.',
                             showConfirmButton: true
                         });
                     }
@@ -699,6 +801,10 @@
                         text: 'No se pudo conectar con el servidor.',
                         showConfirmButton: true
                     });
+                }).finally(() => {
+                    // Restaurar botón
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
                 });
 
         })

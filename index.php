@@ -2,7 +2,8 @@
 ob_start();
 
 require_once 'config.php';
-require_once 'core/auth.php'; 
+require_once 'core/auth.php';
+require_once 'core/navigation.php'; 
 
 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
     check_session_expiry(); 
@@ -44,14 +45,12 @@ if (empty($pagePath)) {
     if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         $pagePath = 'facturar-login'; 
     } else {
-        if (is_admin()) {
-            $redirectTarget = 'panel?pg=inicio-admin';
-        } else {
-            $redirectTarget = 'panel?pg=inicio'; 
-        }
-        header("Location: index.php?$redirectTarget");
-        exit(); 
+        $panelUrl = get_panel_url();
+        safe_redirect("index.php?$panelUrl");
     }
+} else {
+    // Reset contador si llegamos a una página válida
+    reset_redirect_count();
 }
 
 $accessMap = [
@@ -79,6 +78,7 @@ $accessMap = [
     'admin-dashboard' => ['admin'],
     'usuarios-admin' => ['admin'],
     'reportes-admin' => ['admin'],
+    'editar-sucursales' => ['admin'],
 ];
 
 $currentPage = $pagePath;
@@ -86,35 +86,50 @@ $currentPage = $pagePath;
 if (isset($accessMap[$currentPage])) {
     
     if (in_array($currentPage, ['facturar-login', 'facturar-invitado']) && is_authenticated()) {
-        if (is_admin()) {
-            header('Location: index.php?pg=inicio-admin');
-        } else if (is_cliente()) {
-            header('Location: index.php?pg=inicio');
-        }
-        exit();
+        $panelUrl = get_panel_url();
+        safe_redirect("index.php?$panelUrl");
     }
     
     require_roles($accessMap[$currentPage]); 
     
 } else if (is_authenticated()) {
-    if (is_admin()) {
-        header('Location: index.php?pg=inicio-admin'); 
-    } else if (is_cliente()) {
-        header('Location: index.php?pg=inicio');
-    }
-    exit();
+    // Usuario autenticado pero página no en mapa de acceso
+    $panelUrl = get_panel_url();
+    safe_redirect("index.php?$panelUrl");
 } else {
-    header('Location: index.php?pg=facturar-login');
-    exit();
+    // Usuario no autenticado
+    safe_redirect('index.php?pg=facturar-login');
 }
 
 
 
 $pageInclude = "pages/$currentPage.inc.php";
 
-if (!file_exists($pageInclude)) {
-    $currentPage = '404';
-    $pageInclude = "pages/$currentPage.inc.php";
+// Verificar si la página existe y es accesible
+if (!page_exists_and_accessible($currentPage, $accessMap)) {
+    debug_log("Página no encontrada o no accesible", [
+        'page' => $currentPage,
+        'file' => $pageInclude,
+        'exists' => file_exists($pageInclude),
+        'user_role' => is_authenticated() ? (is_admin() ? 'admin' : 'cliente') : 'guest'
+    ]);
+    
+    // Evitar bucle infinito en 404
+    if ($currentPage !== '404') {
+        $currentPage = '404';
+        $pageInclude = "pages/$currentPage.inc.php";
+        
+        // Si tampoco existe el 404, crear uno básico
+        if (!file_exists($pageInclude)) {
+            http_response_code(404);
+            echo '<!DOCTYPE html><html><head><title>404 - Página no encontrada</title></head><body>';
+            echo '<h1>404 - Página no encontrada</h1>';
+            echo '<p>La página solicitada no existe.</p>';
+            echo '<a href="index.php">Volver al inicio</a>';
+            echo '</body></html>';
+            exit();
+        }
+    }
 }
 
 $pageTitle = str_replace('-', ' ', $currentPage);

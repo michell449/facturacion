@@ -16,12 +16,12 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 <div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-6 col-md-8">
+            <div class="col-lg-10 col-md-12">
                 <div class="card border-0 shadow-lg rounded-4">
                     <div class="card-body p-5 text-center">
                         <!-- Icono de error -->
                         <div class="mb-4">
-                            <div class="mx-auto" style="width: 120px; height: 120px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <div class="mx-auto bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
                                 <i class="bi bi-exclamation-triangle text-white" style="font-size: 3rem;"></i>
                             </div>
                         </div>
@@ -42,13 +42,6 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                             <button onclick="window.history.back()" class="btn btn-outline-secondary btn-lg rounded-3 px-4">
                                 <i class="bi bi-arrow-left me-2"></i>Regresar
                             </button>
-                        </div>
-                        
-                        <!-- Información adicional -->
-                        <div class="mt-5 pt-4 border-top">
-                            <small class="text-muted">
-                                Si crees que esto es un error, por favor contacta al administrador del sistema.
-                            </small>
                         </div>
                     </div>
                 </div>

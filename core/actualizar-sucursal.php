@@ -11,6 +11,39 @@ $respuesta = [
     'message' => 'Error desconocido.'
 ];
 
+// Función para manejar subida de logo
+function manejarSubidaLogo($file, $id_empresa) {
+    $upload_dir = __DIR__ . '/../uploads/logos/';
+    
+    // Crear directorio si no existe
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+    }
+    
+    // Validar tipo de archivo
+    $allowed_types = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    if (!in_array($file['type'], $allowed_types)) {
+        throw new Exception('Tipo de archivo no válido para el logo');
+    }
+    
+    // Validar tamaño (2MB máximo)
+    if ($file['size'] > 2 * 1024 * 1024) {
+        throw new Exception('El logo no puede ser mayor a 2MB');
+    }
+    
+    // Generar nombre único
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = 'logo_' . $id_empresa . '_' . time() . '.' . $extension;
+    $filepath = $upload_dir . $filename;
+    
+    // Mover archivo
+    if (move_uploaded_file($file['tmp_name'], $filepath)) {
+        return $filename;
+    } else {
+        throw new Exception('Error al subir el logo');
+    }
+}
+
 try {
 
     $id_usuario = null;
@@ -24,11 +57,20 @@ try {
         throw new Exception('Sesión de usuario no válida. ID de usuario no encontrado en la sesión.');
     }
 
-    $json_data = file_get_contents('php://input');
-    $data = json_decode($json_data, true);
+    // Determinar si es JSON o FormData
+    $content_type = $_SERVER['CONTENT_TYPE'] ?? '';
+    
+    if (strpos($content_type, 'multipart/form-data') !== false) {
+        // Es FormData (con archivos)
+        $data = $_POST;
+    } else {
+        // Es JSON
+        $json_data = file_get_contents('php://input');
+        $data = json_decode($json_data, true);
 
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception('Datos JSON inválidos: ' . json_last_error_msg());
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Datos JSON inválidos: ' . json_last_error_msg());
+        }
     }
 
     if (!isset($data['id_empresa']) || empty($data['id_empresa'])) {
@@ -36,7 +78,7 @@ try {
     }
     $id_empresa = (int)$data['id_empresa'];
     
-    $required_fields = ['rfc_fiscal', 'razon_social', 'regimen_fiscal', 'codigo_sucursal', 'codigo_postal', 'calle', 'numero_exterior', 'colonia'];
+    $required_fields = ['rfc_fiscal', 'razon_social', 'nombre_comercial', 'regimen_fiscal', 'codigo_sucursal', 'codigo_postal', 'direccion', 'colonia', 'email'];
     foreach ($required_fields as $field) {
         if (!isset($data[$field]) || empty(trim($data[$field]))) {
             throw new Exception('Falta el campo requerido: ' . $field);
@@ -45,14 +87,20 @@ try {
     
     $rfc          = mb_strtoupper(trim($data['rfc_fiscal'] ?? ''));
     $razon_social = trim($data['razon_social'] ?? '');
+    $nombre_comercial = trim($data['nombre_comercial'] ?? '');
     $reg_fiscal   = trim($data['regimen_fiscal'] ?? '');
     $codigo_suc   = trim($data['codigo_sucursal'] ?? '');
     $cp           = (int)trim($data['codigo_postal'] ?? '0');
-    $calle        = trim($data['calle'] ?? '');
-    $num_ext      = trim($data['numero_exterior'] ?? '');
-    $num_int      = empty($data['numero_interior']) ? null : trim($data['numero_interior']);
+    $direccion    = trim($data['direccion'] ?? '');
     $colonia      = trim($data['colonia'] ?? '');
-    $estatus      = trim($data['estatus'] ?? '1'); 
+    $estatus      = trim($data['estatus'] ?? '1');
+    $email        = trim($data['email'] ?? '');
+    
+    // Manejar logo
+    $logo_filename = null;
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+        $logo_filename = manejarSubidaLogo($_FILES['logo'], $id_empresa);
+    } 
 
     $estatus_lower = strtolower($estatus);
     if (in_array($estatus_lower, ['activo', 'activa', '1', 'true']) || $estatus === 1) {
@@ -72,23 +120,45 @@ try {
         throw new Exception("Ya existe otra sucursal con el código: " . $codigo_suc);
     }
     
-    $sql = "UPDATE empresas SET 
-                rfc = ?, 
-                razon_social = ?, 
-                reg_fiscal = ?, 
-                codigo_suc = ?, 
-                cp = ?, 
-                calle = ?, 
-                num_ext = ?, 
-                num_int = ?, 
-                colonia = ?, 
-                estatus = ?
-            WHERE id_empresa = ? AND id_usuario = ?";
-    
-    $params = [
-        $rfc, $razon_social, $reg_fiscal, $codigo_suc, $cp, $calle, $num_ext, $num_int, $colonia, $estatus,
-        $id_empresa, $id_usuario
-    ];
+    // Construir consulta dinámicamente dependiendo si hay logo
+    if ($logo_filename) {
+        $sql = "UPDATE empresas SET 
+                    rfc = ?, 
+                    razon_social = ?, 
+                    nombre = ?, 
+                    reg_fiscal = ?, 
+                    codigo_suc = ?, 
+                    cp = ?, 
+                    direccion = ?, 
+                    colonia = ?, 
+                    estatus = ?,
+                    correo = ?,
+                    logo = ?
+                WHERE id_empresa = ? AND id_usuario = ?";
+        
+        $params = [
+            $rfc, $razon_social, $nombre_comercial, $reg_fiscal, $codigo_suc, $cp, $direccion, $colonia, $estatus, $email, $logo_filename,
+            $id_empresa, $id_usuario
+        ];
+    } else {
+        $sql = "UPDATE empresas SET 
+                    rfc = ?, 
+                    razon_social = ?, 
+                    nombre = ?, 
+                    reg_fiscal = ?, 
+                    codigo_suc = ?, 
+                    cp = ?, 
+                    direccion = ?, 
+                    colonia = ?, 
+                    estatus = ?,
+                    correo = ?
+                WHERE id_empresa = ? AND id_usuario = ?";
+        
+        $params = [
+            $rfc, $razon_social, $nombre_comercial, $reg_fiscal, $codigo_suc, $cp, $direccion, $colonia, $estatus, $email,
+            $id_empresa, $id_usuario
+        ];
+    }
 
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);

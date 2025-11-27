@@ -29,7 +29,7 @@ try {
         throw new Exception('Datos JSON inválidos: ' . json_last_error_msg());
     }
     
-    $required_fields = ['rfc_fiscal', 'razon_social', 'regimen_fiscal', 'codigo_sucursal', 'codigo_postal', 'calle', 'numero_exterior', 'colonia'];
+    $required_fields = ['rfc_fiscal', 'razon_social','nombre_comercial', 'regimen_fiscal', 'codigo_sucursal', 'codigo_postal', 'direccion', 'colonia', 'estatus', 'email'];
     foreach ($required_fields as $field) {
         if (!isset($data[$field]) || empty(trim($data[$field]))) {
             throw new Exception('Falta el campo requerido: ' . $field);
@@ -38,20 +38,21 @@ try {
     
     $rfc          = mb_strtoupper(trim($data['rfc_fiscal'] ?? ''));
     $razon_social = trim($data['razon_social'] ?? '');
+    $nombre_comercial = trim($data['nombre_comercial'] ?? '');
     $reg_fiscal   = trim($data['regimen_fiscal'] ?? '');
     $codigo_suc   = trim($data['codigo_sucursal'] ?? '');
     $cp           = (int)trim($data['codigo_postal'] ?? '0');
-    $calle        = trim($data['calle'] ?? '');
-    $num_ext      = trim($data['numero_exterior'] ?? '');
-    $num_int      = empty($data['numero_interior']) ? null : trim($data['numero_interior']);
+    $direccion    = trim($data['direccion'] ?? '');
     $colonia      = trim($data['colonia'] ?? '');
     $estatus      = trim($data['estatus'] ?? '1'); 
+    $email        = trim($data['email'] ?? '');
+    $logo         = trim($data['logo'] ?? '');
 
     if (strlen($rfc) < 12 || strlen($rfc) > 13) {
         throw new Exception('RFC debe tener entre 12 y 13 caracteres');
     }
-    if (strlen($codigo_suc) > 5) {
-        throw new Exception('Código de sucursal no puede exceder 5 caracteres');
+    if (strlen($codigo_suc) > 10) {
+        throw new Exception('Código de sucursal no puede exceder 10 caracteres');
     }
 
 
@@ -76,13 +77,8 @@ try {
     $csf = isset($data['csf']) && !empty($data['csf']) ? trim($data['csf']) : null;
     $sello = isset($data['sello']) && !empty($data['sello']) ? trim($data['sello']) : null;
 
-    $fields = ['rfc', 'razon_social', 'reg_fiscal', 'codigo_suc', 'cp', 'calle', 'num_ext', 'num_int', 'colonia', 'estatus'];
-    $values = [$rfc, $razon_social, $reg_fiscal, $codigo_suc, $cp, $calle, $num_ext, $num_int, $colonia, $estatus];
-    
-    if ($csf !== null) {
-        $fields[] = 'csf';
-        $values[] = $csf;
-    }
+    $fields = ['rfc', 'razon_social', 'nombre', 'reg_fiscal', 'codigo_suc', 'cp', 'direccion', 'colonia', 'estatus', 'correo', 'logo'];
+    $values = [$rfc, $razon_social, $nombre_comercial, $reg_fiscal, $codigo_suc, $cp, $direccion, $colonia, $estatus, $email, $logo];
     
     if ($sello !== null) {
         $fields[] = 'sello';

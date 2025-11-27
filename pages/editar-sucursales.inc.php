@@ -1,5 +1,70 @@
 <!-- Crear Nueva Sucursal -->
 <meta charset="UTF-8">
+<style>
+    .logo-upload-container {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        padding: 20px;
+        border: 2px dashed #dee2e6;
+        border-radius: 12px;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .logo-upload-container:hover {
+        border-color: #0d6efd;
+        background: #f0f8ff;
+    }
+
+    .logo-preview {
+        flex-shrink: 0;
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
+        border: 2px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .logo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 10px;
+    }
+
+    .logo-placeholder {
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .logo-controls {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .logo-controls .btn {
+        align-self: flex-start;
+    }
+
+    @media (max-width: 768px) {
+        .logo-upload-container {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .logo-controls .btn {
+            align-self: center;
+        }
+    }
+</style>
 <div class="content-wrapper bg-light">
     <div class="container py-4">
         <!-- Título de la página -->
@@ -39,11 +104,11 @@
                                 <!-- Razon social de la Sucursal -->
                                 <div class="col-md-6">
                                     <label for="nombreSucursal" class="form-label fw-semibold">
-                                        Razon Social
+                                        Razón Social
                                     </label>
                                     <input type="text" class="form-control form-control-lg rounded-3"
-                                        id="razonSocial" placeholder="Ej: Sucursal Centro" required>
-                                    <div class="form-text">Nombre de la sucursal</div>
+                                        id="razonSocial" placeholder="Ej: Empresa XYZ" required>
+                                    <div class="form-text">Nombre de la empresa</div>
                                 </div>
 
                                 <!-- Código de Sucursal -->
@@ -61,11 +126,19 @@
                                         Estado
                                     </label>
                                     <select class="form-select form-select-lg rounded-3" id="estadoSucursal">
-                                        <option value="activa" selected>Activa</option>
-                                        <option value="inactiva">Inactiva</option>
+                                        <option value="1" selected>Activa</option>
+                                        <option value="0">Inactiva</option>
                                     </select>
                                 </div>
-
+                                <!-- nombre comercial de la sucursal -->
+                                <div class="col-md-6">
+                                    <label for="nombreComercial" class="form-label fw-semibold">
+                                        Nombre Comercial
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg rounded-3"
+                                        id="nombreComercial" placeholder="Ej: Sucursal Centro" required>
+                                    <div class="form-text">Nombre comercial de la sucursal</div>
+                                </div>
                                 <!-- RFC -->
                                 <div class="col-md-6">
                                     <label for="rfcSucursal" class="form-label fw-semibold">
@@ -86,6 +159,45 @@
                                         <!-- Las opciones se cargarán dinámicamente -->
                                     </select>
                                 </div>
+                                <!-- correo electrónico de la sucursal -->
+                                <div class="col-md-6">
+                                    <label for="emailSucursal" class="form-label fw-semibold">
+                                        Correo Electrónico
+                                    </label>
+                                    <input type="email" class="form-control form-control-lg rounded-3"
+                                        id="emailSucursal" placeholder="correo@sucursal.com" required>
+                                    <div class="form-text">Correo electrónico</div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <label for="logoSucursal" class="form-label fw-semibold">
+                                            Logotipo
+                                        </label>
+                                        <div class="logo-upload-container">
+                                            <div class="logo-preview" id="logoPreview">
+                                                <div class="logo-placeholder">
+                                                    <i class="bi bi-image display-5 text-muted"></i>
+                                                    <p class="text-muted mb-0">Vista previa del logo</p>
+                                                </div>
+                                            </div>
+                                            <div class="logo-controls">
+                                                <input type="file" class="form-control d-none" id="logoSucursal" accept=".png,.jpg,.jpeg,.svg" />
+                                                <button type="button" class="btn btn-outline-primary rounded-3 fw-semibold" id="btnSeleccionarLogo">
+                                                    <i class="bi bi-cloud-upload me-2"></i>Seleccionar Logo
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger rounded-3 fw-semibold d-none" id="btnEliminarLogo">
+                                                    <i class="bi bi-trash me-2"></i>Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="form-text">
+                                            <small class="text-muted">
+                                                Formatos: PNG, JPG, JPEG, SVG • Tamaño máximo: 2MB • Recomendado: 200x200px
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <!-- Dirección Fiscal -->
@@ -97,13 +209,13 @@
                                     </h5>
                                 </div>
                                 <div class="row g-3">
-                                    <!-- Calle -->
-                                    <div class="col-md-8">
-                                        <label for="calleSucursal" class="form-label fw-semibold">
-                                            Calle
+                                    <!-- Dirección -->
+                                    <div class="col-md-12">
+                                        <label for="direccionSucursal" class="form-label fw-semibold">
+                                            Dirección
                                         </label>
                                         <input type="text" class="form-control form-control-lg rounded-3"
-                                            id="calleSucursal" placeholder="Av. Reforma" required>
+                                            id="direccionSucursal" placeholder="Av. Reforma #123" required>
                                     </div>
 
                                     <!-- Código Postal -->
@@ -116,21 +228,8 @@
                                         <div class="form-text" id="cpStatus">Ingresa el código postal de 5 dígitos</div>
                                     </div>
 
-                                    <!-- Información de ubicación -->
-                                    <div class="col-12" id="infoUbicacion" style="display: none;">
-                                        <div class="alert alert-info border-0 rounded-3">
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-geo-alt-fill me-3 fs-5 text-info"></i>
-                                                <div>
-                                                    <strong>Ubicación:</strong>
-                                                    <span id="ubicacionTexto" class="ms-2"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <!-- Colonia -->
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         <label for="colonia" class="form-label fw-semibold">Colonia</label>
                                         <select class="form-select form-select-lg rounded-3" id="colonia" required>
                                             <option value="">Selecciona una colonia</option>
@@ -140,7 +239,7 @@
                                     <!-- Municipio/Delegación -->
                                     <div class="col-md-6">
                                         <label for="municipio" class="form-label fw-semibold">
-                                            <i class="bi bi-geo-alt me-2 text-info"></i>Municipio/Delegación
+                                            Municipio/Delegación
                                         </label>
                                         <input type="text" class="form-control form-control-lg rounded-3"
                                             id="municipio" placeholder="Se llenará automáticamente" readonly required>
@@ -157,21 +256,7 @@
                                         <div class="form-text">Se llena automáticamente con el código postal</div>
                                     </div>
 
-                                    <!-- numero exterior e interior ocpional -->
-                                    <div class="col-md-3">
-                                        <label for="numExterior" class="form-label fw-semibold">
-                                            Número Exterior
-                                        </label>
-                                        <input type="text" class="form-control form-control-lg rounded-3"
-                                            id="numExterior" placeholder="123" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="numInterior" class="form-label fw-semibold">
-                                            Número Interior
-                                        </label>
-                                        <input type="text" class="form-control form-control-lg rounded-3"
-                                            id="numInterior" placeholder="(opcional)">
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -180,78 +265,61 @@
         </div>
 
         <!-- Documentos Fiscales -->
-        <div class="row mb-4 py-5">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div>
-                                <h5 class="fw-bold mb-1 text-primary">
-                                    <i class="bi bi-shield-check me-2"></i>Documentos Fiscales
-                                </h5>
-                                <p class="text-muted small mb-0">
-                                    Puedes subir estos documentos ahora o después desde la gestión de sucursales
-                                </p>
-                            </div>
-                        </div>
-                        <div class="row g-4">
-                            <!-- Constancia de Situación Fiscal -->
-                            <div class="col-lg-6">
-                                <div class="card border-2 border-primary border-dashed rounded-4 h-100">
-                                    <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
-                                        <div class="mb-3">
-                                            <i class="bi bi-file-earmark-pdf display-1 text-primary opacity-75"></i>
-                                        </div>
-                                        <h6 class="text-primary fw-bold mb-2">Constancia de Situación Fiscal</h6>
-                                        <p class="text-muted small mb-3">Archivo PDF de la constancia fiscal del SAT</p>
-                                        <button type="button" class="btn btn-outline-primary rounded-3" data-bs-toggle="modal" data-bs-target="#subirConstanciaModal">
-                                            <i class="bi bi-cloud-upload me-2"></i>Seleccionar Archivo
-                                        </button>
-                                        <small class="text-muted mt-2">Opcional - Máx. 5MB</small>
-                                    </div>
+        <div class="card border-0 shadow-sm rounded-4 mt-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="fw-bold mb-1 text-primary">
+                            <i class="bi bi-shield-check me-2"></i>Documentos Fiscales
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            Administra los documentos digitales de la sucursal
+                        </p>
+                    </div>
+                </div>
+                <div class="row g-4">
+                    <!-- Sello Digital (CSD) -->
+                    <div class="col-lg-12">
+                        <div class="card border-2 border-primary border-dashed rounded-4 h-100">
+                            <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                                <div class="mb-3">
+                                    <i class="bi bi-shield-lock display-1 text-primary opacity-75"></i>
                                 </div>
-                            </div>
-                            <!-- Sello Digital (CSD) -->
-                            <div class="col-lg-6">
-                                <div class="card border-2 border-info border-dashed rounded-4 h-100">
-                                    <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
-                                        <div class="mb-3">
-                                            <i class="bi bi-shield-lock display-1 text-info opacity-75"></i>
-                                        </div>
-                                        <h6 class="text-info fw-bold mb-2">Sello Digital (CSD)</h6>
-                                        <p class="text-muted small mb-3">Certificado (.cer) y llave (.key) para facturación</p>
-                                        <button type="button" class="btn btn-outline-info rounded-3" data-bs-toggle="modal" data-bs-target="#subirSelloModal">
-                                            <i class="bi bi-shield-plus me-2"></i>Configurar Sello
-                                        </button>
-                                        <small class="text-muted mt-2">Opcional - Requerido para facturar</small>
-                                    </div>
+                                <h6 class="text-primary fw-bold mb-2">Sello Digital (CSD)</h6>
+                                <p class="text-muted small mb-3">Certificado (.cer) y llave (.key) para facturación</p>
+                                <div class="sello-status mb-3" id="selloStatus">
+                                    <span class="badge bg-secondary">No configurado</span>
                                 </div>
+                                <button type="button" class="btn btn-outline-primary rounded-3" data-bs-toggle="modal" data-bs-target="#subirSelloModal">
+                                    <i class="bi bi-shield-plus me-2"></i>Configurar Sello
+                                </button>
+                                <small class="text-muted mt-2">Requerido para facturación electrónica</small>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Botones de Acción -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <h6 class="mb-1 fw-bold">¿Listo para actualizar la sucursal?</h6>
-                                <small class="text-muted">Verifica que todos los cambios sean correctos antes de guardar</small>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="d-flex gap-2 justify-content-md-end mt-3 mt-md-0">
-                                    <button type="button" class="btn btn-outline-secondary rounded-3 fw-semibold"
-                                        onclick="window.history.back()">
-                                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                                    </button>
-                                    <button type="submit" class="btn btn-success rounded-3 fw-semibold" id="btnActualizarSucursal">
-                                        <i class="bi bi-check-circle me-2"></i>Actualizar Sucursal
-                                    </button>
-                                </div>
+    </div>
+    <!-- Botones de Acción -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="mb-1 fw-bold">¿Listo para actualizar la sucursal?</h6>
+                            <small class="text-muted">Verifica que todos los cambios sean correctos antes de guardar</small>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2 justify-content-md-end mt-3 mt-md-0">
+                                <button type="button" class="btn btn-outline-secondary rounded-3 fw-semibold"
+                                    onclick="window.history.back()">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-success rounded-3 fw-semibold" id="btnActualizarSucursal">
+                                    Actualizar Sucursal
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -260,169 +328,78 @@
         </div>
     </div>
 </div>
-</div>
-
-<!-- Modal para Subir Constancia -->
-<div class="modal fade" id="subirConstanciaModal" tabindex="-1" aria-labelledby="subirConstanciaModalLabel">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0 bg-primary text-white rounded-top-4">
-                <h5 class="modal-title fw-bold" id="subirConstanciaModalLabel">
-                    <i class="bi bi-file-earmark-pdf me-2"></i>Subir Constancia de Situación Fiscal
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="alert alert-info border-0 rounded-3 mb-4">
-                    <div class="d-flex">
-                        <i class="bi bi-info-circle-fill me-3 fs-5 text-info"></i>
-                        <div>
-                            <h6 class="mb-2 fw-bold">Requisitos del archivo</h6>
-                            <ul class="small mb-0 ps-3">
-                                <li>La constancia debe estar vigente</li>
-                                <li>El RFC debe coincidir con el registrado</li>
-                                <li>Solo archivos PDF de máximo 5 MB</li>
-                                <li>Los campos se llenarán automáticamente</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <form id="formSubirConstancia">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="sucursalConstancia" class="form-label fw-semibold">
-                                Sucursal
-                            </label>
-                            <input type="text" class="form-control form-control-lg rounded-3"
-                                id="sucursalConstancia" placeholder="Sucursal Centro" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="fechaEmision" class="form-label fw-semibold">
-                                <i class="bi bi-calendar me-2 text-info"></i>Fecha de Emisión
-                            </label>
-                            <input type="date" class="form-control form-control-lg rounded-3"
-                                id="fechaEmision" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="fechaVigencia" class="form-label fw-semibold">
-                                Fecha de Vigencia
-                            </label>
-                            <input type="date" class="form-control form-control-lg rounded-3"
-                                id="fechaVigencia" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="rfcConstancia" class="form-label fw-semibold">
-                                RFC
-                            </label>
-                            <input type="text" class="form-control form-control-lg rounded-3"
-                                id="rfcConstancia" placeholder="XAXX010101000" required>
-                        </div>
-
-                        <div class="col-12">
-                            <label for="archivoConstancia" class="form-label fw-semibold">
-                                Archivo PDF
-                            </label>
-                            <input type="file" class="form-control form-control-lg rounded-3"
-                                id="archivoConstancia" accept=".pdf" required>
-                            <div class="form-text">Solo archivos PDF, máximo 5 MB</div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0 bg-light rounded-bottom-4">
-                <button type="button" class="btn btn-outline-secondary rounded-3 fw-semibold" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle me-2"></i>Cancelar
-                </button>
-                <button type="button" class="btn btn-primary rounded-3 fw-semibold" id="btnSubirConstancia">
-                    <i class="bi bi-cloud-upload me-2"></i>Subir Constancia
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Modal para subir Sello Digital -->
 <div class="modal fade" id="subirSelloModal" tabindex="-1" aria-labelledby="subirSelloModalLabel">
     <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0 bg-info text-white rounded-top-4">
+            <div class="modal-header border-0 bg-primary text-white rounded-top-4">
                 <h5 class="modal-title fw-bold" id="subirSelloModalLabel">
                     <i class="bi bi-shield-lock me-2"></i>Configurar Sello Digital (CSD)
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body p-4">
-                <form id="formSelloNuevo">
-                    <div class="alert alert-warning border-0 rounded-3 mb-4">
+                <form id="formSelloDigital">
+                    <div class="alert alert-info border-0 rounded-3 mb-4">
                         <div class="d-flex">
-                            <i class="bi bi-shield-exclamation-fill me-3 fs-5 text-warning"></i>
+                            <i class="bi bi-primary-circle-fill me-3 fs-5 text-primary"></i>
                             <div>
-                                <h6 class="fw-bold mb-2">Información de Seguridad</h6>
-                                <ul class="small mb-0 ps-3">
-                                    <li>Los archivos se almacenan encriptados</li>
-                                    <li>La contraseña se valida pero no se guarda</li>
-                                    <li>Se verifica la correspondencia certificado-llave</li>
-                                    <li>Solo se aceptan archivos .cer y .key válidos</li>
-                                </ul>
+                                <h6 class="fw-bold mb-2">Sello Digital (CSD)</h6>
+                                <p class="small mb-0">
+                                    - Sube los archivos del certificado digital (.cer) y la llave privada (.key)
+                                    necesarios para la facturación electrónica. Los archivos se almacenarán de forma segura.
+                                </p>
+                                <p class="small mb-0">
+                                    - Ingresa tu clave privada, esta se guardara encriptada y de forma segura.
+                                </p>
                             </div>
                         </div>
                     </div>
 
+                    <!-- campo para subir la clave privada -->
+                    <div class="mb-4">
+                        <label for="inputPassword" class="form-label fw-semibold">
+                            <i class="bi bi-lock me-1 text-primary"></i> Contraseña
+                        </label>
+                        <div class="position-relative">
+                            <input type="password" class="form-control form-control-lg rounded-3 pe-5" id="inputPassword"
+                                placeholder="Tu contraseña" required>
+                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0"
+                                id="toggleLoginPassword" style="z-index: 10;">
+                                <i class="bi bi-eye text-muted fs-5" id="iconLoginPassword"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="numeroSerieNuevo" class="form-label fw-semibold">
-                                Número de Serie
-                            </label>
-                            <input type="text" class="form-control form-control-lg rounded-3"
-                                id="numeroSerieNuevo" placeholder="30001000000400002345"
-                                maxlength="20" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="fechaVigenciaNuevo" class="form-label fw-semibold">
-                                Fecha de Vigencia
-                            </label>
-                            <input type="date" class="form-control form-control-lg rounded-3"
-                                id="fechaVigenciaNuevo" required>
-                        </div>
-
-                        <div class="col-12">
-                            <label for="passwordNuevo" class="form-label fw-semibold">
-                                Contraseña de Llave Privada
-                            </label>
-                            <input type="password" class="form-control form-control-lg rounded-3"
-                                id="passwordNuevo" placeholder="Contraseña del archivo .key" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="archivoCerNuevo" class="form-label fw-semibold">
+                            <label for="archivoCer" class="form-label fw-semibold">
                                 Certificado (.cer)
                             </label>
                             <input type="file" class="form-control form-control-lg rounded-3"
-                                id="archivoCerNuevo" accept=".cer" required>
-                            <div class="form-text">Archivo de certificado .cer</div>
+                                id="archivoCer" accept=".cer" required>
+                            <div class="form-text">Selecciona el archivo de certificado .cer</div>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="archivoKeyNuevo" class="form-label fw-semibold">
+                            <label for="archivoKey" class="form-label fw-semibold">
                                 Llave Privada (.key)
                             </label>
                             <input type="file" class="form-control form-control-lg rounded-3"
-                                id="archivoKeyNuevo" accept=".key" required>
-                            <div class="form-text">Archivo de llave privada .key</div>
+                                id="archivoKey" accept=".key" required>
+                            <div class="form-text">Selecciona el archivo de llave privada .key</div>
                         </div>
 
-                        <!-- Estado de validación -->
-                        <div class="col-12" id="validacionNuevoPanel" style="display: none;">
+                        <!-- Estado de los archivos seleccionados -->
+                        <div class="col-12" id="archivosSeleccionados" style="display: none;">
                             <div class="card bg-light border-0 rounded-3">
                                 <div class="card-body">
                                     <h6 class="fw-bold mb-3">
-                                        Estado de Validación
+                                        <i class="bi bi-check-circle text-success me-2"></i>Archivos Seleccionados
                                     </h6>
-                                    <div id="validacionNuevoResultados">
-                                        <!-- Resultados dinámicos -->
+                                    <div id="listaArchivos">
+                                        <!-- Lista de archivos seleccionados -->
                                     </div>
                                 </div>
                             </div>
@@ -432,10 +409,10 @@
             </div>
             <div class="modal-footer border-0 bg-light rounded-bottom-4">
                 <button type="button" class="btn btn-outline-secondary rounded-3 fw-semibold" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                    Cancelar
                 </button>
-                <button type="button" class="btn btn-info text-white rounded-3 fw-semibold" id="btnValidarNuevo">
-                    <i class="bi bi-shield-check me-2"></i>Validar Sello
+                <button type="button" class="btn btn-primary text-white rounded-3 fw-semibold" id="btnGuardarSello">
+                    Guardar Sello Digital
                 </button>
             </div>
         </div>
@@ -492,21 +469,33 @@
     // Llenar el formulario con los datos de la sucursal
     function llenarFormulario(data) {
         console.log('Datos recibidos para llenar formulario:', data);
-        
+
         // Agregar campo oculto con ID de empresa
         document.getElementById('idSucursal').value = data.id_empresa;
-        
+
         // Llenar campos del formulario
         document.getElementById('razonSocial').value = data.razon_social || '';
         document.getElementById('codigoSucursal').value = data.codigo_suc || '';
         document.getElementById('rfcSucursal').value = data.rfc || '';
-        document.getElementById('estadoSucursal').value = data.estatus == 1 ? 'activa' : 'inactiva';
+        document.getElementById('estadoSucursal').value = data.estatus == 1 ? '1' : '0';
+        document.getElementById('nombreComercial').value = data.nombre || '';
         document.getElementById('regimenFiscal').value = data.reg_fiscal || '';
-        document.getElementById('calleSucursal').value = data.calle || '';
+        document.getElementById('emailSucursal').value = data.correo || '';
+        document.getElementById('direccionSucursal').value = data.direccion || '';
         document.getElementById('codigoPostal').value = data.cp || '';
-        document.getElementById('numExterior').value = data.num_ext || '';
-        document.getElementById('numInterior').value = data.num_int || '';
-        
+
+        // Cargar logo si existe
+        if (data.logo) {
+            mostrarLogoExistente(data.logo);
+        }
+
+        // Actualizar estado del sello digital
+        if (data.file_cer && data.file_key) {
+            actualizarEstadoSello(true);
+        } else {
+            actualizarEstadoSello(false);
+        }
+
         // Si hay código postal, cargar datos automáticos
         if (data.cp) {
             cargarDatosCP(data.cp).then(() => {
@@ -672,6 +661,243 @@
         }
     }
 
+    // Función para mostrar logo existente
+    function mostrarLogoExistente(logoPath) {
+        const logoPreview = document.getElementById('logoPreview');
+        const btnEliminar = document.getElementById('btnEliminarLogo');
+
+        logoPreview.innerHTML = `<img src="uploads/logos/${logoPath}" alt="Logo de la sucursal" />`;
+        btnEliminar.classList.remove('d-none');
+    }
+
+    // Función para actualizar estado del sello digital
+    function actualizarEstadoSello(tieneConfigurado) {
+        const selloStatus = document.getElementById('selloStatus');
+        if (tieneConfigurado) {
+            selloStatus.innerHTML = '<span class="badge bg-success">Configurado</span>';
+        } else {
+            selloStatus.innerHTML = '<span class="badge bg-secondary">No configurado</span>';
+        }
+    }
+
+    // Función para manejar la selección de logo
+    function setupLogoHandler() {
+        const logoInput = document.getElementById('logoSucursal');
+        const btnSeleccionar = document.getElementById('btnSeleccionarLogo');
+        const btnEliminar = document.getElementById('btnEliminarLogo');
+        const logoPreview = document.getElementById('logoPreview');
+
+        btnSeleccionar.addEventListener('click', function() {
+            logoInput.click();
+        });
+
+        logoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validar tipo de archivo
+                const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+                if (!allowedTypes.includes(file.type)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Archivo no válido',
+                        text: 'Solo se permiten archivos PNG, JPG, JPEG o SVG'
+                    });
+                    return;
+                }
+
+                // Validar tamaño (2MB máximo)
+                if (file.size > 2 * 1024 * 1024) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Archivo muy grande',
+                        text: 'El archivo no puede ser mayor a 2MB'
+                    });
+                    return;
+                }
+
+                // Mostrar vista previa
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    logoPreview.innerHTML = `<img src="${e.target.result}" alt="Logo preview" />`;
+                    btnEliminar.classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        btnEliminar.addEventListener('click', function() {
+            logoInput.value = '';
+            logoPreview.innerHTML = `
+                <div class="logo-placeholder">
+                    <i class="bi bi-image display-4 text-muted"></i>
+                    <p class="text-muted mb-0">Vista previa del logo</p>
+                </div>
+            `;
+            btnEliminar.classList.add('d-none');
+        });
+    }
+
+    // Variables para el sello digital
+    let archivosSelloDigital = {
+        certificado: null,
+        llave: null
+    };
+
+    // Función para manejar el sello digital
+    function setupSelloHandler() {
+        // Manejar selección de archivo certificado
+        document.getElementById('archivoCer').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.name.toLowerCase().endsWith('.cer')) {
+                    archivosSelloDigital.certificado = file;
+                    actualizarListaArchivos();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Archivo no válido',
+                        text: 'Solo se permiten archivos .cer para el certificado'
+                    });
+                    e.target.value = '';
+                }
+            }
+        });
+
+        // Manejar selección de archivo llave
+        document.getElementById('archivoKey').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.name.toLowerCase().endsWith('.key')) {
+                    archivosSelloDigital.llave = file;
+                    actualizarListaArchivos();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Archivo no válido',
+                        text: 'Solo se permiten archivos .key para la llave privada'
+                    });
+                    e.target.value = '';
+                }
+            }
+        });
+
+        // Manejar guardado del sello digital
+        document.getElementById('btnGuardarSello').addEventListener('click', function() {
+            if (!archivosSelloDigital.certificado || !archivosSelloDigital.llave) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Archivos faltantes',
+                    text: 'Debes seleccionar tanto el certificado (.cer) como la llave privada (.key)'
+                });
+                return;
+            }
+
+            // Crear FormData para enviar archivos
+            const formData = new FormData();
+            formData.append('certificado', archivosSelloDigital.certificado);
+            formData.append('llave_privada', archivosSelloDigital.llave);
+            formData.append('id_empresa', document.getElementById('idSucursal').value);
+
+            // Mostrar loading en el botón
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Guardando...';
+
+            // Enviar archivos al servidor
+            fetch('core/subir-sello-digital.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sello Digital Configurado',
+                            text: result.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            // Actualizar estado visual
+                            actualizarEstadoSello(true);
+
+                            // Cerrar el modal
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('subirSelloModal'));
+                            modal.hide();
+
+                            // Limpiar formulario
+                            document.getElementById('archivoCer').value = '';
+                            document.getElementById('archivoKey').value = '';
+                            archivosSelloDigital = {
+                                certificado: null,
+                                llave: null
+                            };
+                            actualizarListaArchivos();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error al guardar',
+                            text: result.message
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo conectar con el servidor'
+                    });
+                })
+                .finally(() => {
+                    // Restaurar botón
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+        });
+    }
+
+    // Función para actualizar la lista de archivos seleccionados
+    function actualizarListaArchivos() {
+        const panel = document.getElementById('archivosSeleccionados');
+        const lista = document.getElementById('listaArchivos');
+
+        let html = '';
+
+        if (archivosSelloDigital.certificado) {
+            html += `
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-file-earmark-text text-primary me-3"></i>
+                    <div>
+                        <strong>Certificado:</strong> ${archivosSelloDigital.certificado.name}
+                        <small class="text-muted d-block">${(archivosSelloDigital.certificado.size / 1024).toFixed(2)} KB</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (archivosSelloDigital.llave) {
+            html += `
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-key text-warning me-3"></i>
+                    <div>
+                        <strong>Llave Privada:</strong> ${archivosSelloDigital.llave.name}
+                        <small class="text-muted d-block">${(archivosSelloDigital.llave.size / 1024).toFixed(2)} KB</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (html) {
+            lista.innerHTML = html;
+            panel.style.display = 'block';
+        } else {
+            panel.style.display = 'none';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', async function() {
         // Obtener ID de la sucursal de la URL
         const sucursalId = obtenerIdSucursal();
@@ -686,28 +912,15 @@
 
         // Configurar event listeners
         setupEventListeners();
-
-        let selloValidado = false;
-
-        document.getElementById('numeroSerieNuevo').addEventListener('input', function() {
-            const valor = this.value.replace(/\D/g, '');
-            this.value = valor;
-
-            if (valor.length === 20) {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            } else if (valor.length > 0) {
-                this.classList.remove('is-valid');
-                this.classList.add('is-invalid');
-            }
-        });
+        setupLogoHandler();
+        setupSelloHandler();
 
         document.getElementById('btnActualizarSucursal').addEventListener('click', function(event) {
             event.preventDefault();
 
             const requiredFields = [
-                'razonSocial', 'codigoSucursal', 'rfcSucursal', 'estadoSucursal', 'regimenFiscal',
-                'calleSucursal', 'codigoPostal', 'colonia', 'numExterior'
+                'razonSocial', 'codigoSucursal', 'rfcSucursal', 'estadoSucursal', 'nombreComercial', 'regimenFiscal', 'emailSucursal',
+                'direccionSucursal', 'codigoPostal', 'colonia'
             ];
 
             let allValid = true;
@@ -743,21 +956,27 @@
                 return;
             }
 
-            const data = {
-                id_empresa: document.getElementById('idSucursal').value,
-                razon_social: document.getElementById('razonSocial').value.trim(),
-                codigo_sucursal: document.getElementById('codigoSucursal').value.trim(),
-                rfc_fiscal: document.getElementById('rfcSucursal').value.trim(),
-                estatus: document.getElementById('estadoSucursal').value,
-                regimen_fiscal: document.getElementById('regimenFiscal').value,
-                codigo_postal: document.getElementById('codigoPostal').value.trim(),
-                calle: document.getElementById('calleSucursal').value.trim(),
-                numero_exterior: document.getElementById('numExterior').value.trim(),
-                numero_interior: document.getElementById('numInterior').value.trim() || null,
-                colonia: document.getElementById('colonia').value
-            };
+            // Crear FormData para manejar archivos
+            const formData = new FormData();
+            formData.append('id_empresa', document.getElementById('idSucursal').value);
+            formData.append('razon_social', document.getElementById('razonSocial').value.trim());
+            formData.append('codigo_sucursal', document.getElementById('codigoSucursal').value.trim());
+            formData.append('rfc_fiscal', document.getElementById('rfcSucursal').value.trim());
+            formData.append('estatus', document.getElementById('estadoSucursal').value);
+            formData.append('nombre_comercial', document.getElementById('nombreComercial').value.trim());
+            formData.append('regimen_fiscal', document.getElementById('regimenFiscal').value);
+            formData.append('email', document.getElementById('emailSucursal').value.trim());
+            formData.append('codigo_postal', document.getElementById('codigoPostal').value.trim());
+            formData.append('direccion', document.getElementById('direccionSucursal').value.trim());
+            formData.append('colonia', document.getElementById('colonia').value);
 
-            console.log('Datos a enviar para actualización:', data);
+            // Agregar logo si se seleccionó uno nuevo
+            const logoFile = document.getElementById('logoSucursal').files[0];
+            if (logoFile) {
+                formData.append('logo', logoFile);
+            }
+
+            console.log('Datos a enviar para actualización');
 
             // Mostrar loading
             const btn = this;
@@ -767,14 +986,11 @@
 
             fetch('core/actualizar-sucursal.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
+                    body: formData
                 }).then(response => response.json())
                 .then(result => {
                     console.log('Respuesta del servidor:', result);
-                    
+
                     if (result.success) {
                         Swal.fire({
                             icon: 'success',

@@ -28,7 +28,7 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
     
-    $stmt = $conn->prepare("SELECT id_empresa, razon_social, codigo_suc, rfc, reg_fiscal, cp, calle, num_ext, num_int, colonia, estatus, csf, sello FROM empresas WHERE id_usuario = ? ORDER BY razon_social ASC");
+    $stmt = $conn->prepare("SELECT id_empresa, razon_social, nombre, codigo_suc, rfc, reg_fiscal, cp, direccion, colonia, estatus, logo, correo, file_cer, file_key FROM empresas WHERE id_usuario = ? ORDER BY razon_social ASC");
     $stmt->execute([$id_usuario]);
     $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

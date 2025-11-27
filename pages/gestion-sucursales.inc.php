@@ -1,4 +1,24 @@
 <!-- SECCIÓN DE ENCABEZADO -->
+<style>
+    .logo-container {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        overflow: hidden;
+    }
+
+    .logo-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 6px;
+    }
+</style>
 <div class="container py-4">
     <!-- Fila para el título y el botón de regresar -->
     <div class="row mb-4 align-items-center">
@@ -68,7 +88,12 @@
             <div class="card-header bg-white border-0 pb-0">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
-                        <div class="col-12 text-primary">
+                        <div class="sucursal-logo me-3">
+                            <div class="logo-container">
+                                <i class="bi bi-building fs-2 text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="text-primary">
                             <h6 class="fw-bold mb-0 sucursal-nombre">Sucursal</h6>
                             <small class="text-muted sucursal-codigo">Código</small>
                         </div>
@@ -90,7 +115,8 @@
                         <i class="bi bi-card-text me-2"></i>Información Fiscal
                     </h6>
                     <p class="mb-1"><strong>RFC:</strong> <span class="sucursal-rfc">RFC</span></p>
-                    <p class="mb-0"><strong>Régimen:</strong> <span class="sucursal-regimen">Régimen</span></p>
+                    <p class="mb-1"><strong>Régimen:</strong> <span class="sucursal-regimen">Régimen</span></p>
+                    <p class="mb-1 sucursal-email"> <strong><i class="bi bi-envelope me-1"> Correo:</i></strong> <span class="sucursal-correo">email@empresa.com</span></p>
                 </div>
 
                 <!-- Documentos Fiscales -->
@@ -98,26 +124,6 @@
                     <h6 class="text-muted mb-3">
                         <i class="bi bi-shield-check me-2"></i>Documentos Fiscales
                     </h6>
-
-                    <!-- Constancia de Situación Fiscal -->
-                    <div class="card bg-light border-0 rounded-3 mb-2">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div>
-                                        <h6 class="mb-0 small fw-bold">Constancia Fiscal</h6>
-                                        <small class="text-muted csf-estado">No disponible</small>
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    <button type="button" class="btn btn-outline-primary btn-sm btn-csf">
-                                        <i class="bi bi-upload"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Sello Digital -->
                     <div class="card bg-light border-0 rounded-3">
                         <div class="card-body p-3">
@@ -129,7 +135,7 @@
                                     </div>
                                 </div>
                                 <div class="text-end">
-                                    <button type="button" class="btn btn-outline-info btn-sm btn-sello">
+                                    <button type="button" class="btn btn-outline-primary btn-sm btn-sello">
                                         <i class="bi bi-upload"></i>
                                     </button>
                                 </div>
@@ -170,7 +176,7 @@
         }
     }
     
-    // Mostrar las sucursales en el contenedor
+    // Mostrar las sucursales
     function mostrarSucursales(sucursales) {
         const contenedor = document.getElementById('contenedorSucursales');
         const template = document.getElementById('templateSucursal');
@@ -180,7 +186,7 @@
             return;
         }
         
-        // Limpiar contenedor
+        // Limpiar
         contenedor.innerHTML = '';
         
         if (sucursales.length === 0) {
@@ -191,20 +197,21 @@
         sucursales.forEach(sucursal => {
             const clone = template.content.cloneNode(true);
             
-            // Llenar datos básicos
+            // Llenar datos
             clone.querySelector('.sucursal-nombre').textContent = sucursal.razon_social || 'Sin nombre';
             clone.querySelector('.sucursal-codigo').textContent = sucursal.codigo_suc || 'Sin código';
             clone.querySelector('.sucursal-rfc').textContent = sucursal.rfc || 'Sin RFC';
             clone.querySelector('.sucursal-regimen').textContent = sucursal.reg_fiscal || 'Sin régimen';
+            clone.querySelector('.sucursal-correo').textContent = sucursal.correo || 'Sin correo';
+            
+            // Logo
+            const logoContainer = clone.querySelector('.logo-container');
+            if (sucursal.logo) {
+                logoContainer.innerHTML = `<img src="uploads/logos/${sucursal.logo}" alt="Logo de ${sucursal.razon_social}" />`;
+            }
             
             // Dirección
-            let direccion = sucursal.calle || 'Sin dirección';
-            if (sucursal.num_ext) {
-                direccion += ` ${sucursal.num_ext}`;
-            }
-            if (sucursal.num_int) {
-                direccion += ` Int. ${sucursal.num_int}`;
-            }
+            let direccion = sucursal.direccion || 'Sin dirección';
             clone.querySelector('.sucursal-direccion').textContent = direccion;
             clone.querySelector('.sucursal-ubicacion').textContent = `${sucursal.colonia || ''}, CP ${sucursal.cp || ''}`;
             
@@ -219,18 +226,9 @@
             }
             
             // Estado de documentos
-            const csfEstado = clone.querySelector('.csf-estado');
             const selloEstado = clone.querySelector('.sello-estado');
             
-            if (sucursal.csf) {
-                csfEstado.textContent = 'Disponible';
-                csfEstado.className = 'text-success';
-            } else {
-                csfEstado.textContent = 'No disponible';
-                csfEstado.className = 'text-muted';
-            }
-            
-            if (sucursal.sello) {
+            if (sucursal.file_cer && sucursal.file_key) {
                 selloEstado.textContent = 'Configurado';
                 selloEstado.className = 'text-success';
             } else {
@@ -238,7 +236,6 @@
                 selloEstado.className = 'text-muted';
             }
             
-            // Event listeners para botones
             const btnEditar = clone.querySelector('.btn-editar');
             const btnEliminar = clone.querySelector('.btn-eliminar');
             const btnCsf = clone.querySelector('.btn-csf');
@@ -246,14 +243,12 @@
             
             btnEditar.addEventListener('click', () => editarSucursal(sucursal));
             btnEliminar.addEventListener('click', () => eliminarSucursal(sucursal));
-            btnCsf.addEventListener('click', () => gestionarCSF(sucursal));
             btnSello.addEventListener('click', () => gestionarSello(sucursal));
             
             contenedor.appendChild(clone);
         });
     }
     
-    // Actualizar estadísticas
     function actualizarEstadisticas(sucursales) {
         const estadisticas = document.getElementById('estadisticasSucursales');
         if (!estadisticas) return;
@@ -311,9 +306,7 @@
         }
     }
     
-    // Funciones de acciones
     function editarSucursal(sucursal) {
-        // Redireccionar a la página de edición con el ID de la sucursal usando el sistema de panel
         const sucursalId = sucursal.id_empresa;
         if (sucursalId) {
             window.location.href = `panel?pg=editar-sucursales&id=${sucursalId}`;
@@ -340,10 +333,42 @@
     }
     
     function gestionarSello(sucursal) {
-        alert(`Gestionar Sello Digital\nSucursal: ${sucursal.razon_social}\nEstado actual: ${sucursal.sello ? 'Configurado' : 'No configurado'}`);
+        const tieneArchivos = sucursal.file_cer && sucursal.file_key;
+        const estadoActual = tieneArchivos ? 'Configurado' : 'No configurado';
+        
+        Swal.fire({
+            title: 'Gestión de Sello Digital',
+            html: `
+                <div class="text-start">
+                    <p><strong>Sucursal:</strong> ${sucursal.razon_social}</p>
+                    <p><strong>Código:</strong> ${sucursal.codigo_suc}</p>
+                    <p><strong>Estado actual:</strong> <span class="${tieneArchivos ? 'text-success' : 'text-muted'}">${estadoActual}</span></p>
+                    ${tieneArchivos ? `
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <h6 class="mb-2">Archivos configurados:</h6>
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                                <small>Certificado: ${sucursal.file_cer}</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-key text-warning me-2"></i>
+                                <small>Llave Privada: ${sucursal.file_key}</small>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: tieneArchivos ? 'Actualizar Sello' : 'Configurar Sello',
+            cancelButtonText: 'Cerrar',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redirigir a la página de editar sucursal donde está el modal del sello
+                window.location.href = `panel?pg=editar-sucursales&id=${sucursal.id_empresa}`;
+            }
+        });
     }
     
-    // Inicializar cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {
         cargarSucursales();
     });
@@ -386,7 +411,6 @@
                         timer: 1000,
                         showConfirmButton: false
                     });
-                    // Recargar la lista de sucursales
                     cargarSucursales();
                 } else {
                     throw new Error(result_api.message || 'Error desconocido al eliminar.');

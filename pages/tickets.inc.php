@@ -24,16 +24,16 @@
                     <div class="card shadow-sm border-0 rounded-4">
                         <div class="card-body p-3">
                             <div class="row g-3 align-items-center">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-0">
                                             <i class="bi bi-search text-muted"></i>
                                         </span>
                                         <input type="text" class="form-control border-0 bg-light"
-                                            placeholder="Buscar ticket..." id="searchTickets">
+                                            placeholder="Buscar por folio..." id="searchFolio">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <select class="form-select border-0 bg-light" id="filterSucursal">
                                         <option value="">Todas las sucursales</option>
                                         <option value="centro">Sucursal Centro</option>
@@ -41,7 +41,7 @@
                                         <option value="sur">Sucursal Sur</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-0">
                                             <i class="bi bi-calendar text-muted"></i>
@@ -50,10 +50,23 @@
                                     </div>
                                 </div>
                                 <div class="col-md-2">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="bi bi-currency-dollar text-muted"></i>
+                                        </span>
+                                        <input type="number" class="form-control border-0 bg-light"
+                                            placeholder="Monto..." id="filterMonto" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select border-0 bg-light" id="filterEstadoFacturacion">
+                                        <option value="">Todos los estados</option>
+                                        <option value="pendiente">Sin Facturar</option>
+                                        <option value="facturado">Facturado</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
                                     <div class="btn-group w-100" role="group">
-                                        <button class="btn btn-outline-primary" title="Procesar Seleccionados">
-                                            <i class="bi bi-check-all"></i>
-                                        </button>
                                         <button class="btn btn-outline-primary" title="Exportar">
                                             <i class="bi bi-download"></i>
                                         </button>
@@ -68,7 +81,7 @@
             <!-- Lista de Tickets -->
             <div class="row g-4 py-4">
                 <div class="col-12">
-                    <div class="card shadow-lg border-0 rounded-4 ">
+                    <div class="card shadow-lg border-0 rounded-4">
                         <div class="card-body p-4">
                             <div class="row align-items-center">
                                 <div class="col-md-2">
@@ -78,17 +91,18 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <h6 class="mb-1">Cliente: Juan Pérez García</h6>
-                                    <small class="text-muted">RFC: PEGJ850123ABC</small>
+                                    <h6 class="mb-1">Número de Cuenta: <span class="text-primary">CTA-00456789</span></h6>
+                                    <small class="text-muted">Estado: </small>
+                                    <span class="badge bg-warning text-dark">Sin Facturar</span>
                                     <br>
-                                    <small class="text-primary">
-                                        <i class="bi bi-envelope me-1"></i>juan.perez@email.com
+                                    <small class="text-muted">
+                                        <i class="bi bi-receipt me-1"></i>Folio Ticket: F-789456
                                     </small>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="text-center">
                                         <h6 class="text-success mb-1">$1,250.00</h6>
-                                        <small class="text-muted">Folio: F-789456</small>
+                                        <small class="text-muted">Importe Total</small>
                                         <br>
                                         <small class="text-warning">
                                             <i class="bi bi-clock me-1"></i>Vence hoy
@@ -103,16 +117,13 @@
                                         <i class="bi bi-exclamation-triangle me-1"></i>2 días restantes
                                     </small>
                                 </div>
-                                <div class="col-md-2 text-end">
+                                <div class="col-md-3 text-end">
                                     <div class="btn-group-vertical" role="group">
                                         <button class="btn btn-success btn-sm mb-2" title="Procesar Factura">
                                             <i class="bi bi-check-circle me-1"></i>Facturar
                                         </button>
-                                        <button class="btn btn-outline-primary btn-sm mb-2" title="Ver Detalles">
-                                            <i class="bi bi-eye me-1"></i>Ver
-                                        </button>
-                                        <button class="btn btn-outline-warning btn-sm" title="Contactar Cliente">
-                                            <i class="bi bi-chat me-1"></i>Contactar
+                                        <button class="btn btn-outline-primary btn-sm" title="Ver Detalles">
+                                            <i class="bi bi-eye me-1"></i>Ver Detalles
                                         </button>
                                     </div>
                                 </div>
@@ -132,20 +143,21 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <h6 class="mb-1">Cliente: María López Hernández</h6>
-                                    <small class="text-muted">RFC: LOHM920315XYZ</small>
+                                    <h6 class="mb-1">Número de Cuenta: <span class="text-primary">CTA-00456790</span></h6>
+                                    <small class="text-muted">Estado: </small>
+                                    <span class="badge bg-success">Facturado</span>
                                     <br>
-                                    <small class="text-primary">
-                                        <i class="bi bi-envelope me-1"></i>maria.lopez@email.com
+                                    <small class="text-success">
+                                        <i class="bi bi-file-earmark-check me-1"></i>Folio Factura: FAC-A-2025-1235
                                     </small>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="text-center">
                                         <h6 class="text-success mb-1">$850.00</h6>
-                                        <small class="text-muted">Folio: F-789457</small>
+                                        <small class="text-muted">Importe Total</small>
                                         <br>
-                                        <small class="text-info">
-                                            <i class="bi bi-calendar me-1"></i>Vence mañana
+                                        <small class="text-success">
+                                            <i class="bi bi-check-circle me-1"></i>Procesado
                                         </small>
                                     </div>
                                 </div>
@@ -153,20 +165,20 @@
                                     <small class="text-muted d-block">Fecha de Compra:</small>
                                     <strong>04/11/2025</strong>
                                     <br>
-                                    <small class="text-warning">
-                                        <i class="bi bi-clock me-1"></i>3 días restantes
+                                    <small class="text-success">
+                                        <i class="bi bi-calendar-check me-1"></i>Facturado
                                     </small>
                                 </div>
-                                <div class="col-md-2 text-end">
+                                <div class="col-md-3 text-end">
                                     <div class="btn-group-vertical" role="group">
-                                        <button class="btn btn-success btn-sm mb-2" title="Procesar Factura">
-                                            <i class="bi bi-check-circle me-1"></i>Facturar
+                                        <button class="btn btn-info btn-sm mb-2" title="Reenviar Factura">
+                                            <i class="bi bi-arrow-repeat me-1"></i>Reenviar
                                         </button>
-                                        <button class="btn btn-outline-primary btn-sm mb-2" title="Ver Detalles">
+                                        <button class="btn btn-outline-danger btn-sm mb-2" title="Cancelar Factura">
+                                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                                        </button>
+                                        <button class="btn btn-outline-primary btn-sm" title="Ver Detalles">
                                             <i class="bi bi-eye me-1"></i>Ver
-                                        </button>
-                                        <button class="btn btn-outline-warning btn-sm" title="Contactar Cliente">
-                                            <i class="bi bi-chat me-1"></i>Contactar
                                         </button>
                                     </div>
                                 </div>
@@ -186,17 +198,18 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <h6 class="mb-1">Cliente: Carlos Rodríguez Sánchez</h6>
-                                    <small class="text-muted">RFC: ROSC870612DEF</small>
+                                    <h6 class="mb-1">Número de Cuenta: <span class="text-primary">CTA-00456791</span></h6>
+                                    <small class="text-muted">Estado: </small>
+                                    <span class="badge bg-warning text-dark">Sin Facturar</span>
                                     <br>
-                                    <small class="text-primary">
-                                        <i class="bi bi-envelope me-1"></i>carlos.rodriguez@email.com
+                                    <small class="text-muted">
+                                        <i class="bi bi-receipt me-1"></i>Folio Ticket: F-789458
                                     </small>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="text-center">
                                         <h6 class="text-success mb-1">$2,100.00</h6>
-                                        <small class="text-muted">Folio: F-789458</small>
+                                        <small class="text-muted">Importe Total</small>
                                         <br>
                                         <small class="text-success">
                                             <i class="bi bi-check me-1"></i>5 días restantes
@@ -211,16 +224,13 @@
                                         <i class="bi bi-calendar me-1"></i>Dentro del plazo
                                     </small>
                                 </div>
-                                <div class="col-md-2 text-end">
+                                <div class="col-md-3 text-end">
                                     <div class="btn-group-vertical" role="group">
                                         <button class="btn btn-success btn-sm mb-2" title="Procesar Factura">
                                             <i class="bi bi-check-circle me-1"></i>Facturar
                                         </button>
-                                        <button class="btn btn-outline-primary btn-sm mb-2" title="Ver Detalles">
-                                            <i class="bi bi-eye me-1"></i>Ver
-                                        </button>
-                                        <button class="btn btn-outline-warning btn-sm" title="Contactar Cliente">
-                                            <i class="bi bi-chat me-1"></i>Contactar
+                                        <button class="btn btn-outline-primary btn-sm" title="Ver Detalles">
+                                            <i class="bi bi-eye me-1"></i>Ver Detalles
                                         </button>
                                     </div>
                                 </div>
@@ -298,32 +308,80 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Búsqueda en tiempo real
-            document.getElementById('searchTickets').addEventListener('input', function() {
+            // Búsqueda por folio en tiempo real
+            document.getElementById('searchFolio').addEventListener('input', function() {
                 const searchTerm = this.value.toLowerCase();
-                // Lógica de búsqueda
-                console.log('Buscando:', searchTerm);
+                filtrarTickets();
+                console.log('Buscando folio:', searchTerm);
             });
 
             // Filtros
             document.getElementById('filterSucursal').addEventListener('change', function() {
+                filtrarTickets();
                 console.log('Filtrar por sucursal:', this.value);
             });
 
-            document.getElementById('filterPrioridad').addEventListener('change', function() {
-                console.log('Filtrar por prioridad:', this.value);
+            document.getElementById('filterFecha').addEventListener('change', function() {
+                filtrarTickets();
+                console.log('Filtrar por fecha:', this.value);
             });
 
-            // Botones de acción
+            document.getElementById('filterMonto').addEventListener('input', function() {
+                filtrarTickets();
+                console.log('Filtrar por monto:', this.value);
+            });
+
+            document.getElementById('filterEstadoFacturacion').addEventListener('change', function() {
+                filtrarTickets();
+                console.log('Filtrar por estado:', this.value);
+            });
+
+            // Función para filtrar tickets
+            function filtrarTickets() {
+                const folio = document.getElementById('searchFolio').value.toLowerCase();
+                const sucursal = document.getElementById('filterSucursal').value;
+                const fecha = document.getElementById('filterFecha').value;
+                const monto = document.getElementById('filterMonto').value;
+                const estado = document.getElementById('filterEstadoFacturacion').value;
+
+                // Aquí iría la lógica de filtrado
+                console.log('Aplicando filtros:', { folio, sucursal, fecha, monto, estado });
+            }
+
+            // Botones de acción - Facturar
             document.querySelectorAll('button[title="Procesar Factura"]').forEach(button => {
                 button.addEventListener('click', function() {
                     const ticketId = this.closest('.card').querySelector('h6').textContent;
                     if (confirm(`¿Procesar factura para ${ticketId}?`)) {
+                        // Aquí iría la lógica para procesar la factura
                         alert('Factura procesada exitosamente');
                     }
                 });
             });
 
+            // Botones de acción - Reenviar Factura
+            document.querySelectorAll('button[title="Reenviar Factura"]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ticketId = this.closest('.card').querySelector('h6').textContent;
+                    if (confirm(`¿Reenviar factura para ${ticketId}?`)) {
+                        // Aquí iría la lógica para reenviar la factura
+                        alert('Factura reenviada exitosamente');
+                    }
+                });
+            });
+
+            // Botones de acción - Cancelar Factura
+            document.querySelectorAll('button[title="Cancelar Factura"]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ticketId = this.closest('.card').querySelector('h6').textContent;
+                    if (confirm(`¿Está seguro de cancelar la factura para ${ticketId}? Esta acción no se puede deshacer.`)) {
+                        // Aquí iría la lógica para cancelar la factura
+                        alert('Factura cancelada');
+                    }
+                });
+            });
+
+            // Ver detalles
             document.querySelectorAll('button[title="Ver Detalles"]').forEach(button => {
                 button.addEventListener('click', function() {
                     const modal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
@@ -331,17 +389,10 @@
                 });
             });
 
-            // Selección múltiple
-            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const selectedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
-                    console.log(`${selectedCount} tickets seleccionados`);
-                });
-            });
-
             // Auto-refresh cada 30 segundos
             setInterval(function() {
-                console.log('Actualizando tickets pendientes...');
+                console.log('Actualizando tickets...');
+                // Aquí iría la lógica para actualizar la lista
             }, 30000);
         });
     </script>

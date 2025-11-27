@@ -122,8 +122,8 @@ $hora_actual = date('H:i');
                                     <h6 class="fw-bold text-success mb-2">Control de facturas</h6>
                                     <p class="text-muted mb-3">Tickets y facturas generadas</p>
                                     <div class="d-grid gap-2">
-                                        <a href="panel?pg=tickets-por-facturar" class="btn btn-success btn-sm">
-                                            <i class="bi bi-clock me-2"></i>Tickets por facturar
+                                        <a href="panel?pg=tickets" class="btn btn-success btn-sm">
+                                            <i class="bi bi-clock me-2"></i>Tickets
                                         </a>
                                         <a href="panel?pg=facturas-generadas-admin" class="btn btn-outline-success btn-sm">
                                             <i class="bi bi-file-check me-2"></i>Ver Facturas

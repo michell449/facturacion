@@ -1,9 +1,37 @@
 <?php
 
 require_once __DIR__ . '/class/db.php';
-require_once __DIR__ . '/../config.php'; 
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/sello-utils.php';
 
 header('Content-Type: application/json; charset=utf-8');
+
+function manejarSubidaLogo($file) {
+    $upload_dir = __DIR__ . '/../uploads/logos/';
+    
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+    }
+    
+    $allowed_types = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    if (!in_array($file['type'], $allowed_types)) {
+        throw new Exception('Tipo de archivo no válido para el logo');
+    }
+    
+    if ($file['size'] > 2 * 1024 * 1024) {
+        throw new Exception('El logo no puede ser mayor a 2MB');
+    }
+    
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = 'logo_' . uniqid() . '_' . time() . '.' . $extension;
+    $filepath = $upload_dir . $filename;
+    
+    if (move_uploaded_file($file['tmp_name'], $filepath)) {
+        return $filename;
+    } else {
+        throw new Exception('Error al subir el logo');
+    }
+}
 
 $respuesta = [
     'success' => false,
@@ -22,11 +50,17 @@ try {
         throw new Exception('Sesión de usuario no válida. ID de usuario no encontrado en la sesión.');
     }
     
-    $json_data = file_get_contents('php://input');
-    $data = json_decode($json_data, true);
+    $content_type = $_SERVER['CONTENT_TYPE'] ?? '';
+    
+    if (strpos($content_type, 'multipart/form-data') !== false) {
+        $data = $_POST;
+    } else {
+        $json_data = file_get_contents('php://input');
+        $data = json_decode($json_data, true);
 
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception('Datos JSON inválidos: ' . json_last_error_msg());
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Datos JSON inválidos: ' . json_last_error_msg());
+        }
     }
     
     $required_fields = ['rfc_fiscal', 'razon_social','nombre_comercial', 'regimen_fiscal', 'codigo_sucursal', 'codigo_postal', 'direccion', 'colonia', 'estatus', 'email'];
@@ -46,7 +80,11 @@ try {
     $colonia      = trim($data['colonia'] ?? '');
     $estatus      = trim($data['estatus'] ?? '1'); 
     $email        = trim($data['email'] ?? '');
-    $logo         = trim($data['logo'] ?? '');
+    
+    $logo = '';
+    if (isset($_FILES['logoSucursal']) && $_FILES['logoSucursal']['error'] === UPLOAD_ERR_OK) {
+        $logo = manejarSubidaLogo($_FILES['logoSucursal']);
+    }
 
     if (strlen($rfc) < 12 || strlen($rfc) > 13) {
         throw new Exception('RFC debe tener entre 12 y 13 caracteres');
@@ -76,9 +114,16 @@ try {
     
     $csf = isset($data['csf']) && !empty($data['csf']) ? trim($data['csf']) : null;
     $sello = isset($data['sello']) && !empty($data['sello']) ? trim($data['sello']) : null;
+    $clave_privada = isset($data['clave_privada']) && !empty($data['clave_privada']) ? trim($data['clave_privada']) : null;
 
-    $fields = ['rfc', 'razon_social', 'nombre', 'reg_fiscal', 'codigo_suc', 'cp', 'direccion', 'colonia', 'estatus', 'correo', 'logo'];
-    $values = [$rfc, $razon_social, $nombre_comercial, $reg_fiscal, $codigo_suc, $cp, $direccion, $colonia, $estatus, $email, $logo];
+    $fields = ['rfc', 'razon_social', 'nombre', 'reg_fiscal', 'codigo_suc', 'cp', 'direccion', 'colonia', 'estatus', 'correo'];
+    $values = [$rfc, $razon_social, $nombre_comercial, $reg_fiscal, $codigo_suc, $cp, $direccion, $colonia, $estatus, $email];
+    
+    // Agregar logo si existe
+    if ($logo) {
+        $fields[] = 'logo';
+        $values[] = $logo;
+    }
     
     if ($sello !== null) {
         $fields[] = 'sello';
@@ -93,8 +138,17 @@ try {
     array_unshift($values, $id_usuario);
     
     if ($stmt_insert->execute($values)) {
+        $id_empresa_nuevo = $conn->lastInsertId();
+        
+        //  cifrarla y guardarla
+        if ($clave_privada !== null) {
+            $clave_cifrada = SelloUtils::cifrarClave($clave_privada, $id_empresa_nuevo);
+            $stmt_clave = $conn->prepare("UPDATE empresas SET clave = ? WHERE id_empresa = ?");
+            $stmt_clave->execute([$clave_cifrada, $id_empresa_nuevo]);
+        }
+        
         $respuesta['message'] = 'Nueva sucursal registrada correctamente.';
-        $respuesta['id_empresa'] = $conn->lastInsertId();
+        $respuesta['id_empresa'] = $id_empresa_nuevo;
         $respuesta['success'] = true;
     } else {
         throw new Exception('Error al registrar la nueva sucursal: ' . implode(', ', $stmt_insert->errorInfo()));

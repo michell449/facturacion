@@ -480,6 +480,23 @@
                             <div class="form-text">Selecciona el archivo de llave privada .key</div>
                         </div>
 
+                        <div class="col-12">
+                            <label for="clavePrivada" class="form-label fw-semibold">
+                                <i class="bi bi-key me-2"></i>Clave Privada
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control form-control-lg rounded-start-3"
+                                    id="clavePrivada" placeholder="Ingresa la clave privada" required>
+                                <button class="btn btn-outline-secondary rounded-end-3" type="button" id="togglePassword">
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-shield-check text-success me-1"></i>
+                                Esta contraseña se almacenará de forma cifrada y segura
+                            </div>
+                        </div>
+
                         <!-- Estado de los archivos seleccionados -->
                         <div class="col-12" id="archivosSeleccionados" style="display: none;">
                             <div class="card bg-light border-0 rounded-3">
@@ -661,13 +678,33 @@
 
         setupEventListeners();
         setupLogoHandler();
+        setupPasswordToggle();
 
         let archivosSelloDigital = {
             certificado: null,
-            llave: null
+            llave: null,
+            clave: null
         };
 
-        // Manejar selección de archivo certificado
+        // Función para mostrar/ocultar contraseña
+        function setupPasswordToggle() {
+            const toggleBtn = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('clavePrivada');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (toggleBtn && passwordInput && toggleIcon) {
+                toggleBtn.addEventListener('click', function() {
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        toggleIcon.className = 'bi bi-eye-slash';
+                    } else {
+                        passwordInput.type = 'password';
+                        toggleIcon.className = 'bi bi-eye';
+                    }
+                });
+            }
+        }
+
         document.getElementById('archivoCerNuevo').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -685,7 +722,6 @@
             }
         });
 
-        // Manejar selección de archivo llave
         document.getElementById('archivoKeyNuevo').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -703,7 +739,6 @@
             }
         });
 
-        // Función para actualizar la lista de archivos seleccionados
         function actualizarListaArchivos() {
             const panel = document.getElementById('archivosSeleccionados');
             const lista = document.getElementById('listaArchivos');
@@ -742,8 +777,10 @@
             }
         }
 
-        // Manejar guardado del sello digital
         document.getElementById('btnGuardarSello').addEventListener('click', function() {
+            const claveInput = document.getElementById('clavePrivada');
+            const clave = claveInput.value.trim();
+
             if (!archivosSelloDigital.certificado || !archivosSelloDigital.llave) {
                 Swal.fire({
                     icon: 'warning',
@@ -753,24 +790,33 @@
                 return;
             }
 
-            // Crear FormData para enviar archivos
+            if (!clave) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Contraseña requerida',
+                    text: 'Debes ingresar la contraseña de la llave privada'
+                });
+                claveInput.focus();
+                return;
+            }
+
+            archivosSelloDigital.clave = clave;
+
             const formData = new FormData();
             formData.append('certificado', archivosSelloDigital.certificado);
             formData.append('llave_privada', archivosSelloDigital.llave);
+            formData.append('clave_privada', archivosSelloDigital.clave);
             
-            // Si estamos editando una sucursal, agregar el ID
             const idSucursal = document.getElementById('idSucursal');
             if (idSucursal && idSucursal.value) {
                 formData.append('id_empresa', idSucursal.value);
             } else {
-                // Si es una nueva sucursal, necesitaremos guardarlo después de crear la sucursal
                 Swal.fire({
-                    icon: 'info',
-                    title: 'Información',
+                    icon: 'success',
+                    title: 'Sello Digital Configurado',
                     text: 'Los archivos del sello digital se guardarán después de crear la sucursal'
                 });
                 
-                // Almacenar temporalmente para usar después de crear la sucursal
                 window.archivosSelloTemporal = archivosSelloDigital;
                 
                 const modal = bootstrap.Modal.getInstance(document.getElementById('subirSelloModal'));
@@ -778,7 +824,6 @@
                 return;
             }
 
-            // Mostrar loading en el botón
             const btn = this;
             const originalText = btn.innerHTML;
             btn.disabled = true;
@@ -806,7 +851,8 @@
                         // Limpiar formulario
                         document.getElementById('archivoCerNuevo').value = '';
                         document.getElementById('archivoKeyNuevo').value = '';
-                        archivosSelloDigital = { certificado: null, llave: null };
+                        document.getElementById('clavePrivadaSello').value = '';
+                        archivosSelloDigital = { certificado: null, llave: null, clave: null };
                         actualizarListaArchivos();
                     });
                 } else {
@@ -834,36 +880,61 @@
 
         document.getElementById('btnCrearSucursal').addEventListener('click', function(event) {
             event.preventDefault();
+            event.stopPropagation();
+            
+            try {
+                console.log('Iniciando validación de campos...');
+                
+                const requiredFields = [
+                    'razonSocial', 'codigoSucursal', 'rfcSucursal', 'estadoSucursal', 'regimenFiscal',
+                    'direccionSucursal', 'codigoPostal', 'colonia', 'nombreComercial', 'emailSucursal'
+                ];
 
-            const requiredFields = [
-                'razonSocial', 'codigoSucursal', 'rfcSucursal', 'estadoSucursal', 'regimenFiscal',
-                'direccionSucursal', 'codigoPostal', 'colonia', 'nombreComercial', 'emailSucursal'
-            ];
-
-            let allValid = true;
-            requiredFields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (field && (!field.value || field.value.trim() === '')) {
-                    field.classList.add('is-invalid');
-                    allValid = false;
-                } else if (field) {
-                    field.classList.remove('is-invalid');
-                }
-            });
-
-            if (allValid) {
-                console.log('Todos los campos requeridos están completos.');
-            } else {
-                console.log('Faltan campos requeridos.');
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campos incompletos',
-                    text: 'Por favor, completa todos los campos requeridos antes de continuar.',
-                    showConfirmButton: true
+                let allValid = true;
+                requiredFields.forEach(fieldId => {
+                    try {
+                        const field = document.getElementById(fieldId);
+                        if (!field) {
+                            console.warn(`Campo ${fieldId} no encontrado`);
+                            allValid = false;
+                            return;
+                        }
+                        
+                        if (!field.value || field.value.trim() === '') {
+                            field.classList.add('is-invalid');
+                            allValid = false;
+                        } else {
+                            field.classList.remove('is-invalid');
+                        }
+                    } catch (error) {
+                        console.error(`Error validando campo ${fieldId}:`, error);
+                        allValid = false;
+                    }
                 });
+
+                if (allValid) {
+                    console.log('Todos los campos requeridos están completos.');
+                } else {
+                    console.log('Faltan campos requeridos.');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Campos incompletos',
+                        text: 'Por favor, completa todos los campos requeridos antes de continuar.',
+                        showConfirmButton: true
+                    });
+                    return;
+                }
+                
+            } catch (validationError) {
+                console.error('Error en validación de campos:', validationError);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de validación',
+                    text: 'Hubo un error al validar los campos del formulario'
+                });
+                return;
             }
 
-            // Validar que los campos automáticos estén llenos
             if (!document.getElementById('municipio').value.trim() || !document.getElementById('estado').value.trim()) {
                 Swal.fire({
                     icon: 'warning',
@@ -875,31 +946,65 @@
                 return;
             }
 
-            const data = {
-                razon_social: document.getElementById('razonSocial').value.trim(),
-                codigo_sucursal: document.getElementById('codigoSucursal').value.trim(),
-                rfc_fiscal: document.getElementById('rfcSucursal').value.trim(),
-                estatus: document.getElementById('estadoSucursal').value,
-                nombre_comercial: document.getElementById('nombreComercial').value.trim(),
-                regimen_fiscal: document.getElementById('regimenFiscal').value,
-                codigo_postal: document.getElementById('codigoPostal').value.trim(),
-                direccion: document.getElementById('direccionSucursal').value.trim(),
-                colonia: document.getElementById('colonia').value.trim(),
-                email: document.getElementById('emailSucursal').value.trim(),
+            // Crear FormData para manejar archivos
+            let formData;
+            try {
+                formData = new FormData();
+                console.log('FormData creado exitosamente');
+            } catch (formError) {
+                console.error('Error creando FormData:', formError);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al preparar el formulario'
+                });
+                return;
+            }
+            
+            // Validar y agregar campos del formulario
+            const campos = [
+                { id: 'razonSocial', name: 'razon_social' },
+                { id: 'codigoSucursal', name: 'codigo_sucursal' },
+                { id: 'rfcSucursal', name: 'rfc_fiscal' },
+                { id: 'estadoSucursal', name: 'estatus' },
+                { id: 'nombreComercial', name: 'nombre_comercial' },
+                { id: 'regimenFiscal', name: 'regimen_fiscal' },
+                { id: 'codigoPostal', name: 'codigo_postal' },
+                { id: 'direccionSucursal', name: 'direccion' },
+                { id: 'colonia', name: 'colonia' },
+                { id: 'emailSucursal', name: 'email' },
+                { id: 'clavePrivadaSello', name: 'clave_privada' }
+            ];
+            
+            for (const campo of campos) {
+                try {
+                    const elemento = document.getElementById(campo.id);
+                    if (elemento && elemento.value !== undefined) {
+                        formData.append(campo.name, elemento.value.trim());
+                        console.log(`Campo ${campo.name} agregado:`, elemento.value.trim());
+                    } else {
+                        console.warn(`Elemento ${campo.id} no encontrado o sin valor`);
+                        formData.append(campo.name, '');
+                    }
+                } catch (error) {
+                    console.error(`Error procesando campo ${campo.id}:`, error);
+                    formData.append(campo.name, '');
+                }
+            }
 
-            };
+            // Agregar logo si existe
+            const logoElement = document.getElementById('logoSucursal');
+            if (logoElement && logoElement.files && logoElement.files[0]) {
+                formData.append('logoSucursal', logoElement.files[0]);
+            }
 
             fetch('core/registro-sucursal.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
+                    body: formData
                 }).then(response => response.json())
                 .then(result => {
                     if (result.success) {
-                        // Si hay archivos de sello temporal, subirlos ahora
-                        if (window.archivosSelloTemporal && window.archivosSelloTemporal.certificado && window.archivosSelloTemporal.llave) {
+                        if (window.archivosSelloTemporal && window.archivosSelloTemporal.certificado && window.archivosSelloTemporal.llave && window.archivosSelloTemporal.clave) {
                             subirSelloTemporal(result.id_empresa);
                         } else {
                             Swal.fire({
@@ -930,11 +1035,12 @@
                     });
                 });
 
-        // Función para subir sello digital después de crear sucursal
+        // Función para subir sello digital
         function subirSelloTemporal(idEmpresa) {
             const formData = new FormData();
             formData.append('certificado', window.archivosSelloTemporal.certificado);
             formData.append('llave_privada', window.archivosSelloTemporal.llave);
+            formData.append('clave_privada', window.archivosSelloTemporal.clave);
             formData.append('id_empresa', idEmpresa);
 
             fetch('core/subir-sello-digital.php', {
@@ -982,7 +1088,6 @@
 
         })
 
-        // Función para manejar la selección de logo
         function setupLogoHandler() {
             const logoInput = document.getElementById('logoSucursal');
             const btnSeleccionar = document.getElementById('btnSeleccionarLogo');
@@ -993,11 +1098,14 @@
                 return;
             }
 
-            btnSeleccionar.addEventListener('click', function() {
+            btnSeleccionar.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 logoInput.click();
             });
 
             logoInput.addEventListener('change', function(e) {
+                e.stopPropagation();
                 const file = e.target.files[0];
                 if (file) {
                     // Validar tipo de archivo
@@ -1008,23 +1116,24 @@
                             title: 'Archivo no válido',
                             text: 'Solo se permiten archivos PNG, JPG, JPEG o SVG'
                         });
+                        e.target.value = '';
                         return;
                     }
 
-                    // Validar tamaño (2MB máximo)
                     if (file.size > 2 * 1024 * 1024) {
                         Swal.fire({
                             icon: 'error',
                             title: 'Archivo muy grande',
                             text: 'El archivo no puede ser mayor a 2MB'
                         });
+                        e.target.value = '';
                         return;
                     }
 
                     // Mostrar vista previa
                     const reader = new FileReader();
-                    reader.onload = function(e) {
-                        logoPreview.innerHTML = `<img src="${e.target.result}" alt="Logo preview" />`;
+                    reader.onload = function(event) {
+                        logoPreview.innerHTML = `<img src="${event.target.result}" alt="Logo preview" />`;
                         btnEliminar.classList.remove('d-none');
                     };
                     reader.readAsDataURL(file);
@@ -1032,14 +1141,35 @@
             });
 
             btnEliminar.addEventListener('click', function() {
-                logoInput.value = '';
-                logoPreview.innerHTML = `
-                    <div class="logo-placeholder">
-                        <i class="bi bi-image display-5 text-muted"></i>
-                        <p class="text-muted mb-0">Vista previa del logo</p>
-                    </div>
-                `;
-                btnEliminar.classList.add('d-none');
+                Swal.fire({
+                    title: '¿Remover imagen?',
+                    text: 'Se quitará la imagen seleccionada',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, remover',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        logoInput.value = '';
+                        logoPreview.innerHTML = `
+                            <div class="logo-placeholder">
+                                <i class="bi bi-image display-5 text-muted"></i>
+                                <p class="text-muted mb-0">Vista previa del logo</p>
+                            </div>
+                        `;
+                        btnEliminar.classList.add('d-none');
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Imagen removida',
+                            text: 'La imagen ha sido removida de la vista previa',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    }
+                });
             });
         }
         setupLogoHandler();

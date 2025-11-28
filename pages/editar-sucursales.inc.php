@@ -332,7 +332,7 @@
 
 <!-- Modal para subir Sello Digital -->
 <div class="modal fade" id="subirSelloModal" tabindex="-1" aria-labelledby="subirSelloModalLabel">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 bg-primary text-white rounded-top-4">
                 <h5 class="modal-title fw-bold" id="subirSelloModalLabel">
@@ -342,36 +342,6 @@
             </div>
             <div class="modal-body p-4">
                 <form id="formSelloDigital">
-                    <div class="alert alert-info border-0 rounded-3 mb-4">
-                        <div class="d-flex">
-                            <i class="bi bi-primary-circle-fill me-3 fs-5 text-primary"></i>
-                            <div>
-                                <h6 class="fw-bold mb-2">Sello Digital (CSD)</h6>
-                                <p class="small mb-0">
-                                    - Sube los archivos del certificado digital (.cer) y la llave privada (.key)
-                                    necesarios para la facturación electrónica. Los archivos se almacenarán de forma segura.
-                                </p>
-                                <p class="small mb-0">
-                                    - Ingresa tu clave privada, esta se guardara encriptada y de forma segura.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- campo para subir la clave privada -->
-                    <div class="mb-4">
-                        <label for="inputPassword" class="form-label fw-semibold">
-                            <i class="bi bi-lock me-1 text-primary"></i> Contraseña
-                        </label>
-                        <div class="position-relative">
-                            <input type="password" class="form-control form-control-lg rounded-3 pe-5" id="inputPassword"
-                                placeholder="Tu contraseña" required>
-                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0"
-                                id="toggleLoginPassword" style="z-index: 10;">
-                                <i class="bi bi-eye text-muted fs-5" id="iconLoginPassword"></i>
-                            </button>
-                        </div>
-                    </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="archivoCer" class="form-label fw-semibold">
@@ -389,6 +359,23 @@
                             <input type="file" class="form-control form-control-lg rounded-3"
                                 id="archivoKey" accept=".key" required>
                             <div class="form-text">Selecciona el archivo de llave privada .key</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="clavePrivadaEdit" class="form-label fw-semibold">
+                                <i class="bi bi-key me-2"></i>Llave Privada
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control form-control-lg rounded-start-3"
+                                    id="clavePrivadaEdit" placeholder="Ingresa la llave privada" required>
+                                <button class="btn btn-outline-secondary rounded-end-3" type="button" id="togglePasswordEdit">
+                                    <i class="bi bi-eye" id="toggleIconEdit"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-shield-check text-success me-1"></i>
+                                Esta contraseña se almacenará de forma cifrada y segura
+                            </div>
                         </div>
 
                         <!-- Estado de los archivos seleccionados -->
@@ -470,7 +457,6 @@
     function llenarFormulario(data) {
         console.log('Datos recibidos para llenar formulario:', data);
 
-        // Agregar campo oculto con ID de empresa
         document.getElementById('idSucursal').value = data.id_empresa;
 
         // Llenar campos del formulario
@@ -489,9 +475,10 @@
             mostrarLogoExistente(data.logo);
         }
 
-        // Actualizar estado del sello digital
+        // Actualizar estado del sello digital y cargar datos existentes
         if (data.file_cer && data.file_key) {
             actualizarEstadoSello(true);
+            cargarDatosSelloExistente(data);
         } else {
             actualizarEstadoSello(false);
         }
@@ -499,7 +486,6 @@
         // Si hay código postal, cargar datos automáticos
         if (data.cp) {
             cargarDatosCP(data.cp).then(() => {
-                // Después de cargar las colonias, seleccionar la correcta
                 setTimeout(() => {
                     if (data.colonia) {
                         document.getElementById('colonia').value = data.colonia;
@@ -524,7 +510,6 @@
                     select.appendChild(option);
                 });
 
-                // Si ya tenemos datos de sucursal, seleccionar el régimen correcto
                 if (sucursalData && sucursalData.reg_fiscal) {
                     select.value = sucursalData.reg_fiscal;
                 }
@@ -537,8 +522,6 @@
             document.getElementById('regimenFiscal').innerHTML = '<option value="">Error de conexión</option>';
         }
     }
-
-    // Función para cargar datos del código postal
     async function cargarDatosCP(codigoPostal) {
         const selectColonias = document.getElementById('colonia');
         const statusDiv = document.getElementById('cpStatus');
@@ -670,7 +653,6 @@
         btnEliminar.classList.remove('d-none');
     }
 
-    // Función para actualizar estado del sello digital
     function actualizarEstadoSello(tieneConfigurado) {
         const selloStatus = document.getElementById('selloStatus');
         if (tieneConfigurado) {
@@ -680,7 +662,92 @@
         }
     }
 
-    // Función para manejar la selección de logo
+    function cargarDatosSelloExistente(data) {
+        if (data.file_cer && data.file_key && data.clave) {
+            window.selloExistente = {
+                certificado: data.file_cer,
+                llave: data.file_key,
+                tieneClave: true
+            };
+
+            console.log('Sello digital existente cargado:', {
+                certificado: data.file_cer,
+                llave: data.file_key,
+                clave_configurada: true
+            });
+        }
+    }
+
+    async function obtenerClaveDescifrada(idEmpresa) {
+        try {
+            const response = await fetch(`core/obtener-clave-sello.php?id_empresa=${idEmpresa}`);
+            const result = await response.json();
+
+            if (result.success && result.clave_descifrada) {
+                return result.clave_descifrada;
+            } else {
+                throw new Error(result.message || 'No se pudo obtener la clave');
+            }
+        } catch (error) {
+            console.error('Error al obtener clave descifrada:', error);
+            return null;
+        }
+    }
+
+    // Función para mostrar datos del sello 
+    function mostrarDatosSelloExistente() {
+        if (window.selloExistente) {
+            let infoSello = document.getElementById('infoSelloExistente');
+            if (!infoSello) {
+                infoSello = document.createElement('div');
+                infoSello.id = 'infoSelloExistente';
+                infoSello.className = 'col-12 mb-3';
+                const modalBody = document.querySelector('#subirSelloModal .modal-body');
+                const form = document.getElementById('formSelloDigital');
+                if (modalBody && form) {
+                    modalBody.insertBefore(infoSello, form);
+                }
+            }
+
+            infoSello.innerHTML = `
+                <div class="alert alert-info border-0 rounded-3">
+                    <div class="d-flex">
+                        <i class="bi bi-shield-check-fill me-3 fs-5 text-info"></i>
+                        <div>
+                            <h6 class="fw-bold mb-2">Sello Digital Configurado</h6>
+                            <div class="small">
+                                <div class="mb-1">
+                                    <strong>Certificado:</strong> ${window.selloExistente.certificado}
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Llave Privada:</strong> ${window.selloExistente.llave}
+                                </div>
+                                <p class="mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Para actualizar el sello, sube nuevos archivos y proporciona la nueva contraseña.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Cargar la clave descifrada en el campo de contraseña
+            const idEmpresa = document.getElementById('idSucursal').value;
+            if (idEmpresa) {
+                obtenerClaveDescifrada(idEmpresa).then(clave => {
+                    if (clave) {
+                        const claveInput = document.getElementById('clavePrivadaSelloEdit');
+                        if (claveInput) {
+                            claveInput.value = clave;
+                            claveInput.placeholder = 'Contraseña actual (puede ser modificada)';
+                        }
+                    }
+                });
+            }
+        }
+    }
+
     function setupLogoHandler() {
         const logoInput = document.getElementById('logoSucursal');
         const btnSeleccionar = document.getElementById('btnSeleccionarLogo');
@@ -694,7 +761,6 @@
         logoInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                // Validar tipo de archivo
                 const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
                 if (!allowedTypes.includes(file.type)) {
                     Swal.fire({
@@ -705,7 +771,7 @@
                     return;
                 }
 
-                // Validar tamaño (2MB máximo)
+                // Validar tamaño
                 if (file.size > 2 * 1024 * 1024) {
                     Swal.fire({
                         icon: 'error',
@@ -726,26 +792,112 @@
         });
 
         btnEliminar.addEventListener('click', function() {
-            logoInput.value = '';
-            logoPreview.innerHTML = `
-                <div class="logo-placeholder">
-                    <i class="bi bi-image display-4 text-muted"></i>
-                    <p class="text-muted mb-0">Vista previa del logo</p>
-                </div>
-            `;
-            btnEliminar.classList.add('d-none');
+            const idEmpresa = document.getElementById('sucursal_id').value;
+            
+            if (!idEmpresa) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se ha seleccionado una sucursal válida'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                title: '¿Confirmar eliminación?',
+                text: 'Esta acción eliminará permanentemente el logo de la sucursal',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostrar indicador de carga
+                    Swal.fire({
+                        title: 'Eliminando logo...',
+                        text: 'Por favor espere',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Hacer petición al servidor para eliminar el logo
+                    fetch('core/eliminar-logo.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `accion=eliminar_logo&id_empresa=${idEmpresa}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Limpiar la vista previa
+                            logoInput.value = '';
+                            logoPreview.innerHTML = `
+                                <div class="logo-placeholder">
+                                    <i class="bi bi-image display-4 text-muted"></i>
+                                    <p class="text-muted mb-0">Vista previa del logo</p>
+                                </div>
+                            `;
+                            btnEliminar.classList.add('d-none');
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Logo eliminado',
+                                text: data.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error al eliminar',
+                                text: data.message || 'No se pudo eliminar el logo'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de conexión',
+                            text: 'No se pudo conectar con el servidor'
+                        });
+                    });
+                }
+            });
         });
     }
 
-    // Variables para el sello digital
     let archivosSelloDigital = {
         certificado: null,
-        llave: null
+        llave: null,
+        clave: null
     };
 
-    // Función para manejar el sello digital
+    function setupPasswordToggleEdit() {
+        const toggleBtn = document.getElementById('togglePasswordEdit');
+        const passwordInput = document.getElementById('clavePrivadaEdit');
+        const toggleIcon = document.getElementById('toggleIconEdit');
+
+        if (toggleBtn && passwordInput && toggleIcon) {
+            toggleBtn.addEventListener('click', function() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleIcon.className = 'bi bi-eye-slash';
+                } else {
+                    passwordInput.type = 'password';
+                    toggleIcon.className = 'bi bi-eye';
+                }
+            });
+        }
+    }
+
     function setupSelloHandler() {
-        // Manejar selección de archivo certificado
         document.getElementById('archivoCer').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -763,7 +915,6 @@
             }
         });
 
-        // Manejar selección de archivo llave
         document.getElementById('archivoKey').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -781,8 +932,10 @@
             }
         });
 
-        // Manejar guardado del sello digital
         document.getElementById('btnGuardarSello').addEventListener('click', function() {
+            const claveInput = document.getElementById('clavePrivadaEdit');
+            const clave = claveInput.value.trim();
+
             if (!archivosSelloDigital.certificado || !archivosSelloDigital.llave) {
                 Swal.fire({
                     icon: 'warning',
@@ -792,19 +945,29 @@
                 return;
             }
 
-            // Crear FormData para enviar archivos
+            if (!clave) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Contraseña requerida',
+                    text: 'Debes ingresar la contraseña de la llave privada'
+                });
+                claveInput.focus();
+                return;
+            }
+
+            archivosSelloDigital.clave = clave;
+
             const formData = new FormData();
             formData.append('certificado', archivosSelloDigital.certificado);
             formData.append('llave_privada', archivosSelloDigital.llave);
+            formData.append('clave_privada', archivosSelloDigital.clave);
             formData.append('id_empresa', document.getElementById('idSucursal').value);
 
-            // Mostrar loading en el botón
             const btn = this;
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Guardando...';
 
-            // Enviar archivos al servidor
             fetch('core/subir-sello-digital.php', {
                     method: 'POST',
                     body: formData
@@ -819,7 +982,6 @@
                             timer: 2000,
                             showConfirmButton: false
                         }).then(() => {
-                            // Actualizar estado visual
                             actualizarEstadoSello(true);
 
                             // Cerrar el modal
@@ -859,7 +1021,6 @@
         });
     }
 
-    // Función para actualizar la lista de archivos seleccionados
     function actualizarListaArchivos() {
         const panel = document.getElementById('archivosSeleccionados');
         const lista = document.getElementById('listaArchivos');
@@ -899,21 +1060,26 @@
     }
 
     document.addEventListener('DOMContentLoaded', async function() {
-        // Obtener ID de la sucursal de la URL
         const sucursalId = obtenerIdSucursal();
         if (!sucursalId) return;
 
-        // Cargar regímenes fiscales primero
         await cargarRegimenesFiscales();
 
-        // Luego cargar los datos de la sucursal
         const datosCargados = await cargarDatosSucursal(sucursalId);
         if (!datosCargados) return;
 
-        // Configurar event listeners
         setupEventListeners();
         setupLogoHandler();
         setupSelloHandler();
+        setupPasswordToggleEdit();
+
+        // Configurar evento para mostrar datos del sello al abrir el modal
+        const modalSello = document.getElementById('subirSelloModal');
+        if (modalSello) {
+            modalSello.addEventListener('show.bs.modal', function() {
+                mostrarDatosSelloExistente();
+            });
+        }
 
         document.getElementById('btnActualizarSucursal').addEventListener('click', function(event) {
             event.preventDefault();
@@ -944,7 +1110,6 @@
                 return;
             }
 
-            // Validar que los campos automáticos estén llenos
             if (!document.getElementById('municipio').value.trim() || !document.getElementById('estado').value.trim()) {
                 Swal.fire({
                     icon: 'warning',
@@ -956,7 +1121,6 @@
                 return;
             }
 
-            // Crear FormData para manejar archivos
             const formData = new FormData();
             formData.append('id_empresa', document.getElementById('idSucursal').value);
             formData.append('razon_social', document.getElementById('razonSocial').value.trim());
@@ -970,7 +1134,6 @@
             formData.append('direccion', document.getElementById('direccionSucursal').value.trim());
             formData.append('colonia', document.getElementById('colonia').value);
 
-            // Agregar logo si se seleccionó uno nuevo
             const logoFile = document.getElementById('logoSucursal').files[0];
             if (logoFile) {
                 formData.append('logo', logoFile);
@@ -978,7 +1141,6 @@
 
             console.log('Datos a enviar para actualización');
 
-            // Mostrar loading
             const btn = this;
             const originalText = btn.innerHTML;
             btn.disabled = true;
@@ -1018,7 +1180,6 @@
                         showConfirmButton: true
                     });
                 }).finally(() => {
-                    // Restaurar botón
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 });

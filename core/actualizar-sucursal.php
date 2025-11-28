@@ -3,6 +3,7 @@
 session_start();
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/class/db.php';
+require_once __DIR__ . '/sello-utils.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -95,11 +96,28 @@ try {
     $colonia      = trim($data['colonia'] ?? '');
     $estatus      = trim($data['estatus'] ?? '1');
     $email        = trim($data['email'] ?? '');
+    $clave_privada = isset($data['clave_privada']) && !empty(trim($data['clave_privada'])) ? trim($data['clave_privada']) : null;
     
     // Manejar logo
     $logo_filename = null;
+    $eliminar_logo = isset($_POST['eliminar_logo']) && $_POST['eliminar_logo'] === 'true';
+    
     if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
         $logo_filename = manejarSubidaLogo($_FILES['logo'], $id_empresa);
+    } elseif ($eliminar_logo) {
+        // Si se solicita eliminar el logo, obtener el logo actual para eliminarlo
+        $stmt_logo = $conn->prepare("SELECT logo FROM empresas WHERE id_empresa = ? AND id_usuario = ?");
+        $stmt_logo->execute([$id_empresa, $id_usuario]);
+        $logo_actual = $stmt_logo->fetchColumn();
+        
+        if ($logo_actual) {
+            $ruta_logo = __DIR__ . '/../uploads/logos/' . $logo_actual;
+            if (file_exists($ruta_logo)) {
+                unlink($ruta_logo);
+            }
+        }
+        
+        $logo_filename = ''; // Para actualizar a NULL en la base de datos
     } 
 
     $estatus_lower = strtolower($estatus);
@@ -120,8 +138,9 @@ try {
         throw new Exception("Ya existe otra sucursal con el código: " . $codigo_suc);
     }
     
-    // Construir consulta dinámicamente dependiendo si hay logo
-    if ($logo_filename) {
+    // Construir consulta dinámicamente dependiendo si hay logo o se elimina
+    if ($logo_filename !== null) {
+        // Hay nuevo logo o se está eliminando (logo_filename = '' para eliminar)
         $sql = "UPDATE empresas SET 
                     rfc = ?, 
                     razon_social = ?, 
@@ -136,11 +155,13 @@ try {
                     logo = ?
                 WHERE id_empresa = ? AND id_usuario = ?";
         
+        $logo_value = $logo_filename === '' ? null : $logo_filename;
         $params = [
-            $rfc, $razon_social, $nombre_comercial, $reg_fiscal, $codigo_suc, $cp, $direccion, $colonia, $estatus, $email, $logo_filename,
+            $rfc, $razon_social, $nombre_comercial, $reg_fiscal, $codigo_suc, $cp, $direccion, $colonia, $estatus, $email, $logo_value,
             $id_empresa, $id_usuario
         ];
     } else {
+        // No hay cambios en el logo
         $sql = "UPDATE empresas SET 
                     rfc = ?, 
                     razon_social = ?, 
@@ -164,6 +185,13 @@ try {
     $stmt->execute($params);
 
     if ($stmt->rowCount() > 0 || $stmt->errorCode() === '00000') {
+        // Si hay clave privada, cifrarla y actualizarla
+        if ($clave_privada !== null) {
+            $clave_cifrada = SelloUtils::cifrarClave($clave_privada, $id_empresa);
+            $stmt_clave = $conn->prepare("UPDATE empresas SET clave = ? WHERE id_empresa = ? AND id_usuario = ?");
+            $stmt_clave->execute([$clave_cifrada, $id_empresa, $id_usuario]);
+        }
+        
         $respuesta['success'] = true;
         $respuesta['message'] = 'Sucursal actualizada correctamente.';
     } else {

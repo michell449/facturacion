@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/class/db.php';
+require_once __DIR__ . '/sello-utils.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -24,6 +25,10 @@ try {
 
     if (!isset($_FILES['certificado']) || !isset($_FILES['llave_privada'])) {
         throw new Exception('Faltan los archivos del sello digital. Se requiere certificado (.cer) y llave privada (.key).');
+    }
+
+    if (!isset($_POST['clave_privada']) || empty(trim($_POST['clave_privada']))) {
+        throw new Exception('La contraseña de la llave privada es requerida.');
     }
 
     if (!isset($_POST['id_empresa']) || empty($_POST['id_empresa'])) {
@@ -79,6 +84,10 @@ try {
     
     $codigoSucursal = $sucursal['codigo_suc'] ?: 'sucursal_' . $id_empresa;
     
+    // Obtener y cifrar la clave privada
+    $clavePrivada = trim($_POST['clave_privada']);
+    $claveParaGuardar = SelloUtils::cifrarClave($clavePrivada, $id_empresa);
+    
     // Crear la estructura de carpetas
     $uploadBaseDir = __DIR__ . '/../uploads/sellos/';
     $uploadDir = $uploadBaseDir . $codigoSucursal . '/';
@@ -111,9 +120,9 @@ try {
     $stmt_old->execute([$id_empresa]);
     $oldFiles = $stmt_old->fetch(PDO::FETCH_ASSOC);
     
-    $sql = "UPDATE empresas SET file_cer = ?, file_key = ? WHERE id_empresa = ? AND id_usuario = ?";
+    $sql = "UPDATE empresas SET file_cer = ?, file_key = ?, clave = ? WHERE id_empresa = ? AND id_usuario = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->execute([$rutaRelativaCer, $rutaRelativaKey, $id_empresa, $id_usuario]);
+    $stmt->execute([$rutaRelativaCer, $rutaRelativaKey, $claveParaGuardar, $id_empresa, $id_usuario]);
     
     if ($stmt->rowCount() > 0) {
         // Limpiar archivos antiguos si existen

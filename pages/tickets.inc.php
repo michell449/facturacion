@@ -63,13 +63,6 @@
                                         <option value="facturado">Facturado</option>
                                     </select>
                                 </div>
-                                <div class="col-md-1">
-                                    <div class="btn-group w-100" role="group">
-                                        <button class="btn btn-outline-primary" title="Exportar">
-                                            <i class="bi bi-download"></i>
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -79,43 +72,43 @@
             <!-- Resumen de Tickets -->
             <div class="row g-4 py-2" id="ticketsResumen">
                 <div class="col-md-3">
-                    <div class="card bg-primary text-white border-0 rounded-4">
-                        <div class="card-body text-center">
-                            <i class="bi bi-ticket-detailed display-6 mb-2"></i>
+                    <div class="card bg-info bg-opacity-10 border-0 rounded-4">
+                        <div class="card-body text-center text-primary">
+                            <i class="bi bi-ticket-detailed display-8 mb-2"></i>
                             <h4 class="mb-1" id="totalTickets">0</h4>
                             <small>Total Tickets</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-warning text-dark border-0 rounded-4">
-                        <div class="card-body text-center">
-                            <i class="bi bi-clock-history display-6 mb-2"></i>
+                    <div class="card bg-info border-0 rounded-4 bg-opacity-10">
+                        <div class="card-body text-center text-primary">
+                            <i class="bi bi-clock-history display-8 mb-2"></i>
                             <h4 class="mb-1" id="ticketsPendientes">0</h4>
                             <small>Pendientes</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-success text-white border-0 rounded-4">
-                        <div class="card-body text-center">
-                            <i class="bi bi-check-circle display-6 mb-2"></i>
+                    <div class="card bg-info border-0 rounded-4 bg-opacity-10">
+                        <div class="card-body text-center text-primary">
+                            <i class="bi bi-check-circle display-8 mb-2"></i>
                             <h4 class="mb-1" id="ticketsFacturados">0</h4>
                             <small>Facturados</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-info text-white border-0 rounded-4">
-                        <div class="card-body text-center">
-                            <i class="bi bi-currency-dollar display-6 mb-2"></i>
+                    <div class="card bg-info border-0 rounded-4 bg-opacity-10">
+                        <div class="card-body text-center text-primary">
+                            <i class="bi bi-currency-dollar display-8 mb-2"></i>
                             <h4 class="mb-1" id="totalImporte">$0.00</h4>
                             <small>Importe Total</small>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Loading State -->
             <div class="row g-4 py-4" id="loadingState">
                 <div class="col-12">
@@ -129,7 +122,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Lista de Tickets -->
             <div class="row g-4 py-4" id="ticketsContainer" style="display: none;">
                 <!-- Los tickets se cargan dinámicamente aquí -->
@@ -179,51 +172,44 @@
     </div>
 
     <script>
-        // Variables globales
         let paginaActual = 1;
         let ticketsData = [];
         let sucursalesData = [];
-        
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Cargar tickets al iniciar
             cargarTickets();
-            
-            // Configurar eventos de filtros
+
             document.getElementById('searchFolio').addEventListener('input', debounce(aplicarFiltros, 300));
             document.getElementById('filterSucursal').addEventListener('change', aplicarFiltros);
             document.getElementById('filterFecha').addEventListener('change', aplicarFiltros);
             document.getElementById('filterMonto').addEventListener('input', debounce(aplicarFiltros, 500));
             document.getElementById('filterEstadoFacturacion').addEventListener('change', aplicarFiltros);
         });
-        
-        // Función para cargar tickets desde el servidor
+
         function cargarTickets(pagina = 1) {
             paginaActual = pagina;
-            
-            // Mostrar loading
+
             document.getElementById('loadingState').style.display = 'block';
             document.getElementById('ticketsContainer').style.display = 'none';
             document.getElementById('paginacionContainer').style.display = 'none';
-            
-            // Construir parámetros de la URL
+
             const params = new URLSearchParams({
                 pagina: pagina,
                 limite: 20
             });
-            
-            // Agregar filtros si existen
+
             const folio = document.getElementById('searchFolio').value.trim();
             const sucursal = document.getElementById('filterSucursal').value;
             const fecha = document.getElementById('filterFecha').value;
             const monto = document.getElementById('filterMonto').value;
             const estado = document.getElementById('filterEstadoFacturacion').value;
-            
+
             if (folio) params.append('folio', folio);
             if (sucursal) params.append('id_empresa', sucursal);
             if (fecha) params.append('fecha_inicio', fecha);
             if (monto) params.append('importe_min', monto);
             if (estado) params.append('estatus', estado);
-            
+
             fetch(`core/consultar-tickets.php?${params.toString()}`)
                 .then(response => response.json())
                 .then(data => {
@@ -242,11 +228,10 @@
                     mostrarError('Error de conexión al cargar tickets');
                 });
         }
-        
-        // Función para mostrar los tickets en el template
+
         function mostrarTickets(data) {
             const container = document.getElementById('ticketsContainer');
-            
+
             if (data.tickets.length === 0) {
                 container.innerHTML = `
                     <div class="col-12">
@@ -262,73 +247,102 @@
             } else {
                 container.innerHTML = data.tickets.map(ticket => crearTicketHTML(ticket)).join('');
             }
-            
-            // Ocultar loading y mostrar contenido
+
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('ticketsContainer').style.display = 'block';
         }
-        
+
         // Función para crear el HTML de un ticket
         function crearTicketHTML(ticket) {
             const estadoClass = ticket.estatus === 'facturado' ? 'bg-success' : 'bg-warning text-dark';
             const estadoTexto = ticket.estatus === 'facturado' ? 'Facturado' : 'Pendiente';
-            
+
             let urgenciaClass = 'text-success';
             if (ticket.urgencia === 'alta') urgenciaClass = 'text-danger';
             else if (ticket.urgencia === 'media') urgenciaClass = 'text-warning';
-            
+
+            // Generar UUID simulado para tickets facturados (temporal hasta implementar backend)
+            const uuidSimulado = ticket.estatus === 'facturado' ?
+                `${ticket.id_ticket}-${ticket.folio_ticket}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase() :
+                null;
+
+            // Crear botones contextuales según el estado
+            let botonesAccion = '';
+            if (ticket.estatus === 'pendiente') {
+                botonesAccion = `
+                    <button class="btn btn-outline-success btn-md mb-1" onclick="facturarTicket(${ticket.id_ticket})" title="Generar Factura">
+                        <i class="bi bi-file-earmark-plus me-1"></i>Facturar
+                    </button>
+                `;
+            } else {
+                botonesAccion = `
+                    <button class="btn btn-outline-primary btn-sm mb-1" onclick="verDetallesTicket(${ticket.id_ticket})" title="Ver Detalles">
+                        <i class="bi bi-envelope me-1"></i>Reenviar
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm mb-1" onclick="cancelarFactura(${ticket.id_ticket})" title="Cancelar Factura">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                `;
+            }
+
             return `
                 <div class="col-12">
-                    <div class="card shadow-lg border-0 rounded-4">
+                    <div class="card shadow-lg border-0 rounded-4 ${ticket.estatus === 'facturado' ? 'border-success border-opacity-25' : ''}">
                         <div class="card-body p-4">
-                            <div class="row align-items-center">
+                            <div class="row">
+                                <!-- Información Principal -->
                                 <div class="col-md-2">
                                     <div class="text-center">
-                                        <h6 class="fw-bold text-primary mb-1">${ticket.folio_ticket}</h6>
-                                        <small class="text-muted">${ticket.sucursal_completa}</small>
+                                        <h4 class="fw-bold text-primary mb-1">${ticket.folio_ticket}</h4>
+                                        <small>${ticket.sucursal_completa}</small>
+                                        <div class="mb-2">
+                                        <span class="badge ${estadoClass} mb-1">${estadoTexto}</span>
+                                    </div>
                                     </div>
                                 </div>
+                                
+                                <!-- Detalles del Ticket -->
                                 <div class="col-md-3">
-                                    <h6 class="mb-1">Productos: <span class="text-primary">${ticket.total_productos}</span></h6>
-                                    <small class="text-muted">Estado: </small>
-                                    <span class="badge ${estadoClass}">${estadoTexto}</span>
-                                    <br>
-                                    <small class="text-muted" title="${ticket.productos_detalle || 'Sin detalles'}">
-                                        <i class="bi bi-receipt me-1"></i>${(ticket.productos_detalle || 'Sin productos').substring(0, 40)}${ticket.productos_detalle && ticket.productos_detalle.length > 40 ? '...' : ''}
-                                    </small>
+                                    <div>
+                                        <small class="text-muted d-block">Productos: <span class="fw-bold text-primary">${ticket.total_productos}</span></small>
+                                        <small class="text-muted" title="${ticket.productos_detalle || 'Sin detalles'}"> ${(ticket.productos_detalle || 'Sin productos').substring(0, 45)}${ticket.productos_detalle && ticket.productos_detalle.length > 45 ? '...' : ''}
+                                            ${ticket.estatus === 'facturado' && uuidSimulado ? `
+                                            <div class="mt-1">
+                                                <small class="text-muted d-block">Folio Fiscal:</small>
+                                                <small class="fw-bold text-primary font-monospace" style="font-size: 0.75rem;">${uuidSimulado}</small>
+                                            </div>
+                                        ` : ''}
+                                            </small>
+                                    </div>
                                 </div>
+                                
+                                <!-- Información Financiera -->
                                 <div class="col-md-2">
-                                    <div class="text-center">
-                                        <h6 class="text-success mb-1">$${ticket.importe_formateado}</h6>
-                                        <small class="text-muted">Importe Total</small>
+                                    <div class="text-center ps-3">
+                                        <small class="text-muted d-block">Total </small>
+                                        <h5 class="text-success mb-1 fw-bold">$${ticket.importe_formateado}</h5>
+                                        <small class="text-muted">Subtotal: <span class="fw-bold">$${ticket.subtotal_formateado}</span></small>
                                         <br>
-                                        <small class="text-muted">
-                                            Subtotal: $${ticket.subtotal_formateado}
+                                        <small class="text-muted">IVA: <span class="fw-bold">$${ticket.impuesto_formateado}</span></small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Información Temporal -->
+                                <div class="col-md-2">
+                                    <div class="text-center ps-3">
+                                        <small class="text-muted d-block mb-1">Fecha de Venta:</small>
+                                        <strong class="d-block mb-2">${ticket.fecha_formateada}</strong>
+                                        <small class="${urgenciaClass}">
+                                            <i class="bi bi-${ticket.estatus === 'facturado' ? 'check-circle' : 'clock-history'} me-1"></i>
+                                            ${ticket.mensaje_urgencia}
                                         </small>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <small class="text-muted d-block">Fecha de Venta:</small>
-                                    <strong>${ticket.fecha_formateada}</strong>
-                                    <br>
-                                    <small class="${urgenciaClass}">
-                                        <i class="bi bi-clock me-1"></i>${ticket.mensaje_urgencia}
-                                    </small>
-                                </div>
-                                <div class="col-md-3 text-end">
-                                    <div class="btn-group-vertical" role="group">
-                                        ${ticket.estatus === 'pendiente' ? `
-                                            <button class="btn btn-success btn-sm mb-2" onclick="facturarTicket(${ticket.id_ticket})">
-                                                <i class="bi bi-check-circle me-1"></i>Facturar
-                                            </button>
-                                        ` : `
-                                            <button class="btn btn-outline-success btn-sm mb-2" disabled>
-                                                <i class="bi bi-file-earmark-check me-1"></i>Facturado
-                                            </button>
-                                        `}
-                                        <button class="btn btn-outline-primary btn-sm" onclick="verDetallesTicket(${ticket.id_ticket})">
-                                            <i class="bi bi-eye me-1"></i>Ver Detalles
-                                        </button>
+                                
+                                <!-- Acciones -->
+                                <div class="col-md-3">
+                                    <div class="d-flex flex-column gap-1 align-items-end">
+                                        ${botonesAccion}
                                     </div>
                                 </div>
                             </div>
@@ -337,81 +351,76 @@
                 </div>
             `;
         }
-        
-        // Función para actualizar el resumen
+
         function actualizarResumen(resumen) {
             document.getElementById('totalTickets').textContent = resumen.pendientes + resumen.facturados;
             document.getElementById('ticketsPendientes').textContent = resumen.pendientes;
             document.getElementById('ticketsFacturados').textContent = resumen.facturados;
             document.getElementById('totalImporte').textContent = `$${resumen.total_importe_formateado}`;
         }
-        
-        // Función para cargar sucursales únicas
+
         function cargarSucursales(tickets) {
             const sucursales = [...new Map(tickets.map(t => [t.id_empresa, {
                 id: t.id_empresa,
                 nombre: t.sucursal_completa
             }])).values()];
-            
+
             const select = document.getElementById('filterSucursal');
             const currentValue = select.value;
-            
+
             select.innerHTML = '<option value="">Todas las sucursales</option>';
             sucursales.forEach(sucursal => {
                 select.innerHTML += `<option value="${sucursal.id}">${sucursal.nombre}</option>`;
             });
-            
+
             if (currentValue) select.value = currentValue;
         }
-        
-        // Función para actualizar paginación
+
         function actualizarPaginacion(data) {
             const container = document.getElementById('paginacionContainer');
             const paginacion = document.getElementById('paginacion');
             const info = document.getElementById('infoPaginacion');
-            
+
             if (data.total_paginas <= 1) {
                 container.style.display = 'none';
                 return;
             }
-            
+
             // Actualizar información
             const inicio = (data.pagina_actual - 1) * data.limite + 1;
             const fin = Math.min(data.pagina_actual * data.limite, data.total_tickets);
             info.textContent = `Mostrando ${inicio}-${fin} de ${data.total_tickets} tickets`;
-            
+
             // Generar paginación
             let html = '';
-            
+
             // Botón anterior
             html += `<li class="page-item ${data.pagina_actual === 1 ? 'disabled' : ''}">`;
             html += `<a class="page-link" href="#" onclick="${data.pagina_actual > 1 ? `cargarTickets(${data.pagina_actual - 1})` : 'return false'}">`;
             html += '<i class="bi bi-chevron-left"></i></a></li>';
-            
+
             // Números de página
             const inicio_pag = Math.max(1, data.pagina_actual - 2);
             const fin_pag = Math.min(data.total_paginas, data.pagina_actual + 2);
-            
+
             for (let i = inicio_pag; i <= fin_pag; i++) {
                 html += `<li class="page-item ${i === data.pagina_actual ? 'active' : ''}">`;
                 html += `<a class="page-link" href="#" onclick="cargarTickets(${i})">${i}</a></li>`;
             }
-            
+
             // Botón siguiente
             html += `<li class="page-item ${data.pagina_actual === data.total_paginas ? 'disabled' : ''}">`;
             html += `<a class="page-link" href="#" onclick="${data.pagina_actual < data.total_paginas ? `cargarTickets(${data.pagina_actual + 1})` : 'return false'}">`;
             html += '<i class="bi bi-chevron-right"></i></a></li>';
-            
+
             paginacion.innerHTML = html;
             container.style.display = 'block';
         }
-        
-        // Función para aplicar filtros
+
         function aplicarFiltros() {
-            cargarTickets(1); // Resetear a la primera página
+            cargarTickets(1);
         }
-        
-        // Función para mostrar errores
+
         function mostrarError(mensaje) {
             const container = document.getElementById('ticketsContainer');
             container.innerHTML = `
@@ -426,12 +435,11 @@
                     </div>
                 </div>
             `;
-            
+
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('ticketsContainer').style.display = 'block';
         }
-        
-        // Función debounce para evitar muchas llamadas
+
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -443,22 +451,18 @@
                 timeout = setTimeout(later, wait);
             };
         }
-        
-        // Función para facturar ticket
+
         function facturarTicket(idTicket) {
             if (confirm('¿Desea procesar la factura para este ticket?')) {
-                // Implementar lógica de facturación
                 alert('Función de facturación en desarrollo');
             }
         }
-        
-        // Función para ver detalles del ticket
+
         function verDetallesTicket(idTicket) {
-            // Mostrar modal con loading
             const modal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
             const modalBody = document.querySelector('#ticketDetailsModal .modal-body');
             const modalTitle = document.querySelector('#ticketDetailsModalLabel');
-            
+
             modalTitle.innerHTML = `<i class="bi bi-receipt me-2"></i>Cargando detalles...`;
             modalBody.innerHTML = `
                 <div class="text-center p-4">
@@ -468,30 +472,28 @@
                     <p class="mt-2 text-muted">Obteniendo detalles del ticket...</p>
                 </div>
             `;
-            
+
             modal.show();
-            
-            // Obtener detalles completos del servidor
+
             fetch('core/ticket-actions.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `accion=obtener_detalle&id_ticket=${idTicket}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const ticket = data.ticket;
-                    const productos = data.productos;
-                    const metodoPago = data.metodo_pago;
-                    
-                    modalTitle.innerHTML = `<i class="bi bi-receipt me-2"></i>Detalles del Ticket ${ticket.folio_ticket}`;
-                    
-                    // Construir tabla de productos
-                    let tablaProductos = '';
-                    if (productos && productos.length > 0) {
-                        tablaProductos = `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `accion=obtener_detalle&id_ticket=${idTicket}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const ticket = data.ticket;
+                        const productos = data.productos;
+                        const metodoPago = data.metodo_pago;
+
+                        modalTitle.innerHTML = `<i class="bi bi-receipt me-2"></i>Detalles del Ticket ${ticket.folio_ticket}`;
+
+                        let tablaProductos = '';
+                        if (productos && productos.length > 0) {
+                            tablaProductos = `
                             <div class="table-responsive">
                                 <table class="table table-sm">
                                     <thead class="table-light">
@@ -504,9 +506,9 @@
                                         </tr>
                                     </thead>
                                     <tbody>`;
-                        
-                        productos.forEach(producto => {
-                            tablaProductos += `
+
+                            productos.forEach(producto => {
+                                tablaProductos += `
                                 <tr>
                                     <td>${producto.id_prod_serv}</td>
                                     <td>${producto.descr}</td>
@@ -514,17 +516,17 @@
                                     <td class="text-end">$${parseFloat(producto.precio_unit).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
                                     <td class="text-end">$${parseFloat(producto.importe).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
                                 </tr>`;
-                        });
-                        
-                        tablaProductos += `
+                            });
+
+                            tablaProductos += `
                                     </tbody>
                                 </table>
                             </div>`;
-                    } else {
-                        tablaProductos = '<p class="text-muted mb-0">No hay productos registrados para este ticket</p>';
-                    }
-                    
-                    modalBody.innerHTML = `
+                        } else {
+                            tablaProductos = '<p class="text-muted mb-0">No hay productos registrados para este ticket</p>';
+                        }
+
+                        modalBody.innerHTML = `
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="card bg-light border-0">
@@ -583,9 +585,9 @@
                             </div>
                         </div>
                     `;
-                } else {
-                    modalTitle.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>Error`;
-                    modalBody.innerHTML = `
+                    } else {
+                        modalTitle.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>Error`;
+                        modalBody.innerHTML = `
                         <div class="text-center p-4">
                             <i class="bi bi-exclamation-triangle display-4 text-warning"></i>
                             <h5 class="mt-3">Error al cargar detalles</h5>
@@ -593,12 +595,12 @@
                             <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                         </div>
                     `;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                modalTitle.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>Error de Conexión`;
-                modalBody.innerHTML = `
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalTitle.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>Error de Conexión`;
+                    modalBody.innerHTML = `
                     <div class="text-center p-4">
                         <i class="bi bi-wifi-off display-4 text-danger"></i>
                         <h5 class="mt-3">Error de Conexión</h5>
@@ -606,6 +608,6 @@
                         <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 `;
-            });
+                });
         }
     </script>

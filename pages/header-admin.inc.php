@@ -69,6 +69,25 @@
                                             </a></li>
                                     </ul>
                                 </li>
+                                <li class="nav-item dropdown mx-1">
+                                    <a class="nav-link dropdown-toggle d-flex align-items-center rounded-pill px-3 py-2 <?php echo (strpos($pagePath, 'config') !== false) ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="#" id="configDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-gear me-2"></i> Configuración
+                                    </a>
+                                    <ul class="dropdown-menu shadow border-0 rounded-3" aria-labelledby="configDropdown">
+                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=config-facturas">
+                                                <i class="bi bi-file-earmark-text me-2 text-primary"></i> Formato de Facturas
+                                            </a></li>
+                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=config-correo">
+                                                <i class="bi bi-envelope-at me-2 text-success"></i> Correo de Envío
+                                            </a></li>
+                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=config-folios">
+                                                <i class="bi bi-hash me-2 text-warning"></i> Folios y Series
+                                            </a></li>
+                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=config-productos">
+                                                <i class="bi bi-boxes me-2 text-info"></i> Agrupación de Productos
+                                            </a></li>
+                                    </ul>
+                                </li>
                             </ul>
                         </div>
 

@@ -133,6 +133,44 @@ $hora_actual = date('H:i');
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Nueva sección de Configuración -->
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-6">
+                            <div class="card bg-warning bg-opacity-10 border-0 h-100">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-gear display-4 text-warning mb-3"></i>
+                                    <h6 class="fw-bold text-warning mb-2">Configuración</h6>
+                                    <p class="text-muted mb-3">Personaliza el sistema de facturación</p>
+                                    <div class="d-grid gap-2">
+                                        <a href="panel?pg=config-facturas" class="btn btn-warning btn-sm">
+                                            <i class="bi bi-file-earmark-text me-2"></i>Formato de Facturas
+                                        </a>
+                                        <a href="panel?pg=config-correo" class="btn btn-outline-warning btn-sm">
+                                            <i class="bi bi-envelope-at me-2"></i>Correo de Envío
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-info bg-opacity-10 border-0 h-100">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-sliders display-4 text-info mb-3"></i>
+                                    <h6 class="fw-bold text-info mb-2">Configuraciones Avanzadas</h6>
+                                    <p class="text-muted mb-3">Folios, series y formato de productos</p>
+                                    <div class="d-grid gap-2">
+                                        <a href="panel?pg=config-folios" class="btn btn-info btn-sm">
+                                            <i class="bi bi-hash me-2"></i>Folios y Series
+                                        </a>
+                                        <a href="panel?pg=config-productos" class="btn btn-outline-info btn-sm">
+                                            <i class="bi bi-boxes me-2"></i>Agrupación de Productos
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

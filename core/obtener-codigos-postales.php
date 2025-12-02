@@ -10,11 +10,9 @@ try {
         'message' => 'Error desconocido.'
     ];
 
-    // Obtener el término de búsqueda
     $input = json_decode(file_get_contents('php://input'), true);
     $termino = isset($input['termino']) ? trim($input['termino']) : '';
 
-    // También verificar GET para compatibilidad
     if (empty($termino) && isset($_GET['termino'])) {
         $termino = trim($_GET['termino']);
     }
@@ -23,7 +21,6 @@ try {
         throw new Exception('Término de búsqueda no proporcionado');
     }
 
-    // Validar que sea numérico y de longitud apropiada
     if (!preg_match('/^\d{1,5}$/', $termino)) {
         throw new Exception('El término debe ser numérico (1-5 dígitos)');
     }
@@ -35,7 +32,6 @@ try {
         throw new Exception('No se pudo conectar a la base de datos');
     }
 
-    // Buscar códigos postales que inicien con el término
     $stmt = $conn->prepare("
         SELECT DISTINCT d_codigo, d_mnpio, d_estado 
         FROM cat_codigo_postal 

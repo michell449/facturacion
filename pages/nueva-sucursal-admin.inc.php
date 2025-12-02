@@ -829,7 +829,6 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Guardando...';
 
-            // Enviar archivos al servidor
             fetch('core/subir-sello-digital.php', {
                 method: 'POST',
                 body: formData
@@ -946,7 +945,6 @@
                 return;
             }
 
-            // Crear FormData para manejar archivos
             let formData;
             try {
                 formData = new FormData();
@@ -961,7 +959,6 @@
                 return;
             }
             
-            // Validar y agregar campos del formulario
             const campos = [
                 { id: 'razonSocial', name: 'razon_social' },
                 { id: 'codigoSucursal', name: 'codigo_sucursal' },
@@ -992,7 +989,7 @@
                 }
             }
 
-            // Agregar logo si existe
+            // agregar logo 
             const logoElement = document.getElementById('logoSucursal');
             if (logoElement && logoElement.files && logoElement.files[0]) {
                 formData.append('logoSucursal', logoElement.files[0]);
@@ -1035,7 +1032,7 @@
                     });
                 });
 
-        // Función para subir sello digital
+        // función para subir sello digital
         function subirSelloTemporal(idEmpresa) {
             const formData = new FormData();
             formData.append('certificado', window.archivosSelloTemporal.certificado);
@@ -1108,7 +1105,7 @@
                 e.stopPropagation();
                 const file = e.target.files[0];
                 if (file) {
-                    // Validar tipo de archivo
+                    // validar tipo de archivo
                     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
                     if (!allowedTypes.includes(file.type)) {
                         Swal.fire({

@@ -8,7 +8,6 @@ $respuesta = [
     'message' => 'Error desconocido.'
 ];
 
-//Obtener la informacion fiscal del usuario, mostrarla para poder editarla 
 
 try {
     if (!isset($_SESSION['usuario_id']) || empty($_SESSION['usuario_id'])) {
@@ -24,7 +23,7 @@ try {
     $datos_fiscales = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($datos_fiscales) {
-        // Si hay código postal, obtener municipio y estado del catálogo
+        // obtener municipio y estado del catálogo con codigo postal
         if (!empty($datos_fiscales['cp'])) {
             $stmt_ubicacion = $conn->prepare("SELECT d_mnpio, d_estado FROM cat_codigo_postal WHERE d_codigo = ? LIMIT 1");
             $stmt_ubicacion->execute([$datos_fiscales['cp']]);

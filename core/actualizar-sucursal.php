@@ -12,32 +12,26 @@ $respuesta = [
     'message' => 'Error desconocido.'
 ];
 
-// Función para manejar subida de logo
 function manejarSubidaLogo($file, $id_empresa) {
     $upload_dir = __DIR__ . '/../uploads/logos/';
-    
-    // Crear directorio si no existe
     if (!is_dir($upload_dir)) {
         mkdir($upload_dir, 0755, true);
     }
     
-    // Validar tipo de archivo
+    // validar tipo de archivo
     $allowed_types = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
     if (!in_array($file['type'], $allowed_types)) {
         throw new Exception('Tipo de archivo no válido para el logo');
     }
     
-    // Validar tamaño (2MB máximo)
     if ($file['size'] > 2 * 1024 * 1024) {
         throw new Exception('El logo no puede ser mayor a 2MB');
     }
     
-    // Generar nombre único
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = 'logo_' . $id_empresa . '_' . time() . '.' . $extension;
     $filepath = $upload_dir . $filename;
     
-    // Mover archivo
     if (move_uploaded_file($file['tmp_name'], $filepath)) {
         return $filename;
     } else {
@@ -58,14 +52,11 @@ try {
         throw new Exception('Sesión de usuario no válida. ID de usuario no encontrado en la sesión.');
     }
 
-    // Determinar si es JSON o FormData
     $content_type = $_SERVER['CONTENT_TYPE'] ?? '';
     
     if (strpos($content_type, 'multipart/form-data') !== false) {
-        // Es FormData (con archivos)
         $data = $_POST;
     } else {
-        // Es JSON
         $json_data = file_get_contents('php://input');
         $data = json_decode($json_data, true);
 
@@ -97,15 +88,12 @@ try {
     $estatus      = trim($data['estatus'] ?? '1');
     $email        = trim($data['email'] ?? '');
     $clave_privada = isset($data['clave_privada']) && !empty(trim($data['clave_privada'])) ? trim($data['clave_privada']) : null;
-    
-    // Manejar logo
     $logo_filename = null;
     $eliminar_logo = isset($_POST['eliminar_logo']) && $_POST['eliminar_logo'] === 'true';
     
     if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
         $logo_filename = manejarSubidaLogo($_FILES['logo'], $id_empresa);
     } elseif ($eliminar_logo) {
-        // Si se solicita eliminar el logo, obtener el logo actual para eliminarlo
         $stmt_logo = $conn->prepare("SELECT logo FROM empresas WHERE id_empresa = ? AND id_usuario = ?");
         $stmt_logo->execute([$id_empresa, $id_usuario]);
         $logo_actual = $stmt_logo->fetchColumn();
@@ -117,7 +105,7 @@ try {
             }
         }
         
-        $logo_filename = ''; // Para actualizar a NULL en la base de datos
+        $logo_filename = ''; 
     } 
 
     $estatus_lower = strtolower($estatus);
@@ -138,9 +126,7 @@ try {
         throw new Exception("Ya existe otra sucursal con el código: " . $codigo_suc);
     }
     
-    // Construir consulta dinámicamente dependiendo si hay logo o se elimina
     if ($logo_filename !== null) {
-        // Hay nuevo logo o se está eliminando (logo_filename = '' para eliminar)
         $sql = "UPDATE empresas SET 
                     rfc = ?, 
                     razon_social = ?, 
@@ -161,7 +147,6 @@ try {
             $id_empresa, $id_usuario
         ];
     } else {
-        // No hay cambios en el logo
         $sql = "UPDATE empresas SET 
                     rfc = ?, 
                     razon_social = ?, 
@@ -185,7 +170,7 @@ try {
     $stmt->execute($params);
 
     if ($stmt->rowCount() > 0 || $stmt->errorCode() === '00000') {
-        // Si hay clave privada, cifrarla y actualizarla
+
         if ($clave_privada !== null) {
             $clave_cifrada = SelloUtils::cifrarClave($clave_privada, $id_empresa);
             $stmt_clave = $conn->prepare("UPDATE empresas SET clave = ? WHERE id_empresa = ? AND id_usuario = ?");

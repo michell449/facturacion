@@ -49,7 +49,6 @@ if (empty($pagePath)) {
         safe_redirect("index.php?$panelUrl");
     }
 } else {
-    // Reset contador si llegamos a una página válida
     reset_redirect_count();
 }
 
@@ -57,7 +56,6 @@ $accessMap = [
     // Páginas invitado
     'facturar-login' => ['guest'],
     'facturar-invitado' => ['guest'],
-    'registro-info-usuarios' => ['guest', 'cliente'], 
     'verificacion-sistema' => ['guest'],
     '404' => ['guest', 'cliente', 'admin'],
 
@@ -97,7 +95,6 @@ if (isset($accessMap[$currentPage])) {
     require_roles($accessMap[$currentPage]); 
     
 } else if (is_authenticated()) {
-    // Usuario autenticado pero página no en mapa de acceso
     $panelUrl = get_panel_url();
     safe_redirect("index.php?$panelUrl");
 } else {
@@ -109,7 +106,6 @@ if (isset($accessMap[$currentPage])) {
 
 $pageInclude = "pages/$currentPage.inc.php";
 
-// Verificar si la página existe y es accesible
 if (!page_exists_and_accessible($currentPage, $accessMap)) {
     debug_log("Página no encontrada o no accesible", [
         'page' => $currentPage,
@@ -118,12 +114,10 @@ if (!page_exists_and_accessible($currentPage, $accessMap)) {
         'user_role' => is_authenticated() ? (is_admin() ? 'admin' : 'cliente') : 'guest'
     ]);
     
-    // Evitar bucle infinito en 404
     if ($currentPage !== '404') {
         $currentPage = '404';
         $pageInclude = "pages/$currentPage.inc.php";
         
-        // Si tampoco existe el 404, crear uno básico
         if (!file_exists($pageInclude)) {
             http_response_code(404);
             echo '<!DOCTYPE html><html><head><title>404 - Página no encontrada</title></head><body>';
@@ -150,7 +144,6 @@ if ($isPanel) {
     echo '<body class="d-flex flex-column min-vh-100">';
 }
 
-// Incluir headers
 $noHeaderPages = ['facturar-login', 'facturar-invitado', 'registro-info-usuarios', 'verificacion-sistema', '404'];
 if (!in_array($currentPage, $noHeaderPages)) {
     if (is_admin()) {
@@ -160,10 +153,8 @@ if (!in_array($currentPage, $noHeaderPages)) {
     }
 }
 
-// Contenido Principal
 require_once $pageInclude;
 
-// Incluir footer y scripts
 $noFooterPages = ['facturar-login', 'registro-info-usuarios', 'verificacion-sistema'];
 if (!in_array($currentPage, $noFooterPages)) {
     require_once 'pages/footer.inc.php';

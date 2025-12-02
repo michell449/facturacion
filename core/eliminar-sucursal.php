@@ -11,7 +11,6 @@ $respuesta = [
 ];
 
 try {
-    // 1. Obtener ID de usuario de la sesión
     $id_usuario = null;
     if (isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id'])) {
         $id_usuario = (int)$_SESSION['usuario_id'];

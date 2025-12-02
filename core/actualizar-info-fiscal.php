@@ -15,7 +15,6 @@ try {
     }
     $id_usuario = (int)$_SESSION['usuario_id'];
 
-    // Obtener datos JSON del request
     $json_data = file_get_contents('php://input');
     $data = json_decode($json_data, true);
 
@@ -41,7 +40,7 @@ try {
     $num_int      = empty($data['numero_interior']) ? null : trim($data['numero_interior']); 
     $colonia      = trim($data['colonia'] ?? '');
 
-    // Determinar tipo de persona basado en la longitud del RFC
+    // determinar tipo de persona basado en la longitud del RFC
     $rfc_length = strlen($rfc);
     if ($rfc_length === 13) {
         $tipo_pers = 'Fisica';
@@ -51,7 +50,7 @@ try {
         throw new Exception('La longitud del RFC (' . $rfc_length . ') no es válida (debe ser 12 o 13 caracteres).');
     }
 
-    // Validar código postal
+    // validar código postal
     if ($cp < 1000 || $cp > 99999) {
         throw new Exception('El código postal debe estar entre 01000 y 99999.');
     }
@@ -59,7 +58,7 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
 
-    // Verificar si ya existe registro fiscal para el usuario
+    // verificar si ya existe registro fiscal para el usuario
     $stmt_check = $conn->prepare("SELECT id_df FROM datos_fiscales_usuario WHERE id_usuario = ? LIMIT 1");
     $stmt_check->execute([$id_usuario]);
     $existing_record = $stmt_check->fetch(PDO::FETCH_ASSOC);
@@ -68,14 +67,14 @@ try {
     $params = [$rfc, $razon_social, $reg_fiscal, $cp, $tipo_pers, $calle, $num_ext, $num_int, $colonia];
 
     if ($existing_record) {
-        // Actualizar registro existente
+        // actualizar registro existente
         $sql = "UPDATE datos_fiscales_usuario SET $sql_fields WHERE id_usuario = ?";
         $params[] = $id_usuario;
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
         $action = 'actualizados';
     } else {
-        // Crear nuevo registro
+        // crear nuevo registro
         $sql_fields_insert = 'id_usuario, ' . str_replace(' = ?', '', $sql_fields);
         $placeholders = array_fill(0, count($params) + 1, '?');
         $placeholders_str = implode(', ', $placeholders);

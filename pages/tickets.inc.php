@@ -1,613 +1,425 @@
-<!-- Tickets Pendientes de Facturación -->
 <div class="content-wrapper bg-light loaded">
-    <!-- Header -->
     <div class="container py-4">
+
         <div class="row mb-4 align-items-center">
             <div class="col-8">
-                <h2 class="text-primary fw-bold mb-0">
-                    <i class="bi bi-ticket-detailed display-6 text-primary me-2"></i>
-                    Tickets
-                </h2>
-                <p class="text-muted mb-0">Gestiona los tickets pendientes de facturación.</p>
+                <h2 class="text-primary fw-bold mb-0"><i class="bi bi-ticket-detailed me-2"></i>Gestión de Tickets</h2>
             </div>
             <div class="col-4 text-end">
-                <button type="button" class="btn btn-outline-primary btn-lg rounded-3" onclick="window.history.back()">
-                    <i class="bi bi-arrow-left me-2"></i>Regresar
-                </button>
+                <button class="btn btn-outline-primary" onclick="window.history.back()">Regresar</button>
             </div>
         </div>
 
-        <div class="container py-4">
-            <!-- Filtros y Controles -->
-            <div class="row g-4">
-                <div class="col-lg-12">
-                    <div class="card shadow-sm border-0 rounded-4">
-                        <div class="card-body p-3">
-                            <div class="row g-3 align-items-center">
-                                <div class="col-md-3">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0">
-                                            <i class="bi bi-search text-muted"></i>
-                                        </span>
-                                        <input type="text" class="form-control border-0 bg-light"
-                                            placeholder="Buscar por folio..." id="searchFolio">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <select class="form-select border-0 bg-light" id="filterSucursal">
-                                        <option value="">Todas las sucursales</option>
-                                        <!-- Opciones se cargan dinámicamente -->
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0">
-                                            <i class="bi bi-calendar text-muted"></i>
-                                        </span>
-                                        <input type="date" class="form-control border-0 bg-light" id="filterFecha">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0">
-                                            <i class="bi bi-currency-dollar text-muted"></i>
-                                        </span>
-                                        <input type="number" class="form-control border-0 bg-light"
-                                            placeholder="Monto..." id="filterMonto" step="0.01">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <select class="form-select border-0 bg-light" id="filterEstadoFacturacion">
-                                        <option value="">Todos los estados</option>
-                                        <option value="pendiente">Sin Facturar</option>
-                                        <option value="facturado">Facturado</option>
-                                    </select>
-                                </div>
-                            </div>
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-body p-3">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control bg-light border-0" id="searchFolio" placeholder="Buscar folio...">
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select bg-light border-0" id="filterEstatus">
+                            <option value="">Todos los estatus</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="facturado">Facturados</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select border-0 bg-light" id="filterSucursal">
+                            <option value="">Todas las sucursales</option>
+                            <!-- Opciones de sucursales se cargarán dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <button type="button" class="btn btn-outline-secondary w-100" id="daterange-btn">
+                                <i class="bi bi-calendar-range me-2"></i>
+                                <span>Seleccionar fechas</span>
+                                <i class="bi bi-chevron-down ms-2"></i>
+                            </button>
                         </div>
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()" title="Limpiar filtros">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-outline-info w-100" type="button" data-bs-toggle="collapse" data-bs-target="#panelConfig">
+                            <i class="bi bi-gear"></i>
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Resumen de Tickets -->
-            <div class="row g-4 py-2" id="ticketsResumen">
-                <div class="col-md-3">
-                    <div class="card bg-info bg-opacity-10 border-0 rounded-4">
-                        <div class="card-body text-center text-primary">
-                            <i class="bi bi-ticket-detailed display-8 mb-2"></i>
-                            <h4 class="mb-1" id="totalTickets">0</h4>
-                            <small>Total Tickets</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-info border-0 rounded-4 bg-opacity-10">
-                        <div class="card-body text-center text-primary">
-                            <i class="bi bi-clock-history display-8 mb-2"></i>
-                            <h4 class="mb-1" id="ticketsPendientes">0</h4>
-                            <small>Pendientes</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-info border-0 rounded-4 bg-opacity-10">
-                        <div class="card-body text-center text-primary">
-                            <i class="bi bi-check-circle display-8 mb-2"></i>
-                            <h4 class="mb-1" id="ticketsFacturados">0</h4>
-                            <small>Facturados</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-info border-0 rounded-4 bg-opacity-10">
-                        <div class="card-body text-center text-primary">
-                            <i class="bi bi-currency-dollar display-8 mb-2"></i>
-                            <h4 class="mb-1" id="totalImporte">$0.00</h4>
-                            <small>Importe Total</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="collapse mb-4" id="panelConfig">
+            <div class="card card-body border-info bg-light">
+                <h6 class="text-info fw-bold"><i class="bi bi-eye me-2"></i>Opciones de Visualización</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Modo de Productos:</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="vistaModo" id="vDesglosado" value="desglosado" checked onchange="aplicarVista()">
+                            <label class="btn btn-outline-primary btn-sm" for="vDesglosado"><i class="bi bi-list me-1"></i>Desglosado (Tal cual BD)</label>
 
-            <!-- Loading State -->
-            <div class="row g-4 py-4" id="loadingState">
-                <div class="col-12">
-                    <div class="card shadow-sm border-0 rounded-4">
-                        <div class="card-body text-center p-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
-                            <p class="mt-3 text-muted">Cargando tickets...</p>
+                            <input type="radio" class="btn-check" name="vistaModo" id="vAgrupado" value="agrupado" onchange="aplicarVista()">
+                            <label class="btn btn-outline-primary btn-sm" for="vAgrupado"><i class="bi bi-collection me-1"></i>Agrupado (Sumar items)</label>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Lista de Tickets -->
-            <div class="row g-4 py-4" id="ticketsContainer" style="display: none;">
-                <!-- Los tickets se cargan dinámicamente aquí -->
-            </div>
-            <!-- Paginación -->
-            <div class="row mt-4" id="paginacionContainer" style="display: none;">
-                <div class="col-12">
-                    <div class="card shadow-sm border-0 rounded-4">
-                        <div class="card-body p-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <small class="text-muted" id="infoPaginacion">Mostrando 0 tickets</small>
-                                </div>
-                                <nav aria-label="Navegación de tickets">
-                                    <ul class="pagination mb-0" id="paginacion">
-                                        <!-- Paginación dinámica -->
-                                    </ul>
-                                </nav>
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-outline-primary" onclick="cargarTickets()">
-                                        <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Detalle de Tickets:</label>
+                        <div class="form-check form-switch mt-1">
+                            <input class="form-check-input" type="checkbox" id="checkExpandirTodo" onchange="aplicarVista()">
+                            <label class="form-check-label" for="checkExpandirTodo">Expandir todos los productos automáticamente</label>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="row g-3 mb-4 text-center">
+            <div class="col-4">
+                <div class="p-3 bg-info bg-opacity-10 rounded-4 shadow-sm">
+                    <h5 class="text-primary fw-bold mb-0" id="lblPendientes">0</h5>
+                    <small class="text-muted">Pendientes</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-3 bg-info bg-opacity-10 rounded-4 shadow-sm">
+                    <h5 class="text-primary fw-bold mb-0" id="lblFacturados">0</h5>
+                    <small class="text-muted">Facturados</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-3 bg-info bg-opacity-10 rounded-4 shadow-sm">
+                    <h5 class="text-primary fw-bold mb-0" id="lblImporte">$0.00</h5>
+                    <small class="text-muted">Importe Total</small>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+        <div id="ticketsContainer" class="row g-3"></div>
+
+        <div id="paginacion" class="d-flex justify-content-center mt-4"></div>
     </div>
+</div>
 
-    <!-- Modal de Detalles del Ticket -->
-    <div class="modal fade" id="ticketDetailsModal" tabindex="-1" aria-labelledby="ticketDetailsModalLabel">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content rounded-4 border-0 shadow-lg">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold" id="ticketDetailsModalLabel">
-                        <i class="bi bi-receipt me-2"></i>Detalles del Ticket
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <!-- Contenido del modal se carga dinámicamente -->
-                </div>
-            </div>
-        </div>
-    </div>
+<script src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+<script>
+    let datosTickets = [];
+    let config = {
+        modo: 'desglosado',
+        expandir: false
+    };
 
-    <script>
-        let paginaActual = 1;
-        let ticketsData = [];
-        let sucursalesData = [];
+    let fechaInicio = null;
+    let fechaFin = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            cargarTickets();
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarTickets();
+        inicializarDateRangePicker();
 
-            document.getElementById('searchFolio').addEventListener('input', debounce(aplicarFiltros, 300));
-            document.getElementById('filterSucursal').addEventListener('change', aplicarFiltros);
-            document.getElementById('filterFecha').addEventListener('change', aplicarFiltros);
-            document.getElementById('filterMonto').addEventListener('input', debounce(aplicarFiltros, 500));
-            document.getElementById('filterEstadoFacturacion').addEventListener('change', aplicarFiltros);
-        });
+        // Listeners filtros
+        document.getElementById('searchFolio').addEventListener('input', debounce(() => cargarTickets(1), 500));
+        document.getElementById('filterEstatus').addEventListener('change', () => cargarTickets(1));
+        document.getElementById('filterSucursal').addEventListener('change', () => cargarTickets(1));
+    });
 
-        function cargarTickets(pagina = 1) {
-            paginaActual = pagina;
+    function cargarTickets(pagina = 1) {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('ticketsContainer').innerHTML = '';
 
-            document.getElementById('loadingState').style.display = 'block';
-            document.getElementById('ticketsContainer').style.display = 'none';
-            document.getElementById('paginacionContainer').style.display = 'none';
+        const params = new URLSearchParams();
+        params.append('pagina', pagina);
 
-            const params = new URLSearchParams({
-                pagina: pagina,
-                limite: 20
-            });
+        // Filtros básicos
+        const folio = document.getElementById('searchFolio').value.trim();
+        const estatus = document.getElementById('filterEstatus').value;
+        const sucursal = document.getElementById('filterSucursal').value;
 
-            const folio = document.getElementById('searchFolio').value.trim();
-            const sucursal = document.getElementById('filterSucursal').value;
-            const fecha = document.getElementById('filterFecha').value;
-            const monto = document.getElementById('filterMonto').value;
-            const estado = document.getElementById('filterEstadoFacturacion').value;
+        if (folio) params.append('folio', folio);
+        if (estatus) params.append('estatus', estatus);
+        if (sucursal) params.append('sucursal', sucursal);
 
-            if (folio) params.append('folio', folio);
-            if (sucursal) params.append('id_empresa', sucursal);
-            if (fecha) params.append('fecha_inicio', fecha);
-            if (monto) params.append('importe_min', monto);
-            if (estado) params.append('estatus', estado);
-
-            fetch(`core/consultar-tickets.php?${params.toString()}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        ticketsData = data.tickets;
-                        mostrarTickets(data);
-                        actualizarResumen(data.resumen);
-                        actualizarPaginacion(data);
-                        cargarSucursales(data.tickets);
-                    } else {
-                        mostrarError(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    mostrarError('Error de conexión al cargar tickets');
-                });
+        // Agregar fechas si están seleccionadas
+        if (fechaInicio && fechaFin) {
+            params.append('fecha_desde', fechaInicio.format('YYYY-MM-DD'));
+            params.append('fecha_hasta', fechaFin.format('YYYY-MM-DD'));
         }
 
-        function mostrarTickets(data) {
-            const container = document.getElementById('ticketsContainer');
+        fetch('core/consultar-tickets.php?' + params)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    datosTickets = data.tickets;
+                    renderizarTickets();
+                    actualizarResumen(data.resumen);
+                    generarPaginacion(data.total_paginas, pagina);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(e => console.error(e))
+            .finally(() => document.getElementById('loading').style.display = 'none');
+    }
 
-            if (data.tickets.length === 0) {
-                container.innerHTML = `
+    function aplicarVista() {
+        config.modo = document.getElementById('vAgrupado').checked ? 'agrupado' : 'desglosado';
+        config.expandir = document.getElementById('checkExpandirTodo').checked;
+        renderizarTickets();
+    }
+
+    function renderizarTickets() {
+        const container = document.getElementById('ticketsContainer');
+        container.innerHTML = '';
+
+        if (datosTickets.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center text-muted">No se encontraron tickets</div>';
+            return;
+        }
+
+        datosTickets.forEach(ticket => {
+            const esFacturado = ticket.estatus === 'facturado';
+            const colorEstado = esFacturado ? 'success' : 'warning';
+            const displayDetalle = config.expandir ? 'block' : 'none';
+            const iconDetalle = config.expandir ? 'bi-chevron-up' : 'bi-chevron-down';
+
+            // Generar HTML de productos según configuración
+            const tablaProductos = generarHTMLProductos(ticket.productos);
+
+            const html = `
                     <div class="col-12">
-                        <div class="card shadow-sm border-0 rounded-4">
-                            <div class="card-body text-center p-5">
-                                <i class="bi bi-ticket-detailed display-1 text-muted mb-3"></i>
-                                <h5 class="text-muted">No hay tickets disponibles</h5>
-                                <p class="text-muted mb-0">No se encontraron tickets con los filtros aplicados.</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = data.tickets.map(ticket => crearTicketHTML(ticket)).join('');
-            }
-
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('ticketsContainer').style.display = 'block';
-        }
-
-        // Función para crear el HTML de un ticket
-        function crearTicketHTML(ticket) {
-            const estadoClass = ticket.estatus === 'facturado' ? 'bg-success' : 'bg-warning text-dark';
-            const estadoTexto = ticket.estatus === 'facturado' ? 'Facturado' : 'Pendiente';
-
-            let urgenciaClass = 'text-success';
-            if (ticket.urgencia === 'alta') urgenciaClass = 'text-danger';
-            else if (ticket.urgencia === 'media') urgenciaClass = 'text-warning';
-
-            // Generar UUID simulado para tickets facturados (temporal hasta implementar backend)
-            const uuidSimulado = ticket.estatus === 'facturado' ?
-                `${ticket.id_ticket}-${ticket.folio_ticket}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase() :
-                null;
-
-            // Crear botones contextuales según el estado
-            let botonesAccion = '';
-            if (ticket.estatus === 'pendiente') {
-                botonesAccion = `
-                    <button class="btn btn-outline-success btn-md mb-1" onclick="facturarTicket(${ticket.id_ticket})" title="Generar Factura">
-                        <i class="bi bi-file-earmark-plus me-1"></i>Facturar
-                    </button>
-                `;
-            } else {
-                botonesAccion = `
-                    <button class="btn btn-outline-primary btn-sm mb-1" onclick="verDetallesTicket(${ticket.id_ticket})" title="Ver Detalles">
-                        <i class="bi bi-envelope me-1"></i>Reenviar
-                    </button>
-                    <button class="btn btn-outline-danger btn-sm mb-1" onclick="cancelarFactura(${ticket.id_ticket})" title="Cancelar Factura">
-                        <i class="bi bi-x-circle me-1"></i>Cancelar
-                    </button>
-                `;
-            }
-
-            return `
-                <div class="col-12">
-                    <div class="card shadow-lg border-0 rounded-4 ${ticket.estatus === 'facturado' ? 'border-success border-opacity-25' : ''}">
-                        <div class="card-body p-4">
-                            <div class="row">
-                                <!-- Información Principal -->
-                                <div class="col-md-2">
-                                    <div class="text-center">
-                                        <h4 class="fw-bold text-primary mb-1">${ticket.folio_ticket}</h4>
-                                        <small>${ticket.sucursal_completa}</small>
-                                        <div class="mb-2">
-                                        <span class="badge ${estadoClass} mb-1">${estadoTexto}</span>
+                        <div class="card border-0 shadow-sm rounded-4 mb-2">
+                            <div class="card-header bg-white py-3" style="cursor:pointer" onclick="toggleDetalle(${ticket.id_ticket})">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <span class="badge bg-${colorEstado} me-2">${ticket.estatus}</span>
+                                        <span class="fw-bold text-dark">${ticket.folio_ticket}</span>
                                     </div>
+                                    <div class="col-md-4 text-muted small">
+                                        ${ticket.sucursal_fmt}<br>
+                                        <i class="bi bi-calendar me-1"></i>${ticket.fecha_fmt}
                                     </div>
-                                </div>
-                                
-                                <!-- Detalles del Ticket -->
-                                <div class="col-md-3">
-                                    <div>
-                                        <small class="text-muted d-block">Productos: <span class="fw-bold text-primary">${ticket.total_productos}</span></small>
-                                        <small class="text-muted" title="${ticket.productos_detalle || 'Sin detalles'}"> ${(ticket.productos_detalle || 'Sin productos').substring(0, 45)}${ticket.productos_detalle && ticket.productos_detalle.length > 45 ? '...' : ''}
-                                            ${ticket.estatus === 'facturado' && uuidSimulado ? `
-                                            <div class="mt-1">
-                                                <small class="text-muted d-block">Folio Fiscal:</small>
-                                                <small class="fw-bold text-primary font-monospace" style="font-size: 0.75rem;">${uuidSimulado}</small>
-                                            </div>
-                                        ` : ''}
-                                            </small>
+                                    <div class="col-md-3 text-end">
+                                        <h5 class="mb-0 fw-bold text-primary">$${ticket.importe_fmt}</h5>
+                                        <small class="text-muted">${ticket.items_count} productos</small>
                                     </div>
-                                </div>
-                                
-                                <!-- Información Financiera -->
-                                <div class="col-md-2">
-                                    <div class="text-center ps-3">
-                                        <small class="text-muted d-block">Total </small>
-                                        <h5 class="text-success mb-1 fw-bold">$${ticket.importe_formateado}</h5>
-                                        <small class="text-muted">Subtotal: <span class="fw-bold">$${ticket.subtotal_formateado}</span></small>
-                                        <br>
-                                        <small class="text-muted">IVA: <span class="fw-bold">$${ticket.impuesto_formateado}</span></small>
-                                    </div>
-                                </div>
-                                
-                                <!-- Información Temporal -->
-                                <div class="col-md-2">
-                                    <div class="text-center ps-3">
-                                        <small class="text-muted d-block mb-1">Fecha de Venta:</small>
-                                        <strong class="d-block mb-2">${ticket.fecha_formateada}</strong>
-                                        <small class="${urgenciaClass}">
-                                            <i class="bi bi-${ticket.estatus === 'facturado' ? 'check-circle' : 'clock-history'} me-1"></i>
-                                            ${ticket.mensaje_urgencia}
-                                        </small>
-                                    </div>
-                                </div>
-                                
-                                <!-- Acciones -->
-                                <div class="col-md-3">
-                                    <div class="d-flex flex-column gap-1 align-items-end">
-                                        ${botonesAccion}
+                                    <div class="col-md-2 text-end">
+                                        <i class="bi ${iconDetalle} text-muted" id="icon-${ticket.id_ticket}"></i>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function actualizarResumen(resumen) {
-            document.getElementById('totalTickets').textContent = resumen.pendientes + resumen.facturados;
-            document.getElementById('ticketsPendientes').textContent = resumen.pendientes;
-            document.getElementById('ticketsFacturados').textContent = resumen.facturados;
-            document.getElementById('totalImporte').textContent = `$${resumen.total_importe_formateado}`;
-        }
-
-        function cargarSucursales(tickets) {
-            const sucursales = [...new Map(tickets.map(t => [t.id_empresa, {
-                id: t.id_empresa,
-                nombre: t.sucursal_completa
-            }])).values()];
-
-            const select = document.getElementById('filterSucursal');
-            const currentValue = select.value;
-
-            select.innerHTML = '<option value="">Todas las sucursales</option>';
-            sucursales.forEach(sucursal => {
-                select.innerHTML += `<option value="${sucursal.id}">${sucursal.nombre}</option>`;
-            });
-
-            if (currentValue) select.value = currentValue;
-        }
-
-        function actualizarPaginacion(data) {
-            const container = document.getElementById('paginacionContainer');
-            const paginacion = document.getElementById('paginacion');
-            const info = document.getElementById('infoPaginacion');
-
-            if (data.total_paginas <= 1) {
-                container.style.display = 'none';
-                return;
-            }
-
-            // Actualizar información
-            const inicio = (data.pagina_actual - 1) * data.limite + 1;
-            const fin = Math.min(data.pagina_actual * data.limite, data.total_tickets);
-            info.textContent = `Mostrando ${inicio}-${fin} de ${data.total_tickets} tickets`;
-
-            // Generar paginación
-            let html = '';
-
-            // Botón anterior
-            html += `<li class="page-item ${data.pagina_actual === 1 ? 'disabled' : ''}">`;
-            html += `<a class="page-link" href="#" onclick="${data.pagina_actual > 1 ? `cargarTickets(${data.pagina_actual - 1})` : 'return false'}">`;
-            html += '<i class="bi bi-chevron-left"></i></a></li>';
-
-            // Números de página
-            const inicio_pag = Math.max(1, data.pagina_actual - 2);
-            const fin_pag = Math.min(data.total_paginas, data.pagina_actual + 2);
-
-            for (let i = inicio_pag; i <= fin_pag; i++) {
-                html += `<li class="page-item ${i === data.pagina_actual ? 'active' : ''}">`;
-                html += `<a class="page-link" href="#" onclick="cargarTickets(${i})">${i}</a></li>`;
-            }
-
-            // Botón siguiente
-            html += `<li class="page-item ${data.pagina_actual === data.total_paginas ? 'disabled' : ''}">`;
-            html += `<a class="page-link" href="#" onclick="${data.pagina_actual < data.total_paginas ? `cargarTickets(${data.pagina_actual + 1})` : 'return false'}">`;
-            html += '<i class="bi bi-chevron-right"></i></a></li>';
-
-            paginacion.innerHTML = html;
-            container.style.display = 'block';
-        }
-
-        function aplicarFiltros() {
-            cargarTickets(1);
-        }
-
-        function mostrarError(mensaje) {
-            const container = document.getElementById('ticketsContainer');
-            container.innerHTML = `
-                <div class="col-12">
-                    <div class="card shadow-sm border-0 rounded-4">
-                        <div class="card-body text-center p-5">
-                            <i class="bi bi-exclamation-triangle display-4 text-danger mb-3"></i>
-                            <h5 class="text-danger">Error al cargar tickets</h5>
-                            <p class="text-muted mb-3">${mensaje}</p>
-                            <button class="btn btn-primary" onclick="cargarTickets()">Reintentar</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('ticketsContainer').style.display = 'block';
-        }
-
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        function facturarTicket(idTicket) {
-            if (confirm('¿Desea procesar la factura para este ticket?')) {
-                alert('Función de facturación en desarrollo');
-            }
-        }
-
-        function verDetallesTicket(idTicket) {
-            const modal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
-            const modalBody = document.querySelector('#ticketDetailsModal .modal-body');
-            const modalTitle = document.querySelector('#ticketDetailsModalLabel');
-
-            modalTitle.innerHTML = `<i class="bi bi-receipt me-2"></i>Cargando detalles...`;
-            modalBody.innerHTML = `
-                <div class="text-center p-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Obteniendo detalles del ticket...</p>
-                </div>
-            `;
-
-            modal.show();
-
-            fetch('core/ticket-actions.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `accion=obtener_detalle&id_ticket=${idTicket}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const ticket = data.ticket;
-                        const productos = data.productos;
-                        const metodoPago = data.metodo_pago;
-
-                        modalTitle.innerHTML = `<i class="bi bi-receipt me-2"></i>Detalles del Ticket ${ticket.folio_ticket}`;
-
-                        let tablaProductos = '';
-                        if (productos && productos.length > 0) {
-                            tablaProductos = `
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>ID Prod.</th>
-                                            <th>Descripción</th>
-                                            <th class="text-center">Cant.</th>
-                                            <th class="text-end">P. Unit.</th>
-                                            <th class="text-end">Importe</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>`;
-
-                            productos.forEach(producto => {
-                                tablaProductos += `
-                                <tr>
-                                    <td>${producto.id_prod_serv}</td>
-                                    <td>${producto.descr}</td>
-                                    <td class="text-center">${producto.cant}</td>
-                                    <td class="text-end">$${parseFloat(producto.precio_unit).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
-                                    <td class="text-end">$${parseFloat(producto.importe).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
-                                </tr>`;
-                            });
-
-                            tablaProductos += `
-                                    </tbody>
-                                </table>
-                            </div>`;
-                        } else {
-                            tablaProductos = '<p class="text-muted mb-0">No hay productos registrados para este ticket</p>';
-                        }
-
-                        modalBody.innerHTML = `
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-primary"><i class="bi bi-info-circle me-2"></i>Información General</h6>
-                                        <p><strong>Folio:</strong> ${ticket.folio_ticket}</p>
-                                        <p><strong>Sucursal:</strong> ${ticket.nombre_sucursal} (${ticket.codigo_suc})</p>
-                                        <p><strong>RFC:</strong> ${ticket.rfc}</p>
-                                        <p><strong>Fecha de Venta:</strong> ${new Date(ticket.fecha_venta).toLocaleDateString('es-MX')}</p>
-                                        <p><strong>Estado:</strong> 
-                                            <span class="badge ${ticket.estatus === 'facturado' ? 'bg-success' : 'bg-warning text-dark'}">
-                                                ${ticket.estatus === 'facturado' ? 'Facturado' : 'Pendiente'}
-                                            </span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-success"><i class="bi bi-currency-dollar me-2"></i>Importes</h6>
-                                        <p><strong>Subtotal:</strong> $${parseFloat(ticket.subtotal).toLocaleString('es-MX', {minimumFractionDigits: 2})}</p>
-                                        <p><strong>Impuestos:</strong> $${parseFloat(ticket.impuesto_t).toLocaleString('es-MX', {minimumFractionDigits: 2})}</p>
-                                        <hr>
-                                        <p><strong>Total:</strong> <span class="h5 text-success">$${parseFloat(ticket.importe_t).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                            ${metodoPago ? `
-                            <div class="col-12">
-                                <div class="card bg-light border-0">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-warning"><i class="bi bi-credit-card me-2"></i>Método de Pago</h6>
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <p><strong>Método:</strong> ${metodoPago.metodo_pago}</p>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <p><strong>Forma de Pago:</strong> ${metodoPago.forma_pago}</p>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <p><strong>Monto:</strong> $${parseFloat(metodoPago.monto).toLocaleString('es-MX', {minimumFractionDigits: 2})}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            ` : ''}
-                            <div class="col-12">
-                                <div class="card bg-light border-0">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-info"><i class="bi bi-list-ul me-2"></i>Productos (${productos ? productos.length : 0})</h6>
+                            
+                            <div class="card-body bg-light border-top" id="body-${ticket.id_ticket}" style="display:${displayDetalle}">
+                                <div class="row">
+                                    <div class="col-md-9">
                                         ${tablaProductos}
                                     </div>
+                                    <div class="col-md-3 d-flex align-items-center justify-content-center border-start">
+                                        ${!esFacturado 
+                                            ? `<button class="btn btn-success w-100 shadow-sm" onclick="facturar(${ticket.id_ticket})">
+                                                 <i class="bi bi-lightning-charge me-2"></i>Facturar
+                                               </button>` 
+                                            : `<button class="btn btn-outline-secondary w-100" onclick="descargar(${ticket.id_ticket})">
+                                                <i class="bi bi-download me-2"></i>XML / PDF
+                                            </button>`
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    `;
-                    } else {
-                        modalTitle.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>Error`;
-                        modalBody.innerHTML = `
-                        <div class="text-center p-4">
-                            <i class="bi bi-exclamation-triangle display-4 text-warning"></i>
-                            <h5 class="mt-3">Error al cargar detalles</h5>
-                            <p class="text-muted">${data.message}</p>
-                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        </div>
-                    `;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    modalTitle.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>Error de Conexión`;
-                    modalBody.innerHTML = `
-                    <div class="text-center p-4">
-                        <i class="bi bi-wifi-off display-4 text-danger"></i>
-                        <h5 class="mt-3">Error de Conexión</h5>
-                        <p class="text-muted">No se pudo conectar con el servidor</p>
-                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 `;
-                });
+            container.innerHTML += html;
+        });
+    }
+
+    function generarHTMLProductos(productos) {
+        if (!productos || productos.length === 0) return '<small>Sin detalles</small>';
+
+        let lista = [];
+
+        if (config.modo === 'agrupado') {
+            // Lógica de agrupación
+            const agrupador = {};
+            productos.forEach(p => {
+                const key = p.id_prod_serv;
+                if (!agrupador[key]) {
+                    agrupador[key] = {
+                        ...p,
+                        cant: parseFloat(p.cant),
+                        importe: parseFloat(p.importe)
+                    };
+                } else {
+                    agrupador[key].cant += parseFloat(p.cant);
+                    agrupador[key].importe += parseFloat(p.importe);
+                }
+            });
+            lista = Object.values(agrupador);
+        } else {
+            lista = productos;
         }
-    </script>
+
+        let html = `
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless small mb-0">
+                        <thead class="text-secondary border-bottom">
+                            <tr>
+                                <th>Cód. SAT</th>
+                                <th>Descripción</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end">P. Unit</th>
+                                <th class="text-end">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+        lista.forEach(p => {
+            html += `
+                    <tr>
+                        <td><span class="badge bg-light text-dark border">${p.id_prod_serv}</span></td>
+                        <td>${p.descr}</td>
+                        <td class="text-center fw-bold">${parseFloat(p.cant).toFixed(2)}</td>
+                        <td class="text-end text-muted">$${parseFloat(p.precio_unit).toFixed(2)}</td>
+                        <td class="text-end fw-bold">$${parseFloat(p.importe).toFixed(2)}</td>
+                    </tr>
+                `;
+        });
+
+        html += `</tbody></table></div>`;
+        return html;
+    }
+
+    function toggleDetalle(id) {
+        const el = document.getElementById(`body-${id}`);
+        const icon = document.getElementById(`icon-${id}`);
+        if (el.style.display === 'none') {
+            el.style.display = 'block';
+            icon.classList.replace('bi-chevron-down', 'bi-chevron-up');
+        } else {
+            el.style.display = 'none';
+            icon.classList.replace('bi-chevron-up', 'bi-chevron-down');
+        }
+    }
+
+    function actualizarResumen(resumen) {
+        document.getElementById('lblPendientes').innerText = resumen.pendientes;
+        document.getElementById('lblFacturados').innerText = resumen.facturados;
+        document.getElementById('lblImporte').innerText = '$' + resumen.importe_fmt;
+    }
+
+    function generarPaginacion(total, actual) {
+        const div = document.getElementById('paginacion');
+        if (total <= 1) {
+            div.innerHTML = '';
+            return;
+        }
+
+        let html = `<nav><ul class="pagination">`;
+        for (let i = 1; i <= total; i++) {
+            html += `<li class="page-item ${i===actual?'active':''}"><button class="page-link" onclick="cargarTickets(${i})">${i}</button></li>`;
+        }
+        html += `</ul></nav>`;
+        div.innerHTML = html;
+    }
+
+    function debounce(func, timeout = 300) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                func.apply(this, args);
+            }, timeout);
+        };
+    }
+
+    function facturar(id) {
+        alert('Facturando ticket ' + id);
+    }
+
+    function descargar(id) {
+        alert('Descargando archivos ticket ' + id);
+    }
+
+    function inicializarDateRangePicker() {
+        // Esperar a que jQuery y las librerías estén disponibles
+        if (typeof $ === 'undefined' || typeof moment === 'undefined') {
+            setTimeout(inicializarDateRangePicker, 100);
+            return;
+        }
+
+        $('#daterange-btn').daterangepicker({
+            autoUpdateInput: false,
+            locale: {
+                format: 'DD/MM/YYYY',
+                separator: ' - ',
+                applyLabel: 'Aplicar',
+                cancelLabel: 'Cancelar',
+                fromLabel: 'Desde',
+                toLabel: 'Hasta',
+                customRangeLabel: 'Rango personalizado',
+                weekLabel: 'S',
+                daysOfWeek: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
+                monthNames: [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ],
+                firstDay: 1
+            },
+            ranges: {
+                'Hoy': [moment(), moment()],
+                'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+                'Este mes': [moment().startOf('month'), moment().endOf('month')],
+                'Mes anterior': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            }
+        });
+
+        // Evento al aplicar el rango de fechas
+        $('#daterange-btn').on('apply.daterangepicker', function(ev, picker) {
+            fechaInicio = picker.startDate;
+            fechaFin = picker.endDate;
+
+            // Actualizar el texto del botón
+            $(this).find('span').html(
+                fechaInicio.format('DD/MM/YYYY') + ' - ' + fechaFin.format('DD/MM/YYYY')
+            );
+
+            // Recargar tickets con el filtro de fecha
+            cargarTickets(1);
+        });
+
+        // Evento al cancelar
+        $('#daterange-btn').on('cancel.daterangepicker', function(ev, picker) {
+            fechaInicio = null;
+            fechaFin = null;
+
+            // Restaurar texto original
+            $(this).find('span').html('Seleccionar fechas');
+
+            // Recargar tickets sin filtro de fecha
+            cargarTickets(1);
+        });
+    }
+
+    // Función para limpiar todos los filtros
+    function limpiarFiltros() {
+        document.getElementById('searchFolio').value = '';
+        document.getElementById('filterEstatus').value = '';
+        document.getElementById('filterSucursal').value = '';
+
+        // Limpiar date range picker
+        fechaInicio = null;
+        fechaFin = null;
+        $('#daterange-btn span').html('Seleccionar fechas');
+
+        cargarTickets(1);
+    }
+</script>

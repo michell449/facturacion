@@ -1,9 +1,5 @@
 <?php
-//core/verificar-sesion.php
-//Verificar si el usuario tiene una sesión activa
-
-session_start();
-
+require_once __DIR__ . '/../config.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-cache, must-revalidate');
 

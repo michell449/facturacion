@@ -1,6 +1,4 @@
 <?php
-// core/verificacion-correo-usuario-fact.php
-// Verificación de token para activar cuentas de usuario
 
 require_once __DIR__ . '/class/db.php';
 
@@ -38,7 +36,6 @@ try {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($user) {
-        // Marcar como verificado y limpiar el token
         $stmtUpdate = $conn->prepare("UPDATE usuarios SET verificacion = 1, token = NULL WHERE token = ?");
         $updateResult = $stmtUpdate->execute([$token]);
         

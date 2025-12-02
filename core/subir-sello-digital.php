@@ -70,11 +70,8 @@ try {
         throw new Exception('El archivo de llave privada es muy grande. Máximo permitido: 1MB');
     }
     
-    // Conectar a la base de datos primero
     $db = new Database();
     $conn = $db->getConnection();
-    
-    // Verificar que la sucursal pertenece al usuario y obtener el código
     $stmt_verify = $conn->prepare("SELECT id_empresa, codigo_suc FROM empresas WHERE id_empresa = ? AND id_usuario = ?");
     $stmt_verify->execute([$id_empresa, $id_usuario]);
     $sucursal = $stmt_verify->fetch(PDO::FETCH_ASSOC);
@@ -84,15 +81,11 @@ try {
     
     $codigoSucursal = $sucursal['codigo_suc'] ?: 'sucursal_' . $id_empresa;
     
-    // Obtener y cifrar la clave privada
     $clavePrivada = trim($_POST['clave_privada']);
     $claveParaGuardar = SelloUtils::cifrarClave($clavePrivada, $id_empresa);
     
-    // Crear la estructura de carpetas
     $uploadBaseDir = __DIR__ . '/../uploads/sellos/';
     $uploadDir = $uploadBaseDir . $codigoSucursal . '/';
-    
-    // Crear la carpeta específica para la sucursal si no existe
     if (!file_exists($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
@@ -102,8 +95,6 @@ try {
     
     $rutaCer = $uploadDir . $nombreCer;
     $rutaKey = $uploadDir . $nombreKey;
-    
-    // Guardar la ruta relativa en la base de datos
     $rutaRelativaCer = $codigoSucursal . '/' . $nombreCer;
     $rutaRelativaKey = $codigoSucursal . '/' . $nombreKey;
     
@@ -125,7 +116,6 @@ try {
     $stmt->execute([$rutaRelativaCer, $rutaRelativaKey, $claveParaGuardar, $id_empresa, $id_usuario]);
     
     if ($stmt->rowCount() > 0) {
-        // Limpiar archivos antiguos si existen
         if ($oldFiles && $oldFiles['file_cer']) {
             $oldCerPath = $uploadBaseDir . $oldFiles['file_cer'];
             if (file_exists($oldCerPath)) {

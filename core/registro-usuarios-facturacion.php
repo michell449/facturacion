@@ -28,7 +28,7 @@ if ($password !== $confirmPassword) {
     echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden.']);
     exit;
 }
-// lógica para registrar al usuario en la base de datos
+// registrar al usuario en la base de datos
 $db = new Database();
 $conn = $db->getConnection();
 $stmt = $conn->prepare("SELECT COUNT(*) FROM usuarios WHERE correo = ?");
@@ -43,7 +43,6 @@ $token_verificacion = str_pad(strval(random_int(0, 999999)), 6, '0', STR_PAD_LEF
 $tipo_usuario = 'cliente';
 $verificacion = 0;
 $tipo_cliente = 'registrado';
-// Si el correo no está registrado, proceder con el registro
 $stmt = $conn->prepare("INSERT INTO usuarios (correo, contrasena, tipo_usuario, verificacion, token, tipo_cliente) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute([
     $email,
@@ -81,6 +80,5 @@ try {
 } catch (Exception $e) {
     error_log("Error al enviar el correo de verificación: " . $mail->ErrorInfo);
 }
-// Respuesta final para el frontend
 echo json_encode(['success' => true, 'message' => 'Usuario registrado exitosamente. Revisa tu correo para el código de verificación.']);
 exit;

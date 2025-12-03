@@ -30,48 +30,34 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <div class="input-group">
-                            <button type="button" class="btn btn-outline-secondary w-100" id="daterange-btn">
-                                <i class="bi bi-calendar-range me-2"></i>
-                                <span>Seleccionar fechas</span>
-                                <i class="bi bi-chevron-down ms-2"></i>
-                            </button>
+                        <select id="dateSelect" class="form-select border-0 bg-light" onchange="aplicarRango()">
+                            <option value="todos_fechas" selected>Todos</option>
+                            <option value="hoy">Hoy</option>
+                            <option value="ayer">Ayer</option>
+                            <option value="7dias">Últimos 7 días</option>
+                            <option value="este_mes">Este Mes</option>
+                            <option value="mes_pasado">Mes Pasado</option>
+                            <option value="RangoPersonalizado">Rango Personalizado</option>
+                        </select>
+                        
+                        <!-- Calendarios HTML5 para rango personalizado -->
+                        <div id="rangoPersonalizado" class="mt-2" style="display: none;">
+                            <div class="row g-1">
+                                <div class="col-6">
+                                    <label class="form-label small text-muted mb-1">Desde:</label>
+                                    <input type="date" class="form-control form-control-sm" id="fechaDesde" onchange="aplicarRangoPersonalizado()">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-muted mb-1">Hasta:</label>
+                                    <input type="date" class="form-control form-control-sm" id="fechaHasta" onchange="aplicarRangoPersonalizado()">
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-1">
                         <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()" title="Limpiar filtros">
                             <i class="bi bi-arrow-clockwise"></i>
                         </button>
-                    </div>
-                    <div class="col-md-1">
-                        <button class="btn btn-outline-info w-100" type="button" data-bs-toggle="collapse" data-bs-target="#panelConfig">
-                            <i class="bi bi-gear"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="collapse mb-4" id="panelConfig">
-            <div class="card card-body border-info bg-light">
-                <h6 class="text-info fw-bold"><i class="bi bi-eye me-2"></i>Opciones de Visualización</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <label class="form-label small text-muted">Modo de Productos:</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="vistaModo" id="vDesglosado" value="desglosado" checked onchange="aplicarVista()">
-                            <label class="btn btn-outline-primary btn-sm" for="vDesglosado"><i class="bi bi-list me-1"></i>Desglosado (Tal cual BD)</label>
-
-                            <input type="radio" class="btn-check" name="vistaModo" id="vAgrupado" value="agrupado" onchange="aplicarVista()">
-                            <label class="btn btn-outline-primary btn-sm" for="vAgrupado"><i class="bi bi-collection me-1"></i>Agrupado (Sumar items)</label>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small text-muted">Detalle de Tickets:</label>
-                        <div class="form-check form-switch mt-1">
-                            <input class="form-check-input" type="checkbox" id="checkExpandirTodo" onchange="aplicarVista()">
-                            <label class="form-check-label" for="checkExpandirTodo">Expandir todos los productos automáticamente</label>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -106,11 +92,6 @@
         <div id="paginacion" class="d-flex justify-content-center mt-4"></div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
 <script>
     let datosTickets = [];
     let config = {
@@ -122,14 +103,65 @@
     let fechaFin = null;
 
     document.addEventListener('DOMContentLoaded', () => {
+        // Inicializar sin filtros de fecha (mostrar todos)
+        fechaInicio = null;
+        fechaFin = null;
+
+        cargarSucursales();
         cargarTickets();
-        inicializarDateRangePicker();
 
         // Listeners filtros
         document.getElementById('searchFolio').addEventListener('input', debounce(() => cargarTickets(1), 500));
         document.getElementById('filterEstatus').addEventListener('change', () => cargarTickets(1));
         document.getElementById('filterSucursal').addEventListener('change', () => cargarTickets(1));
     });
+
+    // Función para cargar sucursales
+    function cargarSucursales() {
+        console.log('Cargando sucursales...');
+        fetch('core/consultar-tickets.php?obtener_sucursales=1')
+            .then(r => {
+                if (!r.ok) {
+                    throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+                }
+                return r.text();
+            })
+            .then(text => {
+                console.log('Respuesta sucursales (raw):', text.substring(0, 500));
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Respuesta sucursales no es JSON válido:', text.substring(0, 500));
+                    throw new Error('Error al cargar sucursales: respuesta inválida del servidor');
+                }
+            })
+            .then(data => {
+                console.log('Datos sucursales recibidos:', data);
+                if (data.success && data.sucursales) {
+                    const select = document.getElementById('filterSucursal');
+                    
+                    // Limpiar opciones actuales (mantener la primera "Todas las sucursales")
+                    while (select.children.length > 1) {
+                        select.removeChild(select.lastChild);
+                    }
+                    
+                    // Agregar sucursales
+                    data.sucursales.forEach(sucursal => {
+                        const option = document.createElement('option');
+                        option.value = sucursal.id;
+                        option.textContent = `${sucursal.nombre}${sucursal.codigo_suc ? ' (' + sucursal.codigo_suc + ')' : ''}`;
+                        select.appendChild(option);
+                    });
+                    
+                    console.log(`${data.sucursales.length} sucursales cargadas correctamente`);
+                } else {
+                    console.warn('No se encontraron sucursales o error en respuesta:', data.message);
+                }
+            })
+            .catch(e => {
+                console.error('Error cargando sucursales:', e);
+            });
+    }
 
     function cargarTickets(pagina = 1) {
         document.getElementById('loading').style.display = 'block';
@@ -143,29 +175,63 @@
         const estatus = document.getElementById('filterEstatus').value;
         const sucursal = document.getElementById('filterSucursal').value;
 
+        // Log para debugging
+        console.log('Filtros aplicados:', {
+            folio: folio,
+            estatus: estatus,
+            sucursal: sucursal,
+            fechaInicio: fechaInicio,
+            fechaFin: fechaFin
+        });
+
         if (folio) params.append('folio', folio);
         if (estatus) params.append('estatus', estatus);
-        if (sucursal) params.append('sucursal', sucursal);
+        if (sucursal) {
+            params.append('id_empresa', sucursal);
+            // Mostrar indicador visual de filtro aplicado
+            const sucursalText = document.getElementById('filterSucursal').selectedOptions[0]?.text || 'sucursal seleccionada';
+            console.log('Filtro de sucursal aplicado:', sucursalText);
+        }
 
         // Agregar fechas si están seleccionadas
         if (fechaInicio && fechaFin) {
-            params.append('fecha_desde', fechaInicio.format('YYYY-MM-DD'));
-            params.append('fecha_hasta', fechaFin.format('YYYY-MM-DD'));
+            params.append('fecha_desde', formatearFecha(fechaInicio));
+            params.append('fecha_hasta', formatearFecha(fechaFin));
         }
 
-        fetch('core/consultar-tickets.php?' + params)
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    datosTickets = data.tickets;
-                    renderizarTickets();
-                    actualizarResumen(data.resumen);
-                    generarPaginacion(data.total_paginas, pagina);
-                } else {
-                    alert(data.message);
+        const url = 'core/consultar-tickets.php?' + params;
+        console.log('URL de consulta:', url);
+        
+        fetch(url)
+            .then(r => {
+                if (r.redirected) throw new Error('Sesión finalizada');
+                if (!r.ok) throw new Error(r.statusText);
+                return r.text();
+            })
+            .then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error("Respuesta no válida del servidor:", text);
+                    throw new Error("Error en el servidor (HTML recibido)");
                 }
             })
-            .catch(e => console.error(e))
+            .then(data => {
+                if (data.success) {
+                    datosTickets = data.tickets || [];
+                    renderizarTickets();
+                    if (data.resumen) actualizarResumen(data.resumen);
+                    if (data.total_paginas) generarPaginacion(data.total_paginas, pagina, data.total_registros || 0);
+
+                    if (datosTickets.length === 0) mostrarMensajeVacio('No se encontraron tickets');
+                } else {
+                    mostrarMensajeVacio(data.message || 'Error al cargar data');
+                }
+            })
+            .catch(e => {
+                console.error(e);
+                mostrarMensajeVacio('Error de conexión o sesión expirada');
+            })
             .finally(() => document.getElementById('loading').style.display = 'none');
     }
 
@@ -189,10 +255,7 @@
             const colorEstado = esFacturado ? 'success' : 'warning';
             const displayDetalle = config.expandir ? 'block' : 'none';
             const iconDetalle = config.expandir ? 'bi-chevron-up' : 'bi-chevron-down';
-
-            // Generar HTML de productos según configuración
             const tablaProductos = generarHTMLProductos(ticket.productos);
-
             const html = `
                     <div class="col-12">
                         <div class="card border-0 shadow-sm rounded-4 mb-2">
@@ -224,8 +287,8 @@
                                     <div class="col-md-3 d-flex align-items-center justify-content-center border-start">
                                         ${!esFacturado 
                                             ? `<button class="btn btn-success w-100 shadow-sm" onclick="facturar(${ticket.id_ticket})">
-                                                 <i class="bi bi-lightning-charge me-2"></i>Facturar
-                                               </button>` 
+                                                <i class="bi bi-lightning-charge me-2"></i>Facturar
+                                            </button>` 
                                             : `<button class="btn btn-outline-secondary w-100" onclick="descargar(${ticket.id_ticket})">
                                                 <i class="bi bi-download me-2"></i>XML / PDF
                                             </button>`
@@ -314,18 +377,54 @@
         document.getElementById('lblImporte').innerText = '$' + resumen.importe_fmt;
     }
 
-    function generarPaginacion(total, actual) {
+    function generarPaginacion(total, actual, totalRegistros = 0) {
         const div = document.getElementById('paginacion');
+
         if (total <= 1) {
-            div.innerHTML = '';
+            // Mostrar info si solo hay una página
+            if (totalRegistros > 0) {
+                div.innerHTML = `
+                    <div class="text-center text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Mostrando ${totalRegistros} ticket(s) en total
+                    </div>
+                `;
+            } else {
+                div.innerHTML = '';
+            }
             return;
         }
 
-        let html = `<nav><ul class="pagination">`;
-        for (let i = 1; i <= total; i++) {
-            html += `<li class="page-item ${i===actual?'active':''}"><button class="page-link" onclick="cargarTickets(${i})">${i}</button></li>`;
+        let html = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                    Página ${actual} de ${total} (${totalRegistros} tickets total)
+                </div>
+                <nav><ul class="pagination pagination-sm mb-0">
+        `;
+
+        // Botón anterior
+        if (actual > 1) {
+            html += `<li class="page-item"><button class="page-link" onclick="cargarTickets(${actual - 1})">&laquo;</button></li>`;
         }
-        html += `</ul></nav>`;
+
+        // Páginas
+        for (let i = 1; i <= total; i++) {
+            if (i === 1 || i === total || (i >= actual - 2 && i <= actual + 2)) {
+                html += `<li class="page-item ${i===actual?'active':''}">
+                            <button class="page-link" onclick="cargarTickets(${i})">${i}</button>
+                        </li>`;
+            } else if (i === actual - 3 || i === actual + 3) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+
+        // Botón siguiente
+        if (actual < total) {
+            html += `<li class="page-item"><button class="page-link" onclick="cargarTickets(${actual + 1})">&raquo;</button></li>`;
+        }
+
+        html += `</ul></nav></div>`;
         div.innerHTML = html;
     }
 
@@ -347,79 +446,119 @@
         alert('Descargando archivos ticket ' + id);
     }
 
-    function inicializarDateRangePicker() {
-        // Esperar a que jQuery y las librerías estén disponibles
-        if (typeof $ === 'undefined' || typeof moment === 'undefined') {
-            setTimeout(inicializarDateRangePicker, 100);
-            return;
-        }
-
-        $('#daterange-btn').daterangepicker({
-            autoUpdateInput: false,
-            locale: {
-                format: 'DD/MM/YYYY',
-                separator: ' - ',
-                applyLabel: 'Aplicar',
-                cancelLabel: 'Cancelar',
-                fromLabel: 'Desde',
-                toLabel: 'Hasta',
-                customRangeLabel: 'Rango personalizado',
-                weekLabel: 'S',
-                daysOfWeek: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
-                monthNames: [
-                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-                ],
-                firstDay: 1
-            },
-            ranges: {
-                'Hoy': [moment(), moment()],
-                'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
-                'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
-                'Este mes': [moment().startOf('month'), moment().endOf('month')],
-                'Mes anterior': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-            }
-        });
-
-        // Evento al aplicar el rango de fechas
-        $('#daterange-btn').on('apply.daterangepicker', function(ev, picker) {
-            fechaInicio = picker.startDate;
-            fechaFin = picker.endDate;
-
-            // Actualizar el texto del botón
-            $(this).find('span').html(
-                fechaInicio.format('DD/MM/YYYY') + ' - ' + fechaFin.format('DD/MM/YYYY')
-            );
-
-            // Recargar tickets con el filtro de fecha
-            cargarTickets(1);
-        });
-
-        // Evento al cancelar
-        $('#daterange-btn').on('cancel.daterangepicker', function(ev, picker) {
-            fechaInicio = null;
-            fechaFin = null;
-
-            // Restaurar texto original
-            $(this).find('span').html('Seleccionar fechas');
-
-            // Recargar tickets sin filtro de fecha
-            cargarTickets(1);
-        });
+    function formatearFecha(fecha) {
+        return fecha.toISOString().split('T')[0];
     }
 
-    // Función para limpiar todos los filtros
-    function limpiarFiltros() {
-        document.getElementById('searchFolio').value = '';
-        document.getElementById('filterEstatus').value = '';
-        document.getElementById('filterSucursal').value = '';
+    function aplicarRango() {
+        const seleccion = document.getElementById('dateSelect').value;
+        const hoy = new Date();
+        let inicio, fin;
+        
+        const rangoDiv = document.getElementById('rangoPersonalizado');
+        if (seleccion === 'RangoPersonalizado') {
+            rangoDiv.style.display = 'block';
+            document.getElementById('fechaDesde').value = formatearFecha(hoy);
+            document.getElementById('fechaHasta').value = formatearFecha(hoy);
+            return; 
+        } else {
+            rangoDiv.style.display = 'none';
+        }
 
-        // Limpiar date range picker
-        fechaInicio = null;
-        fechaFin = null;
-        $('#daterange-btn span').html('Seleccionar fechas');
+        switch (seleccion) {
+            case 'todos_fechas':
+                // Sin filtro de fechas - mostrar todos
+                fechaInicio = null;
+                fechaFin = null;
+                break;
+            case 'hoy':
+                inicio = new Date(hoy);
+                fin = new Date(hoy);
+                fechaInicio = inicio;
+                fechaFin = fin;
+                break;
+            case 'ayer':
+                inicio = new Date(hoy.getTime() - 24 * 60 * 60 * 1000);
+                fin = new Date(hoy.getTime() - 24 * 60 * 60 * 1000);
+                fechaInicio = inicio;
+                fechaFin = fin;
+                break;
+            case '7dias':
+                inicio = new Date(hoy.getTime() - 6 * 24 * 60 * 60 * 1000);
+                fin = new Date(hoy);
+                fechaInicio = inicio;
+                fechaFin = fin;
+                break;
+            case 'este_mes':
+                inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+                fechaInicio = inicio;
+                fechaFin = fin;
+                break;
+            case 'mes_pasado':
+                inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+                fin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+                fechaInicio = inicio;
+                fechaFin = fin;
+                break;
+        }
 
         cargarTickets(1);
     }
+    
+    function aplicarRangoPersonalizado() {
+        const fechaDesde = document.getElementById('fechaDesde').value;
+        const fechaHasta = document.getElementById('fechaHasta').value;
+        
+        if (fechaDesde && fechaHasta) {
+            const desde = new Date(fechaDesde);
+            const hasta = new Date(fechaHasta);
+            
+            fechaInicio = desde;
+            fechaFin = hasta;
+            cargarTickets(1);
+        }
+    }
+
+    function mostrarMensajeVacio(mensaje = 'No se encontraron tickets') {
+        document.getElementById('ticketsContainer').innerHTML = `
+            <div class="col-12 text-center text-muted py-5">
+                <h5>${mensaje}</h5>
+                <p class="small">Intenta ajustar los filtros de búsqueda</p>
+                <button class="btn btn-outline-primary btn-sm" onclick="limpiarFiltros()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar filtros
+                </button>
+            </div>
+        `;
+    }
+
+    function limpiarFiltros() {
+        try {
+            // Limpiar campos de filtro
+            document.getElementById('searchFolio').value = '';
+            document.getElementById('filterEstatus').value = '';
+            document.getElementById('filterSucursal').value = '';
+            document.getElementById('dateSelect').value = 'todos_fechas';
+            
+            // Ocultar calendarios personalizados
+            document.getElementById('rangoPersonalizado').style.display = 'none';
+            document.getElementById('fechaDesde').value = '';
+            document.getElementById('fechaHasta').value = '';
+
+            // Resetear fechas a null (mostrar todos)
+            fechaInicio = null;
+            fechaFin = null;
+
+            // Ocultar indicadores de filtros
+            document.getElementById('filtrosActivos').style.display = 'none';
+
+            // Recargar tickets
+            cargarTickets(1);
+            
+            mostrarMensajeTemporal('Filtros limpiados correctamente', 'success');
+        } catch (error) {
+            console.error('Error al limpiar filtros:', error);
+        }
+    }
 </script>
+

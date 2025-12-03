@@ -1,6 +1,10 @@
 <?php
+// config.php inicia la sesión, aseguramos no tener salidas previas
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/class/db.php';
+
+// Limpiar buffer de salida por si config.php dejó espacios en blanco
+ob_clean(); 
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -20,12 +24,27 @@ try {
         $id_usuario = (int)$_SESSION['USR_ID'];
     }
     
-    if (!$id_usuario) throw new Exception('Sesión no válida.');
+    if (!$id_usuario) {
+        // Importante: No uses header('Location: ...'). Lanza excepción para que JS lo maneje.
+        throw new Exception('Sesión no válida o expirada.');
+    }
     
     $db = new Database();
     $conn = $db->getConnection();
+
+    // Si el JS pide sucursales, respondemos y terminamos el script aquí
+    if (isset($_GET['obtener_sucursales']) && $_GET['obtener_sucursales'] == 1) {
+        $sqlSuc = "SELECT id_empresa as id, nombre, codigo_suc FROM empresas WHERE id_usuario = ?";
+        $stmtSuc = $conn->prepare($sqlSuc);
+        $stmtSuc->execute([$id_usuario]);
+        $sucursales = $stmtSuc->fetchAll(PDO::FETCH_ASSOC);
+        
+        echo json_encode(['success' => true, 'sucursales' => $sucursales]);
+        exit; // IMPORTANTE: Detener ejecución aquí
+    }
+    // ----------------------------------------
     
-    // 2. FILTROS
+    // 2. FILTROS (Lógica normal de tickets)
     $params = [$id_usuario];
     $where = "";
     
@@ -41,14 +60,20 @@ try {
         $where .= " AND t.estatus = ?";
         $params[] = $_GET['estatus'];
     }
-    // ... puedes agregar más filtros aquí (fecha, monto) ...
+    
+    // Filtros de Fecha (Agregados para que funcione tu JS)
+    if (!empty($_GET['fecha_desde']) && !empty($_GET['fecha_hasta'])) {
+        $where .= " AND DATE(t.fecha_venta) BETWEEN ? AND ?";
+        $params[] = $_GET['fecha_desde'];
+        $params[] = $_GET['fecha_hasta'];
+    }
 
     // Paginación
-    $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 20;
+    $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 7;
     $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
     $offset = ($pagina - 1) * $limite;
 
-    // 3. OBTENER TICKETS (Cabecera)
+    // 3. OBTENER TICKETS
     $sql = "
         SELECT 
             t.id_ticket, t.folio_ticket, t.fecha_venta, t.importe_t, t.estatus,
@@ -67,32 +92,25 @@ try {
     $stmt->execute($params);
     $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 4. OBTENER DETALLES (PRODUCTOS) PARA ESTOS TICKETS
+    // 4. OBTENER DETALLES
     $productos_map = [];
-    
     if (!empty($tickets)) {
-        // Extraemos solo los IDs de los tickets que vamos a mostrar (ej: 4, 5, 6)
         $ids = array_column($tickets, 'id_ticket');
         $in_query = implode(',', array_fill(0, count($ids), '?'));
         
-        // Consulta optimizada a ticket_detalle usando la estructura de tu tabla
-        $sql_det = "
-            SELECT id_ticket, id_prod_serv, descr, cant, precio_unit, importe 
-            FROM ticket_detalle 
-            WHERE id_ticket IN ($in_query)
-        ";
+        $sql_det = "SELECT id_ticket, id_prod_serv, descr, cant, precio_unit, importe 
+                    FROM ticket_detalle WHERE id_ticket IN ($in_query)";
         
         $stmt_det = $conn->prepare($sql_det);
         $stmt_det->execute($ids);
         $raw_productos = $stmt_det->fetchAll(PDO::FETCH_ASSOC);
         
-        // Agrupamos en PHP por id_ticket para acceso rápido
         foreach ($raw_productos as $prod) {
             $productos_map[$prod['id_ticket']][] = $prod;
         }
     }
 
-    // 5. OBTENER RESUMEN (Totales)
+    // 5. RESUMEN
     $sql_count = "SELECT 
         COUNT(*) as total,
         COUNT(CASE WHEN t.estatus='pendiente' THEN 1 END) as pendientes,
@@ -104,12 +122,9 @@ try {
     $stmt_c->execute($params);
     $resumen = $stmt_c->fetch(PDO::FETCH_ASSOC);
 
-    // 6. ARMAR RESPUESTA JSON
+    // 6. ARMAR RESPUESTA
     foreach ($tickets as &$t) {
-        // Inyectamos el array de productos correspondiente al ticket
         $t['productos'] = isset($productos_map[$t['id_ticket']]) ? $productos_map[$t['id_ticket']] : [];
-        
-        // Formateos visuales
         $t['importe_fmt'] = number_format($t['importe_t'], 2);
         $t['fecha_fmt'] = date('d/m/Y', strtotime($t['fecha_venta']));
         $t['sucursal_fmt'] = $t['nombre_sucursal'] . ' (' . $t['codigo_suc'] . ')';
@@ -118,7 +133,7 @@ try {
 
     $respuesta['success'] = true;
     $respuesta['tickets'] = $tickets;
-    $respuesta['total_tickets'] = $resumen['total'];
+    $respuesta['total_registros'] = $resumen['total']; 
     $respuesta['total_paginas'] = ceil($resumen['total'] / $limite);
     $respuesta['resumen'] = [
         'pendientes' => $resumen['pendientes'],
@@ -127,7 +142,9 @@ try {
     ];
 
 } catch (Exception $e) {
+    http_response_code(400); 
     $respuesta['message'] = $e->getMessage();
 }
 
 echo json_encode($respuesta);
+?>

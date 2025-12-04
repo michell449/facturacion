@@ -29,59 +29,6 @@ $hora_actual = date('H:i');
 
 <!-- Main Dashboard Content -->
 <div class="container py-4">
-    <!-- Statistics Cards -->
-    <div class="row g-4 mb-5">
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-lg stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h6 class="text-muted fw-semibold mb-2">Tickets Pendientes</h6>
-                                <h2 class="fw-bold text-warning mb-0">23</h2>
-                                <small class="text-success">
-                                    <i class="bi bi-arrow-down me-1"></i>-12% vs ayer
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-lg stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h6 class="text-muted fw-semibold mb-2">Facturas Hoy</h6>
-                            <h2 class="fw-bold text-success mb-0">156</h2>
-                            <small class="text-success">
-                                <i class="bi bi-arrow-up me-1"></i>+18% vs ayer
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-lg stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h6 class="text-muted fw-semibold mb-2">Sucursales Activas</h6>
-                            <h2 class="fw-bold text-primary mb-0">8</h2>
-                            <small class="text-primary">
-                                <i class="bi bi-building me-1"></i>Todas operativas
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="row g-4 mb-4">
         <!-- Panel de Gestión  -->
         <div class="col-lg-12">
@@ -93,7 +40,7 @@ $hora_actual = date('H:i');
                         </h5>
                     </div>
                 </div>
-                <div class="card-body p-4 ">
+                <div class="card-body">
                     <div class="row g-4">
                         <!-- Sucursales -->
                         <div class="col-md-6">
@@ -132,44 +79,6 @@ $hora_actual = date('H:i');
                             </div>
                         </div>
                     </div>
-
-                    <!-- Nueva sección de Configuración -->
-                    <div class="row g-4 mt-2" style="display:none">
-                        <div class="col-md-6">
-                            <div class="card bg-warning bg-opacity-10 border-0 h-100">
-                                <div class="card-body text-center p-4">
-                                    <i class="bi bi-gear display-4 text-warning mb-3"></i>
-                                    <h6 class="fw-bold text-warning mb-2">Configuración</h6>
-                                    <p class="text-muted mb-3">Personaliza el sistema de facturación</p>
-                                    <div class="d-grid gap-2">
-                                        <a href="panel?pg=config-facturas" class="btn btn-warning btn-sm">
-                                            <i class="bi bi-file-earmark-text me-2"></i>Formato de Facturas
-                                        </a>
-                                        <a href="panel?pg=config-correo" class="btn btn-outline-warning btn-sm">
-                                            <i class="bi bi-envelope-at me-2"></i>Correo de Envío
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card bg-info bg-opacity-10 border-0 h-100">
-                                <div class="card-body text-center p-4">
-                                    <i class="bi bi-sliders display-4 text-info mb-3"></i>
-                                    <h6 class="fw-bold text-info mb-2">Configuraciones Avanzadas</h6>
-                                    <p class="text-muted mb-3">Folios, series y formato de productos</p>
-                                    <div class="d-grid gap-2">
-                                        <a href="panel?pg=config-folios" class="btn btn-info btn-sm">
-                                            <i class="bi bi-hash me-2"></i>Folios y Series
-                                        </a>
-                                        <a href="panel?pg=config-productos" class="btn btn-outline-info btn-sm">
-                                            <i class="bi bi-boxes me-2"></i>Agrupación de Productos
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -188,11 +97,11 @@ $hora_actual = date('H:i');
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">Período</label>
                     <select class="form-select" id="filterPeriodo" onchange="cambiarPeriodo()">
-                        <option value="todos_fechas">Todos</option>
+                        <option value="todos_fechas" selected>Todos</option>
                         <option value="hoy">Hoy</option>
                         <option value="ayer">Ayer</option>
                         <option value="7dias">Últimos 7 días</option>
-                        <option value="este_mes" selected>Este Mes</option>
+                        <option value="este_mes">Este Mes</option>
                         <option value="mes_pasado">Mes Pasado</option>
                         <option value="personalizado">Rango Personalizado</option>
                     </select>

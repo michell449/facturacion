@@ -81,8 +81,6 @@ $accessMap = [
     'editar-sucursales' => ['admin'],
     'config-correo' => ['admin'],
     'config-facturas' => ['admin'],
-    'config-folios' => ['admin'],
-    'config-productos' => ['admin'],
 ];
 
 $currentPage = $pagePath;

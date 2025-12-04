@@ -286,12 +286,18 @@
                                     </div>
                                     <div class="col-md-3 d-flex align-items-center justify-content-center border-start">
                                         ${!esFacturado 
-                                            ? `<button class="btn btn-success w-100 shadow-sm" onclick="facturar(${ticket.id_ticket})">
-                                                <i class="bi bi-lightning-charge me-2"></i>Facturar
+                                            ? `<button class="btn btn-outline-info w-100 shadow-sm" onclick="facturar(${ticket.id_ticket})">
+                                            Facturar
                                             </button>` 
-                                            : `<button class="btn btn-outline-secondary w-100" onclick="descargar(${ticket.id_ticket})">
-                                                <i class="bi bi-download me-2"></i>XML / PDF
-                                            </button>`
+                                            : `
+                                            <div class="d-grid gap-2 col-12 mx-auto">
+                                                <button class="btn btn-outline-primary w-100" onclick="descargar(${ticket.id_ticket})">
+                                                    Reenviar factura
+                                                </button>
+                                                <button class="btn btn-outline-danger w-100" onclick="descargar(${ticket.id_ticket})">
+                                                    Cancelar
+                                                </button>
+                                            </div>`
                                         }
                                     </div>
                                 </div>

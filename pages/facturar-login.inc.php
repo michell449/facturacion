@@ -294,7 +294,6 @@
                 title: 'Sesión Expirada',
                 text: 'Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente.',
                 confirmButtonText: 'Entendido',
-                confirmButtonColor: '#0d6efd'
             });
         } else if (urlParams.has('error')) {
             const errorType = urlParams.get('error');

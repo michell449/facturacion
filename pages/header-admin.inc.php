@@ -44,12 +44,12 @@
                                     </ul>
                                 </li>
                                 <li class="nav-item dropdown mx-1">
-                                    <a class="nav-link dropdown-toggle d-flex align-items-center rounded-pill px-3 py-2 <?php echo (strpos($pagePath, 'ticket') !== false || strpos($pagePath, 'factura') !== false) ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="#" id="facturacionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <a class="nav-link dropdown-toggle d-flex align-items-center rounded-pill px-3 py-2 <?php echo (strpos($pagePath, 'ticket') !== false || strpos($pagePath, 'factura') !== false || strpos($pagePath, 'dashboard-tickets') !== false) ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="#" id="facturacionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-receipt-cutoff me-2"></i> Facturación
                                     </a>
                                     <ul class="dropdown-menu shadow border-0 rounded-3" aria-labelledby="facturacionDropdown">
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=tickets-por-facturar">
-                                                <i class="bi bi-clock me-2 text-warning"></i> Tickets Pendientes
+                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=tickets">
+                                                <i class="bi bi-ticket-detailed me-2 text-primary"></i> Gestión de Tickets
                                             </a></li>
                                         <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=facturas-generadas-admin">
                                                 <i class="bi bi-file-check me-2 text-success"></i> Facturas Generadas

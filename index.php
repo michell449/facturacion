@@ -66,6 +66,7 @@ $accessMap = [
     'facturar' => ['cliente'],
     'configuracion' => ['cliente'],
     'soporte' => ['cliente'],
+    'registro-info-usuarios' => ['cliente'],
 
     // Páginas de Administrador 
     'inicio-admin' => ['admin'], 
@@ -73,6 +74,7 @@ $accessMap = [
     'nueva-sucursal-admin' => ['admin'],
     'facturas-generadas-admin' => ['admin'],
     'tickets' => ['admin'],
+    'dashboard-tickets' => ['admin'],
     'admin-dashboard' => ['admin'],
     'usuarios-admin' => ['admin'],
     'reportes-admin' => ['admin'],

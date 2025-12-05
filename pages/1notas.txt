@@ -1,299 +1,680 @@
-
--------------------------------------------------------------------------------------------------------------------------------
-
-
 <div class="content-wrapper bg-light loaded">
     <div class="container py-4">
-        
         <div class="row mb-4 align-items-center">
             <div class="col-8">
-                <h2 class="text-primary fw-bold mb-0"><i class="bi bi-ticket-detailed me-2"></i>Gestión de Tickets</h2>
+                <h2 class="text-primary fw-bold mb-0">
+                    <i class="bi bi-receipt-cutoff display-6 text-primary me-2"></i>
+                    Configuración de Facturas
+                </h2>
+                <p class="text-muted mb-0">Configura los datos fiscales y la información para generar facturas CFDI.</p>
             </div>
             <div class="col-4 text-end">
-                <button class="btn btn-outline-primary" onclick="window.history.back()">Regresar</button>
+                <button type="button" class="btn btn-outline-primary btn-lg rounded-3" onclick="window.history.back()">
+                    <i class="bi bi-arrow-left me-2"></i>Regresar
+                </button>
             </div>
         </div>
-
-        <div class="card shadow-sm border-0 rounded-4 mb-4">
-            <div class="card-body p-3">
-                <div class="row g-2">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control bg-light border-0" id="searchFolio" placeholder="Buscar folio...">
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select bg-light border-0" id="filterEstatus">
-                            <option value="">Todos los estatus</option>
-                            <option value="pendiente">Pendientes</option>
-                            <option value="facturado">Facturados</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 offset-md-3">
-                         <button class="btn btn-outline-info w-100" type="button" data-bs-toggle="collapse" data-bs-target="#panelConfig">
-                            <i class="bi bi-gear me-1"></i>Vistas
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="collapse mb-4" id="panelConfig">
-            <div class="card card-body border-info bg-light">
-                <h6 class="text-info fw-bold"><i class="bi bi-eye me-2"></i>Opciones de Visualización</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <label class="form-label small text-muted">Modo de Productos:</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="vistaModo" id="vDesglosado" value="desglosado" checked onchange="aplicarVista()">
-                            <label class="btn btn-outline-primary btn-sm" for="vDesglosado"><i class="bi bi-list me-1"></i>Desglosado (Tal cual BD)</label>
-
-                            <input type="radio" class="btn-check" name="vistaModo" id="vAgrupado" value="agrupado" onchange="aplicarVista()">
-                            <label class="btn btn-outline-primary btn-sm" for="vAgrupado"><i class="bi bi-collection me-1"></i>Agrupado (Sumar items)</label>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                         <label class="form-label small text-muted">Detalle de Tickets:</label>
-                         <div class="form-check form-switch mt-1">
-                            <input class="form-check-input" type="checkbox" id="checkExpandirTodo" onchange="aplicarVista()">
-                            <label class="form-check-label" for="checkExpandirTodo">Expandir todos los productos automáticamente</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-4 text-center">
-            <div class="col-4">
-                <div class="p-3 bg-white rounded-4 shadow-sm">
-                    <h5 class="text-warning fw-bold mb-0" id="lblPendientes">0</h5>
-                    <small class="text-muted">Pendientes</small>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="p-3 bg-white rounded-4 shadow-sm">
-                    <h5 class="text-success fw-bold mb-0" id="lblFacturados">0</h5>
-                    <small class="text-muted">Facturados</small>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="p-3 bg-white rounded-4 shadow-sm">
-                    <h5 class="text-primary fw-bold mb-0" id="lblImporte">$0.00</h5>
-                    <small class="text-muted">Importe Total</small>
-                </div>
-            </div>
-        </div>
-
-        <div id="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
-        <div id="ticketsContainer" class="row g-3"></div>
-
-        <div id="paginacion" class="d-flex justify-content-center mt-4"></div>
     </div>
 
-    <script>
-        let datosTickets = []; // Almacena los tickets y sus productos en memoria
-        let config = { modo: 'desglosado', expandir: false };
+    <div class="container py-2">
+        <div class="row g-4">
+            <!-- Columna Izquierda: Datos del Receptor -->
+            <div class="col-lg-7">
+                <div class="card shadow-lg border-0 rounded-4">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-person-vcard me-2"></i>
+                            Datos del Receptor (Cliente)
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="formDatosReceptor">
+                            <!-- RFC y Razón Social -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-5">
+                                    <label for="rfcReceptor" class="form-label fw-semibold">
+                                        <i class="bi bi-card-text text-primary me-1"></i>RFC <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg text-uppercase" id="rfcReceptor"
+                                        placeholder="XAXX010101000" maxlength="13" required>
+                                    <div class="form-text">RFC del cliente (12 o 13 caracteres)</div>
+                                </div>
+                                <div class="col-md-7">
+                                    <label for="nombreReceptor" class="form-label fw-semibold">
+                                        <i class="bi bi-building text-primary me-1"></i>Nombre o Razón Social <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" id="nombreReceptor"
+                                        placeholder="Nombre completo o Razón Social" required>
+                                </div>
+                            </div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            cargarTickets();
-            
-            // Listeners filtros
-            document.getElementById('searchFolio').addEventListener('input', debounce(() => cargarTickets(1), 500));
-            document.getElementById('filterEstatus').addEventListener('change', () => cargarTickets(1));
-        });
+                            <!-- Uso CFDI y Régimen Fiscal -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="usoCfdi" class="form-label fw-semibold">
+                                        <i class="bi bi-file-earmark-text text-primary me-1"></i>Uso de CFDI <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select form-select-lg" id="usoCfdi" required>
+                                        <option value="">Seleccionar uso...</option>
+                                        <option value="G01">G01 - Adquisición de mercancías</option>
+                                        <option value="G02">G02 - Devoluciones, descuentos o bonificaciones</option>
+                                        <option value="G03">G03 - Gastos en general</option>
+                                        <option value="I01">I01 - Construcciones</option>
+                                        <option value="I02">I02 - Mobiliario y equipo de oficina</option>
+                                        <option value="I03">I03 - Equipo de transporte</option>
+                                        <option value="I04">I04 - Equipo de cómputo y accesorios</option>
+                                        <option value="I05">I05 - Dados, troqueles, moldes</option>
+                                        <option value="I06">I06 - Comunicaciones telefónicas</option>
+                                        <option value="I07">I07 - Comunicaciones satelitales</option>
+                                        <option value="I08">I08 - Otra maquinaria y equipo</option>
+                                        <option value="D01">D01 - Honorarios médicos, dentales</option>
+                                        <option value="D02">D02 - Gastos médicos por incapacidad</option>
+                                        <option value="D03">D03 - Gastos funerales</option>
+                                        <option value="D04">D04 - Donativos</option>
+                                        <option value="D05">D05 - Intereses reales hipotecarios</option>
+                                        <option value="D06">D06 - Aportaciones voluntarias al SAR</option>
+                                        <option value="D07">D07 - Primas por seguros de gastos médicos</option>
+                                        <option value="D08">D08 - Gastos de transportación escolar</option>
+                                        <option value="D09">D09 - Depósitos en cuentas de ahorro</option>
+                                        <option value="D10">D10 - Pagos por servicios educativos</option>
+                                        <option value="S01">S01 - Sin efectos fiscales</option>
+                                        <option value="CP01">CP01 - Pagos</option>
+                                        <option value="CN01">CN01 - Nómina</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="regimenFiscal" class="form-label fw-semibold">
+                                        <i class="bi bi-bank text-primary me-1"></i>Régimen Fiscal <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select form-select-lg" id="regimenFiscal" required>
+                                        <option value="">Seleccionar régimen...</option>
+                                        <optgroup label="Personas Físicas">
+                                            <option value="605">605 - Sueldos y Salarios</option>
+                                            <option value="606">606 - Arrendamiento</option>
+                                            <option value="608">608 - Demás ingresos</option>
+                                            <option value="611">611 - Ingresos por Dividendos</option>
+                                            <option value="612">612 - Actividades Empresariales y Profesionales</option>
+                                            <option value="614">614 - Ingresos por intereses</option>
+                                            <option value="616">616 - Sin obligaciones fiscales</option>
+                                            <option value="621">621 - Incorporación Fiscal</option>
+                                            <option value="622">622 - Actividades Agrícolas, Ganaderas</option>
+                                            <option value="626">626 - Régimen Simplificado de Confianza</option>
+                                        </optgroup>
+                                        <optgroup label="Personas Morales">
+                                            <option value="601">601 - General de Ley Personas Morales</option>
+                                            <option value="603">603 - Personas Morales sin Fines de Lucro</option>
+                                            <option value="609">609 - Consolidación</option>
+                                            <option value="620">620 - Sociedades Cooperativas</option>
+                                            <option value="623">623 - Grupos de Sociedades</option>
+                                            <option value="624">624 - Coordinados</option>
+                                            <option value="625">625 - Régimen de Plataformas</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
 
-        function cargarTickets(pagina = 1) {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('ticketsContainer').innerHTML = '';
-            
-            const params = new URLSearchParams();
-            params.append('pagina', pagina);
-            params.append('folio', document.getElementById('searchFolio').value);
-            params.append('estatus', document.getElementById('filterEstatus').value);
+                            <!-- Sucursal -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-12">
+                                    <label for="sucursalReceptor" class="form-label fw-semibold">
+                                        <i class="bi bi-shop text-primary me-1"></i>Sucursal
+                                    </label>
+                                    <select class="form-select form-select-lg" id="sucursalReceptor">
+                                        <option value="">Seleccionar sucursal (opcional)...</option>
+                                    </select>
+                                    <div class="form-text">Sucursal donde se realizó la compra</div>
+                                </div>
+                            </div>
 
-            fetch('core/consultar-tickets.php?' + params)
-                .then(r => r.json())
-                .then(data => {
-                    if(data.success) {
-                        datosTickets = data.tickets; // Guardamos en variable global
-                        renderizarTickets(); // Pintamos usando la config actual
-                        actualizarResumen(data.resumen);
-                        generarPaginacion(data.total_paginas, pagina);
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(e => console.error(e))
-                .finally(() => document.getElementById('loading').style.display = 'none');
-        }
+                            <!-- Domicilio Fiscal -->
+                            <h6 class="fw-bold text-primary mb-3 mt-4">
+                                <i class="bi bi-geo-alt me-2"></i>Domicilio Fiscal
+                            </h6>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="calleFiscal" class="form-label fw-semibold">Calle</label>
+                                    <input type="text" class="form-control" id="calleFiscal" placeholder="Nombre de la calle">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="numExterior" class="form-label fw-semibold"># Exterior</label>
+                                    <input type="text" class="form-control" id="numExterior" placeholder="123">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="numInterior" class="form-label fw-semibold"># Interior</label>
+                                    <input type="text" class="form-control" id="numInterior" placeholder="A">
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label for="cpFiscal" class="form-label fw-semibold">
+                                        Código Postal <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="cpFiscal" placeholder="12345" maxlength="5" required>
+                                </div>
+                                <div class="col-md-8">
+                                    <label for="coloniaFiscal" class="form-label fw-semibold">Colonia</label>
+                                    <select class="form-select" id="coloniaFiscal">
+                                        <option value="">Ingrese CP para cargar colonias...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="municipioFiscal" class="form-label fw-semibold">Municipio / Alcaldía</label>
+                                    <input type="text" class="form-control" id="municipioFiscal" placeholder="Municipio" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="estadoFiscal" class="form-label fw-semibold">Estado</label>
+                                    <input type="text" class="form-control" id="estadoFiscal" placeholder="Estado" readonly>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-4">
+                                <div class="col-12">
+                                    <label for="paisFiscal" class="form-label fw-semibold">País</label>
+                                    <input type="text" class="form-control" id="paisFiscal" value="México" readonly>
+                                </div>
+                            </div>
 
-        // Esta función NO llama a la BD, solo repinta lo que ya tiene en memoria
-        function aplicarVista() {
-            config.modo = document.getElementById('vAgrupado').checked ? 'agrupado' : 'desglosado';
-            config.expandir = document.getElementById('checkExpandirTodo').checked;
-            renderizarTickets();
-        }
-
-        function renderizarTickets() {
-            const container = document.getElementById('ticketsContainer');
-            container.innerHTML = '';
-
-            if (datosTickets.length === 0) {
-                container.innerHTML = '<div class="col-12 text-center text-muted">No se encontraron tickets</div>';
-                return;
-            }
-
-            datosTickets.forEach(ticket => {
-                const esFacturado = ticket.estatus === 'facturado';
-                const colorEstado = esFacturado ? 'success' : 'warning';
-                const displayDetalle = config.expandir ? 'block' : 'none';
-                const iconDetalle = config.expandir ? 'bi-chevron-up' : 'bi-chevron-down';
-
-                // Generar HTML de productos según configuración
-                const tablaProductos = generarHTMLProductos(ticket.productos);
-
-                const html = `
-                    <div class="col-12">
-                        <div class="card border-0 shadow-sm rounded-4 mb-2">
-                            <div class="card-header bg-white py-3" style="cursor:pointer" onclick="toggleDetalle(${ticket.id_ticket})">
-                                <div class="row align-items-center">
-                                    <div class="col-md-3">
-                                        <span class="badge bg-${colorEstado} me-2">${ticket.estatus}</span>
-                                        <span class="fw-bold text-dark">${ticket.folio_ticket}</span>
-                                    </div>
-                                    <div class="col-md-4 text-muted small">
-                                        ${ticket.sucursal_fmt}<br>
-                                        <i class="bi bi-calendar me-1"></i>${ticket.fecha_fmt}
-                                    </div>
-                                    <div class="col-md-3 text-end">
-                                        <h5 class="mb-0 fw-bold text-primary">$${ticket.importe_fmt}</h5>
-                                        <small class="text-muted">${ticket.items_count} productos</small>
-                                    </div>
-                                    <div class="col-md-2 text-end">
-                                        <i class="bi ${iconDetalle} text-muted" id="icon-${ticket.id_ticket}"></i>
+                            <!-- Correos Electrónicos -->
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="bi bi-envelope me-2"></i>Correos Electrónicos
+                            </h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-12">
+                                    <label for="correosReceptor" class="form-label fw-semibold">
+                                        Correo(s) para envío de factura <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" id="correosReceptor"
+                                        placeholder="correo@ejemplo.com, otro@ejemplo.com" required>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Si deseas agregar varios correos, sepáralos usando comas
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="card-body bg-light border-top" id="body-${ticket.id_ticket}" style="display:${displayDetalle}">
-                                <div class="row">
-                                    <div class="col-md-9">
-                                        ${tablaProductos}
+
+                            <!-- Pagos a Cuenta de Terceros -->
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="bi bi-people me-2"></i>Pagos a Cuenta de Terceros
+                            </h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-12">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="habilitarTerceros">
+                                        <label class="form-check-label fw-semibold" for="habilitarTerceros">
+                                            Habilitar pago a cuenta de terceros
+                                        </label>
                                     </div>
-                                    <div class="col-md-3 d-flex align-items-center justify-content-center border-start">
-                                        ${!esFacturado 
-                                            ? `<button class="btn btn-success w-100 shadow-sm" onclick="facturar(${ticket.id_ticket})">
-                                                 <i class="bi bi-lightning-charge me-2"></i>Facturar
-                                               </button>` 
-                                            : `<button class="btn btn-outline-secondary w-100" onclick="descargar(${ticket.id_ticket})">
-                                                 <i class="bi bi-download me-2"></i>XML / PDF
-                                               </button>`
-                                        }
+                                    <div id="datosTerceros" class="d-none border rounded-3 p-3 bg-light">
+                                        <div class="row g-3">
+                                            <div class="col-md-5">
+                                                <label for="rfcTercero" class="form-label fw-semibold">RFC del Tercero</label>
+                                                <input type="text" class="form-control text-uppercase" id="rfcTercero" maxlength="13">
+                                            </div>
+                                            <div class="col-md-7">
+                                                <label for="nombreTercero" class="form-label fw-semibold">Nombre del Tercero</label>
+                                                <input type="text" class="form-control" id="nombreTercero">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="regimenTercero" class="form-label fw-semibold">Régimen Fiscal</label>
+                                                <select class="form-select" id="regimenTercero">
+                                                    <option value="">Seleccionar...</option>
+                                                    <option value="601">601 - General de Ley</option>
+                                                    <option value="603">603 - Sin Fines de Lucro</option>
+                                                    <option value="612">612 - Actividades Empresariales</option>
+                                                    <option value="626">626 - RESICO</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="cpTercero" class="form-label fw-semibold">Código Postal</label>
+                                                <input type="text" class="form-control" id="cpTercero" maxlength="5">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Datos de la Compra y Resumen -->
+            <div class="col-lg-5">
+                <!-- Datos de la Compra -->
+                <div class="card shadow-lg border-0 rounded-4 mb-4">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-cart-check me-2"></i>
+                            Datos de la Compra
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="folioTicket" class="form-label fw-semibold">
+                                    <i class="bi bi-hash text-success me-1"></i>Folio del Ticket
+                                </label>
+                                <input type="text" class="form-control" id="folioTicket" placeholder="Número de folio">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fechaCompra" class="form-label fw-semibold">
+                                    <i class="bi bi-calendar3 text-success me-1"></i>Fecha de Compra
+                                </label>
+                                <input type="date" class="form-control" id="fechaCompra">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="formaPago" class="form-label fw-semibold">
+                                    <i class="bi bi-credit-card text-success me-1"></i>Forma de Pago
+                                </label>
+                                <select class="form-select" id="formaPago">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="01">01 - Efectivo</option>
+                                    <option value="02">02 - Cheque nominativo</option>
+                                    <option value="03">03 - Transferencia electrónica</option>
+                                    <option value="04">04 - Tarjeta de crédito</option>
+                                    <option value="28">28 - Tarjeta de débito</option>
+                                    <option value="99">99 - Por definir</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="metodoPago" class="form-label fw-semibold">
+                                    <i class="bi bi-wallet2 text-success me-1"></i>Método de Pago
+                                </label>
+                                <select class="form-select" id="metodoPago">
+                                    <option value="PUE">PUE - Pago en una sola exhibición</option>
+                                    <option value="PPD">PPD - Pago en parcialidades o diferido</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="monedaPago" class="form-label fw-semibold">
+                                    <i class="bi bi-currency-exchange text-success me-1"></i>Moneda
+                                </label>
+                                <select class="form-select" id="monedaPago">
+                                    <option value="MXN" selected>MXN - Peso Mexicano</option>
+                                    <option value="USD">USD - Dólar Americano</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Detalle de productos -->
+                        <h6 class="fw-bold text-success mb-3 mt-4">
+                            <i class="bi bi-list-check me-2"></i>Detalle de Productos/Servicios
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover" id="tablaProductos">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>Descripción</th>
+                                        <th class="text-center">Cant.</th>
+                                        <th class="text-end">P.Unit</th>
+                                        <th class="text-end">Importe</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyProductos">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">
+                                            <i class="bi bi-inbox me-2"></i>No hay productos cargados
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totales -->
+                        <div class="bg-light rounded-3 p-3 mt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Subtotal:</span>
+                                <span class="fw-semibold" id="subtotalCompra">$0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">IVA (16%):</span>
+                                <span class="fw-semibold" id="ivaCompra">$0.00</span>
+                            </div>
+                            <hr class="my-2">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold fs-5">Total:</span>
+                                <span class="fw-bold fs-5 text-success" id="totalCompra">$0.00</span>
                             </div>
                         </div>
                     </div>
-                `;
-                container.innerHTML += html;
-            });
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="card shadow border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <div class="d-grid gap-3">
+                            <button type="button" class="btn btn-outline-primary btn-lg" onclick="buscarTicket()">
+                                <i class="bi bi-search me-2"></i>Buscar Ticket
+                            </button>
+                            <button type="button" class="btn btn-primary btn-lg" onclick="previsualizarFactura()">
+                                <i class="bi bi-eye me-2"></i>Previsualizar Factura
+                            </button>
+                            <button type="button" class="btn btn-success btn-lg" onclick="generarFactura()">
+                                <i class="bi bi-file-earmark-check me-2"></i>Generar Factura CFDI
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cargar sucursales
+        cargarSucursales();
+        
+        // Establecer fecha actual
+        document.getElementById('fechaCompra').valueAsDate = new Date();
+        
+        // Event listeners
+        document.getElementById('cpFiscal').addEventListener('blur', buscarColoniasPorCP);
+        document.getElementById('habilitarTerceros').addEventListener('change', toggleDatosTerceros);
+        document.getElementById('rfcReceptor').addEventListener('input', formatearRFC);
+    });
+
+    function formatearRFC(e) {
+        e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9&]/g, '');
+    }
+
+    async function cargarSucursales() {
+        try {
+            const response = await fetch('core/consultar-tickets.php?obtener_sucursales=1');
+            const data = await response.json();
+            if (data.success && data.sucursales) {
+                const select = document.getElementById('sucursalReceptor');
+                data.sucursales.forEach(s => {
+                    select.innerHTML += `<option value="${s.id}">${s.nombre}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error cargando sucursales:', error);
+        }
+    }
+
+    async function buscarColoniasPorCP() {
+        const cp = document.getElementById('cpFiscal').value;
+        if (cp.length !== 5) return;
+        
+        try {
+            const response = await fetch(`core/obtener-colonias-cp.php?cp=${cp}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                const selectColonia = document.getElementById('coloniaFiscal');
+                selectColonia.innerHTML = '<option value="">Seleccionar colonia...</option>';
+                
+                data.colonias.forEach(colonia => {
+                    selectColonia.innerHTML += `<option value="${colonia.nombre}">${colonia.nombre}</option>`;
+                });
+                
+                document.getElementById('municipioFiscal').value = data.municipio || '';
+                document.getElementById('estadoFiscal').value = data.estado || '';
+            }
+        } catch (error) {
+            console.error('Error buscando colonias:', error);
+        }
+    }
+
+    function toggleDatosTerceros() {
+        const checked = document.getElementById('habilitarTerceros').checked;
+        document.getElementById('datosTerceros').classList.toggle('d-none', !checked);
+    }
+
+    function formatMoney(amount) {
+        return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount || 0);
+    }
+
+    async function buscarTicket() {
+        const folio = document.getElementById('folioTicket').value.trim();
+        if (!folio) {
+            Swal.fire('Error', 'Ingresa el número de folio del ticket', 'warning');
+            return;
         }
 
-        function generarHTMLProductos(productos) {
-            if (!productos || productos.length === 0) return '<small>Sin detalles</small>';
+        Swal.fire({
+            title: 'Buscando ticket...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
 
-            let lista = [];
-
-            if (config.modo === 'agrupado') {
-                // Lógica de Agrupación por ID_PROD_SERV
-                const agrupador = {};
-                productos.forEach(p => {
-                    const key = p.id_prod_serv; // Usamos el ID del producto para agrupar
-                    if (!agrupador[key]) {
-                        agrupador[key] = { ...p, cant: parseFloat(p.cant), importe: parseFloat(p.importe) };
-                    } else {
-                        agrupador[key].cant += parseFloat(p.cant);
-                        agrupador[key].importe += parseFloat(p.importe);
-                    }
-                });
-                lista = Object.values(agrupador);
+        try {
+            const response = await fetch(`core/consultar-tickets.php?folio=${folio}`);
+            const data = await response.json();
+            
+            Swal.close();
+            
+            if (data.success && data.ticket) {
+                cargarDatosTicket(data.ticket);
+                Swal.fire('Éxito', 'Ticket encontrado correctamente', 'success');
             } else {
-                // Modo Desglosado: Copia directa
-                lista = productos;
+                Swal.fire('No encontrado', data.message || 'No se encontró el ticket', 'error');
             }
+        } catch (error) {
+            Swal.close();
+            console.error('Error:', error);
+            Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+        }
+    }
 
-            let html = `
+    function cargarDatosTicket(ticket) {
+        // Cargar datos del ticket
+        document.getElementById('fechaCompra').value = ticket.fecha_venta?.split(' ')[0] || '';
+        
+        // Cargar productos
+        const tbody = document.getElementById('tbodyProductos');
+        if (ticket.productos && ticket.productos.length > 0) {
+            tbody.innerHTML = ticket.productos.map(p => `
+                <tr>
+                    <td>${p.descripcion || p.nombre}</td>
+                    <td class="text-center">${p.cantidad}</td>
+                    <td class="text-end">${formatMoney(p.precio_unitario)}</td>
+                    <td class="text-end">${formatMoney(p.importe)}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Actualizar totales
+        document.getElementById('subtotalCompra').textContent = formatMoney(ticket.subtotal);
+        document.getElementById('ivaCompra').textContent = formatMoney(ticket.impuesto_t);
+        document.getElementById('totalCompra').textContent = formatMoney(ticket.importe_t);
+    }
+
+    function previsualizarFactura() {
+        const datos = recopilarDatosFactura();
+        
+        if (!validarDatosRequeridos(datos)) return;
+
+        Swal.fire({
+            title: 'Vista Previa de Factura',
+            html: generarHTMLPreview(datos),
+            width: '80%',
+            showCloseButton: true,
+            confirmButtonText: 'Cerrar',
+            customClass: { popup: 'swal-wide' }
+        });
+    }
+
+    function generarHTMLPreview(datos) {
+        return `
+            <div class="text-start p-3">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <h6 class="fw-bold text-primary">EMISOR</h6>
+                        <p class="mb-1"><strong>Empresa Emisora S.A. de C.V.</strong></p>
+                        <p class="mb-0 small text-muted">RFC: XXXX010101000</p>
+                    </div>
+                    <div class="col-6 text-end">
+                        <h4 class="text-primary fw-bold">FACTURA</h4>
+                        <p class="mb-0">Fecha: ${new Date().toLocaleDateString('es-MX')}</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h6 class="fw-bold text-success">RECEPTOR</h6>
+                        <p class="mb-1"><strong>${datos.nombreReceptor}</strong></p>
+                        <p class="mb-1 small">RFC: ${datos.rfcReceptor}</p>
+                        <p class="mb-1 small">Régimen: ${datos.regimenFiscal}</p>
+                        <p class="mb-1 small">Uso CFDI: ${datos.usoCfdi}</p>
+                        <p class="mb-0 small text-muted">${datos.calleFiscal} ${datos.numExterior}, ${datos.coloniaFiscal}, CP ${datos.cpFiscal}</p>
+                    </div>
+                </div>
+                <hr>
                 <div class="table-responsive">
-                    <table class="table table-sm table-borderless small mb-0">
-                        <thead class="text-secondary border-bottom">
+                    <table class="table table-sm">
+                        <thead class="table-primary">
                             <tr>
-                                <th>Cód. SAT</th>
                                 <th>Descripción</th>
-                                <th class="text-center">Cant.</th>
-                                <th class="text-end">P. Unit</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">P.Unitario</th>
                                 <th class="text-end">Importe</th>
                             </tr>
                         </thead>
-                        <tbody>`;
-            
-            lista.forEach(p => {
-                html += `
-                    <tr>
-                        <td><span class="badge bg-light text-dark border">${p.id_prod_serv}</span></td>
-                        <td>${p.descr}</td>
-                        <td class="text-center fw-bold">${parseFloat(p.cant).toFixed(2)}</td>
-                        <td class="text-end text-muted">$${parseFloat(p.precio_unit).toFixed(2)}</td>
-                        <td class="text-end fw-bold">$${parseFloat(p.importe).toFixed(2)}</td>
-                    </tr>
-                `;
+                        <tbody id="previewProductos">${document.getElementById('tbodyProductos').innerHTML}</tbody>
+                    </table>
+                </div>
+                <div class="row justify-content-end mt-3">
+                    <div class="col-4">
+                        <div class="d-flex justify-content-between"><span>Subtotal:</span><span>${document.getElementById('subtotalCompra').textContent}</span></div>
+                        <div class="d-flex justify-content-between"><span>IVA 16%:</span><span>${document.getElementById('ivaCompra').textContent}</span></div>
+                        <hr class="my-1">
+                        <div class="d-flex justify-content-between fw-bold"><span>Total:</span><span class="text-success">${document.getElementById('totalCompra').textContent}</span></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function recopilarDatosFactura() {
+        return {
+            rfcReceptor: document.getElementById('rfcReceptor').value.trim(),
+            nombreReceptor: document.getElementById('nombreReceptor').value.trim(),
+            usoCfdi: document.getElementById('usoCfdi').value,
+            regimenFiscal: document.getElementById('regimenFiscal').value,
+            sucursal: document.getElementById('sucursalReceptor').value,
+            calleFiscal: document.getElementById('calleFiscal').value.trim(),
+            numExterior: document.getElementById('numExterior').value.trim(),
+            numInterior: document.getElementById('numInterior').value.trim(),
+            cpFiscal: document.getElementById('cpFiscal').value.trim(),
+            coloniaFiscal: document.getElementById('coloniaFiscal').value,
+            municipioFiscal: document.getElementById('municipioFiscal').value,
+            estadoFiscal: document.getElementById('estadoFiscal').value,
+            correosReceptor: document.getElementById('correosReceptor').value.trim(),
+            folioTicket: document.getElementById('folioTicket').value.trim(),
+            fechaCompra: document.getElementById('fechaCompra').value,
+            formaPago: document.getElementById('formaPago').value,
+            metodoPago: document.getElementById('metodoPago').value,
+            monedaPago: document.getElementById('monedaPago').value,
+            habilitarTerceros: document.getElementById('habilitarTerceros').checked,
+            rfcTercero: document.getElementById('rfcTercero').value.trim(),
+            nombreTercero: document.getElementById('nombreTercero').value.trim(),
+            regimenTercero: document.getElementById('regimenTercero').value,
+            cpTercero: document.getElementById('cpTercero').value.trim()
+        };
+    }
+
+    function validarDatosRequeridos(datos) {
+        const camposRequeridos = [
+            { campo: 'rfcReceptor', nombre: 'RFC' },
+            { campo: 'nombreReceptor', nombre: 'Nombre o Razón Social' },
+            { campo: 'usoCfdi', nombre: 'Uso de CFDI' },
+            { campo: 'regimenFiscal', nombre: 'Régimen Fiscal' },
+            { campo: 'cpFiscal', nombre: 'Código Postal' },
+            { campo: 'correosReceptor', nombre: 'Correo Electrónico' }
+        ];
+
+        for (const item of camposRequeridos) {
+            if (!datos[item.campo]) {
+                Swal.fire('Campo requerido', `El campo "${item.nombre}" es obligatorio`, 'warning');
+                document.getElementById(item.campo).focus();
+                return false;
+            }
+        }
+
+        // Validar RFC
+        if (datos.rfcReceptor.length < 12 || datos.rfcReceptor.length > 13) {
+            Swal.fire('RFC inválido', 'El RFC debe tener 12 o 13 caracteres', 'warning');
+            return false;
+        }
+
+        // Validar correos
+        const correos = datos.correosReceptor.split(',').map(c => c.trim());
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        for (const correo of correos) {
+            if (!emailRegex.test(correo)) {
+                Swal.fire('Correo inválido', `El correo "${correo}" no es válido`, 'warning');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function generarFactura() {
+        const datos = recopilarDatosFactura();
+        
+        if (!validarDatosRequeridos(datos)) return;
+
+        Swal.fire({
+            title: '¿Generar Factura?',
+            text: 'Se generará la factura CFDI con los datos proporcionados',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            confirmButtonText: 'Sí, generar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                procesarGeneracionFactura(datos);
+            }
+        });
+    }
+
+    async function procesarGeneracionFactura(datos) {
+        Swal.fire({
+            title: 'Generando factura...',
+            html: '<p>Por favor espera mientras se procesa tu factura CFDI</p>',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const response = await fetch('core/generar-factura-cfdi.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
             });
             
-            html += `</tbody></table></div>`;
-            return html;
-        }
-
-        // Utilidades
-        function toggleDetalle(id) {
-            const el = document.getElementById(`body-${id}`);
-            const icon = document.getElementById(`icon-${id}`);
-            if (el.style.display === 'none') {
-                el.style.display = 'block';
-                icon.classList.replace('bi-chevron-down', 'bi-chevron-up');
-            } else {
-                el.style.display = 'none';
-                icon.classList.replace('bi-chevron-up', 'bi-chevron-down');
-            }
-        }
-
-        function actualizarResumen(resumen) {
-            document.getElementById('lblPendientes').innerText = resumen.pendientes;
-            document.getElementById('lblFacturados').innerText = resumen.facturados;
-            document.getElementById('lblImporte').innerText = '$' + resumen.importe_fmt;
-        }
-        
-        function generarPaginacion(total, actual) {
-            // Lógica simple de paginación para el ejemplo
-            const div = document.getElementById('paginacion');
-            if(total <= 1) { div.innerHTML = ''; return; }
+            const data = await response.json();
+            Swal.close();
             
-            let html = `<nav><ul class="pagination">`;
-            for(let i=1; i<=total; i++) {
-                html += `<li class="page-item ${i===actual?'active':''}"><button class="page-link" onclick="cargarTickets(${i})">${i}</button></li>`;
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Factura Generada!',
+                    html: `
+                        <p>Tu factura ha sido generada correctamente.</p>
+                        <p><strong>UUID:</strong> ${data.uuid || 'N/A'}</p>
+                        <p>Se enviará al correo: ${datos.correosReceptor}</p>
+                    `,
+                    confirmButtonText: 'Descargar PDF',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cerrar'
+                }).then((result) => {
+                    if (result.isConfirmed && data.pdf_url) {
+                        window.open(data.pdf_url, '_blank');
+                    }
+                });
+            } else {
+                Swal.fire('Error', data.message || 'Error al generar la factura', 'error');
             }
-            html += `</ul></nav>`;
-            div.innerHTML = html;
+        } catch (error) {
+            Swal.close();
+            console.error('Error:', error);
+            Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
         }
-
-        function debounce(func, timeout = 300){
-            let timer;
-            return (...args) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => { func.apply(this, args); }, timeout);
-            };
-        }
-
-        // Stubs para botones
-        function facturar(id) { alert('Facturando ticket ' + id); }
-        function descargar(id) { alert('Descargando archivos ticket ' + id); }
-    </script>
-</div>
-
-
+    }
+</script>

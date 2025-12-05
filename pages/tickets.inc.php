@@ -92,6 +92,195 @@
         <div id="paginacion" class="d-flex justify-content-center mt-4"></div>
     </div>
 </div>
+
+<!-- Modal de Previsualización de Factura -->
+<div class="modal fade" id="modalPrevisualizacion" tabindex="-1" aria-labelledby="modalPrevisualizacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header bg-primary text-white rounded-top-4">
+                <h5 class="modal-title" id="modalPrevisualizacionLabel">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>Vista Previa de Factura
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="row g-0">
+                    <!-- Panel de datos del receptor -->
+                    <div class="col-lg-4 bg-light p-4 border-end">
+                        <h6 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-person-fill me-2"></i>Datos del Receptor
+                        </h6>
+                        <form id="formDatosReceptor">
+                            <div class="mb-3">
+                                <label for="receptorRFC" class="form-label fw-semibold small">RFC del Cliente *</label>
+                                <input type="text" class="form-control text-uppercase" id="receptorRFC" placeholder="XAXX010101000" maxlength="13" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="receptorNombre" class="form-label fw-semibold small">Razón Social *</label>
+                                <input type="text" class="form-control" id="receptorNombre" placeholder="Nombre o Razón Social" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="receptorCP" class="form-label fw-semibold small">Código Postal *</label>
+                                <input type="text" class="form-control" id="receptorCP" placeholder="12345" maxlength="5" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="receptorRegimen" class="form-label fw-semibold small">Régimen Fiscal *</label>
+                                <select class="form-select" id="receptorRegimen" required>
+                                    <option value="">Selecciona régimen...</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="receptorUsoCFDI" class="form-label fw-semibold small">Uso de CFDI *</label>
+                                <select class="form-select" id="receptorUsoCFDI" required>
+                                    <option value="">Selecciona uso...</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="receptorFormaPago" class="form-label fw-semibold small">Forma de Pago *</label>
+                                <select class="form-select" id="receptorFormaPago" required>
+                                    <option value="">Selecciona forma...</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="receptorEmail" class="form-label fw-semibold small">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="receptorEmail" placeholder="correo@ejemplo.com">
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Panel de vista previa -->
+                    <div class="col-lg-8 p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-primary mb-0">
+                                <i class="bi bi-eye me-2"></i>Vista Previa
+                            </h6>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="actualizarPrevisualizacion()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                            </button>
+                        </div>
+                        
+                        <!-- Contenedor de la factura -->
+                        <div id="facturaPreviewContainer" class="border rounded-3 bg-white shadow-sm" style="max-height: 60vh; overflow-y: auto;">
+                            <div class="p-4" id="facturaPreviewContent">
+                                <!-- Header de la factura -->
+                                <div class="row mb-4 pb-3 border-bottom">
+                                    <div class="col-6">
+                                        <div id="previewEmisorLogo" class="mb-2">
+                                            <div class="bg-primary text-white px-3 py-2 rounded d-inline-block">LOGO</div>
+                                        </div>
+                                        <h5 class="fw-bold mb-1" id="previewEmisorNombre">Empresa Emisora</h5>
+                                        <p class="text-muted small mb-1" id="previewEmisorRFC">RFC: ---</p>
+                                        <p class="text-muted small mb-0" id="previewEmisorDireccion">Dirección fiscal</p>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <h4 class="fw-bold text-primary mb-2">FACTURA</h4>
+                                        <p class="mb-1"><strong>Serie:</strong> <span id="previewSerie">A</span></p>
+                                        <p class="mb-1"><strong>Folio:</strong> <span id="previewFolio">001</span></p>
+                                        <p class="mb-1"><strong>Fecha:</strong> <span id="previewFecha"><?php echo date('d/m/Y H:i'); ?></span></p>
+                                        <p class="mb-0"><strong>Ticket:</strong> <span id="previewTicketFolio">---</span></p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Datos del receptor -->
+                                <div class="row mb-4 pb-3 border-bottom">
+                                    <div class="col-6">
+                                        <h6 class="fw-bold text-secondary">RECEPTOR</h6>
+                                        <p class="fw-bold mb-1" id="previewReceptorNombre">Nombre del Cliente</p>
+                                        <p class="text-muted small mb-1" id="previewReceptorRFC">RFC: ---</p>
+                                        <p class="text-muted small mb-0" id="previewReceptorCP">C.P.: ---</p>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <p class="mb-1"><strong>Uso CFDI:</strong> <span id="previewUsoCFDI">---</span></p>
+                                        <p class="mb-1"><strong>Forma Pago:</strong> <span id="previewFormaPago">---</span></p>
+                                        <p class="mb-0"><strong>Método Pago:</strong> <span id="previewMetodoPago">PUE</span></p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tabla de conceptos -->
+                                <div class="table-responsive mb-4">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-primary">
+                                            <tr>
+                                                <th style="width: 15%">Clave SAT</th>
+                                                <th>Descripción</th>
+                                                <th class="text-center" style="width: 10%">Cant.</th>
+                                                <th class="text-end" style="width: 12%">P. Unit.</th>
+                                                <th class="text-end" style="width: 12%">Importe</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="previewConceptos">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted">Cargando conceptos...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Totales -->
+                                <div class="row">
+                                    <div class="col-7">
+                                        <div class="bg-light p-3 rounded">
+                                            <p class="small mb-1"><strong>Moneda:</strong> MXN - Peso Mexicano</p>
+                                            <p class="small mb-0"><strong>Tipo Comprobante:</strong> I - Ingreso</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-5">
+                                        <table class="table table-sm table-borderless mb-0">
+                                            <tr>
+                                                <td class="text-end"><strong>Subtotal:</strong></td>
+                                                <td class="text-end" id="previewSubtotal">$0.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-end"><strong>IVA (16%):</strong></td>
+                                                <td class="text-end" id="previewIVA">$0.00</td>
+                                            </tr>
+                                            <tr class="border-top">
+                                                <td class="text-end"><h5 class="fw-bold mb-0">Total:</h5></td>
+                                                <td class="text-end"><h5 class="fw-bold text-primary mb-0" id="previewTotal">$0.00</h5></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pie de factura -->
+                                <div class="mt-4 pt-3 border-top">
+                                    <div class="row">
+                                        <div class="col-3 text-center">
+                                            <div class="border p-3 rounded bg-light">
+                                                <i class="bi bi-qr-code display-5 text-muted"></i>
+                                                <small class="d-block text-muted mt-1">Código QR</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-9">
+                                            <p class="small text-muted mb-1" id="previewLeyenda">Este documento es una representación impresa de un CFDI</p>
+                                            <p class="small text-muted mb-0"><strong>Sello Digital:</strong> <span class="text-break" style="font-size: 0.7rem;">••••••••••••••••••••••••••••••••</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light rounded-bottom-4">
+                <div class="d-flex justify-content-between w-100">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-2"></i>Cancelar
+                    </button>
+                    <div>
+                        <button type="button" class="btn btn-outline-primary me-2" onclick="imprimirPrevisualizacion()">
+                            <i class="bi bi-printer me-2"></i>Imprimir
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="confirmarFacturacion()">
+                            <i class="bi bi-check-circle me-2"></i>Generar Factura
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     let datosTickets = [];
     let config = {
@@ -444,9 +633,340 @@
         };
     }
 
-    function facturar(id) {
-        alert('Facturando ticket ' + id);
+    // ============================================
+    // VARIABLES Y FUNCIONES DE PREVISUALIZACIÓN
+    // ============================================
+    
+    let ticketSeleccionado = null;
+    let configFactura = null;
+    let modalPrevisualizacion = null;
+
+    // Inicializar modal
+    document.addEventListener('DOMContentLoaded', function() {
+        modalPrevisualizacion = new bootstrap.Modal(document.getElementById('modalPrevisualizacion'));
+        
+        // Cargar catálogos para el formulario del receptor
+        cargarCatalogosReceptor();
+        
+        // Listeners para actualizar preview en tiempo real
+        ['receptorRFC', 'receptorNombre', 'receptorCP', 'receptorRegimen', 'receptorUsoCFDI', 'receptorFormaPago'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', actualizarPrevisualizacion);
+                el.addEventListener('change', actualizarPrevisualizacion);
+            }
+        });
+    });
+
+    async function cargarCatalogosReceptor() {
+        try {
+            // Cargar regímenes fiscales
+            const resRegimen = await fetch('core/listar-regimen-fiscal.php');
+            const dataRegimen = await resRegimen.json();
+            if (dataRegimen.success && dataRegimen.data) {
+                const select = document.getElementById('receptorRegimen');
+                select.innerHTML = '<option value="">Selecciona régimen...</option>';
+                dataRegimen.data.forEach(r => {
+                    select.innerHTML += `<option value="${r.codigo}">${r.codigo} - ${r.descripcion}</option>`;
+                });
+            }
+
+            // Cargar usos de CFDI
+            const resUso = await fetch('core/listar-uso-cfdi.php');
+            const dataUso = await resUso.json();
+            if (dataUso.success && dataUso.data) {
+                const select = document.getElementById('receptorUsoCFDI');
+                select.innerHTML = '<option value="">Selecciona uso...</option>';
+                dataUso.data.forEach(u => {
+                    select.innerHTML += `<option value="${u.codigo}">${u.codigo} - ${u.descripcion}</option>`;
+                });
+            }
+
+            // Cargar formas de pago
+            const resPago = await fetch('core/listar-formas-pago.php');
+            const dataPago = await resPago.json();
+            if (dataPago.success && dataPago.data) {
+                const select = document.getElementById('receptorFormaPago');
+                select.innerHTML = '<option value="">Selecciona forma...</option>';
+                dataPago.data.forEach(f => {
+                    select.innerHTML += `<option value="${f.clave}">${f.clave} - ${f.description}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error cargando catálogos:', error);
+        }
     }
+
+    async function cargarConfigFactura() {
+        try {
+            const response = await fetch('core/obtener-config-facturas.php');
+            const result = await response.json();
+            if (result.success && result.data) {
+                configFactura = result.data;
+                aplicarConfigEmisor();
+            }
+        } catch (error) {
+            console.error('Error cargando configuración de factura:', error);
+        }
+    }
+
+    function aplicarConfigEmisor() {
+        if (!configFactura) return;
+
+        // Aplicar datos del emisor
+        document.getElementById('previewEmisorNombre').textContent = configFactura.nombreEmpresa || 'Empresa Emisora';
+        document.getElementById('previewEmisorRFC').textContent = `RFC: ${configFactura.rfcEmpresa || '---'}`;
+        document.getElementById('previewEmisorDireccion').textContent = configFactura.direccionEmpresa || 'Dirección fiscal';
+        
+        // Serie y folio
+        document.getElementById('previewSerie').textContent = configFactura.serieFactura || 'A';
+        const folioActual = configFactura.folioActual > 0 ? configFactura.folioActual + 1 : configFactura.folioInicial || 1;
+        document.getElementById('previewFolio').textContent = String(folioActual).padStart(3, '0');
+        
+        // Logo
+        if (configFactura.logoEmpresa) {
+            document.getElementById('previewEmisorLogo').innerHTML = `<img src="${configFactura.logoEmpresa}" alt="Logo" style="max-height: 60px;">`;
+        }
+        
+        // Leyenda
+        if (configFactura.leyendaFactura) {
+            document.getElementById('previewLeyenda').textContent = configFactura.leyendaFactura;
+        }
+
+        // Valores por defecto en el formulario
+        if (configFactura.usoCfdi) {
+            document.getElementById('receptorUsoCFDI').value = configFactura.usoCfdi;
+        }
+        if (configFactura.formaPago) {
+            document.getElementById('receptorFormaPago').value = configFactura.formaPago;
+        }
+    }
+
+    function facturar(idTicket) {
+        // Buscar el ticket en los datos cargados
+        ticketSeleccionado = datosTickets.find(t => t.id_ticket == idTicket);
+        
+        if (!ticketSeleccionado) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se encontró el ticket seleccionado'
+            });
+            return;
+        }
+
+        // Limpiar formulario del receptor
+        document.getElementById('formDatosReceptor').reset();
+        
+        // Cargar configuración del emisor
+        cargarConfigFactura();
+        
+        // Mostrar datos del ticket en la preview
+        cargarDatosTicketEnPreview();
+        
+        // Mostrar modal
+        modalPrevisualizacion.show();
+    }
+
+    function cargarDatosTicketEnPreview() {
+        if (!ticketSeleccionado) return;
+
+        // Folio del ticket
+        document.getElementById('previewTicketFolio').textContent = ticketSeleccionado.folio_ticket;
+        document.getElementById('previewFecha').textContent = ticketSeleccionado.fecha_fmt;
+
+        // Cargar conceptos/productos
+        const tbody = document.getElementById('previewConceptos');
+        tbody.innerHTML = '';
+        
+        let subtotal = 0;
+        
+        if (ticketSeleccionado.productos && ticketSeleccionado.productos.length > 0) {
+            ticketSeleccionado.productos.forEach(p => {
+                const importe = parseFloat(p.importe) || 0;
+                subtotal += importe;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="badge bg-light text-dark border">${p.id_prod_serv || '---'}</span></td>
+                        <td>${p.descr || 'Producto'}</td>
+                        <td class="text-center">${parseFloat(p.cant).toFixed(2)}</td>
+                        <td class="text-end">$${parseFloat(p.precio_unit).toFixed(2)}</td>
+                        <td class="text-end fw-bold">$${importe.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sin conceptos</td></tr>';
+        }
+
+        // Calcular totales
+        const iva = subtotal * 0.16;
+        const total = subtotal + iva;
+
+        document.getElementById('previewSubtotal').textContent = '$' + subtotal.toFixed(2);
+        document.getElementById('previewIVA').textContent = '$' + iva.toFixed(2);
+        document.getElementById('previewTotal').textContent = '$' + total.toFixed(2);
+    }
+
+    function actualizarPrevisualizacion() {
+        // Actualizar datos del receptor en la preview
+        const rfc = document.getElementById('receptorRFC').value.toUpperCase();
+        const nombre = document.getElementById('receptorNombre').value;
+        const cp = document.getElementById('receptorCP').value;
+        const usoCfdi = document.getElementById('receptorUsoCFDI');
+        const formaPago = document.getElementById('receptorFormaPago');
+
+        document.getElementById('previewReceptorNombre').textContent = nombre || 'Nombre del Cliente';
+        document.getElementById('previewReceptorRFC').textContent = `RFC: ${rfc || '---'}`;
+        document.getElementById('previewReceptorCP').textContent = `C.P.: ${cp || '---'}`;
+        
+        if (usoCfdi.selectedIndex > 0) {
+            document.getElementById('previewUsoCFDI').textContent = usoCfdi.options[usoCfdi.selectedIndex].text;
+        }
+        if (formaPago.selectedIndex > 0) {
+            document.getElementById('previewFormaPago').textContent = formaPago.options[formaPago.selectedIndex].text;
+        }
+    }
+
+    function imprimirPrevisualizacion() {
+        const contenido = document.getElementById('facturaPreviewContent').innerHTML;
+        const ventana = window.open('', '_blank');
+        ventana.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Vista Previa de Factura</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+                <style>
+                    body { padding: 20px; }
+                    @media print { 
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    ${contenido}
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                    }
+                <\/script>
+            </body>
+            </html>
+        `);
+        ventana.document.close();
+    }
+
+    function confirmarFacturacion() {
+        // Validar formulario del receptor
+        const form = document.getElementById('formDatosReceptor');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Datos incompletos',
+                text: 'Por favor complete todos los campos obligatorios del receptor'
+            });
+            return;
+        }
+
+        // Validar RFC
+        const rfc = document.getElementById('receptorRFC').value.trim();
+        if (rfc.length < 12 || rfc.length > 13) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'RFC inválido',
+                text: 'El RFC debe tener 12 caracteres (persona moral) o 13 caracteres (persona física)'
+            });
+            return;
+        }
+
+        // Confirmar facturación
+        Swal.fire({
+            title: '¿Confirmar facturación?',
+            html: `
+                <p>Se generará la factura para el ticket:</p>
+                <p class="fw-bold">${ticketSeleccionado.folio_ticket}</p>
+                <p class="text-muted">Total: $${ticketSeleccionado.importe_fmt}</p>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-check-circle me-2"></i>Sí, generar factura',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                generarFactura();
+            }
+        });
+    }
+
+    async function generarFactura() {
+        // Mostrar loading
+        Swal.fire({
+            title: 'Generando factura...',
+            html: 'Por favor espere mientras se procesa la factura',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Preparar datos
+        const datosFactura = {
+            id_ticket: ticketSeleccionado.id_ticket,
+            receptor: {
+                rfc: document.getElementById('receptorRFC').value.toUpperCase(),
+                nombre: document.getElementById('receptorNombre').value,
+                codigo_postal: document.getElementById('receptorCP').value,
+                regimen_fiscal: document.getElementById('receptorRegimen').value,
+                uso_cfdi: document.getElementById('receptorUsoCFDI').value,
+                forma_pago: document.getElementById('receptorFormaPago').value,
+                email: document.getElementById('receptorEmail').value
+            }
+        };
+
+        try {
+            // TODO: Implementar endpoint de generación de factura
+            // const response = await fetch('core/generar-factura.php', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(datosFactura)
+            // });
+            // const result = await response.json();
+
+            // Simulación temporal
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Factura generada!',
+                html: `
+                    <p>La factura se ha generado correctamente.</p>
+                    <p class="text-muted small">Ticket: ${ticketSeleccionado.folio_ticket}</p>
+                `,
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                modalPrevisualizacion.hide();
+                cargarTickets(); // Recargar lista de tickets
+            });
+
+        } catch (error) {
+            console.error('Error al generar factura:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un problema al generar la factura. Intente nuevamente.'
+            });
+        }
+    }
+
 
     function descargar(id) {
         alert('Descargando archivos ticket ' + id);
@@ -556,7 +1076,8 @@
             fechaFin = null;
 
             // Ocultar indicadores de filtros
-            document.getElementById('filtrosActivos').style.display = 'none';
+            const filtrosActivos = document.getElementById('filtrosActivos');
+            if (filtrosActivos) filtrosActivos.style.display = 'none';
 
             // Recargar tickets
             cargarTickets(1);
@@ -565,6 +1086,20 @@
         } catch (error) {
             console.error('Error al limpiar filtros:', error);
         }
+    }
+
+    function mostrarMensajeTemporal(mensaje, tipo = 'info') {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+        Toast.fire({
+            icon: tipo,
+            title: mensaje
+        });
     }
 </script>
 

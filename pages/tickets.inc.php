@@ -93,194 +93,6 @@
     </div>
 </div>
 
-<!-- Modal de Previsualización de Factura -->
-<div class="modal fade" id="modalPrevisualizacion" tabindex="-1" aria-labelledby="modalPrevisualizacionLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 rounded-4 shadow-lg">
-            <div class="modal-header bg-primary text-white rounded-top-4">
-                <h5 class="modal-title" id="modalPrevisualizacionLabel">
-                    <i class="bi bi-file-earmark-pdf me-2"></i>Vista Previa de Factura
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="row g-0">
-                    <!-- Panel de datos del receptor -->
-                    <div class="col-lg-4 bg-light p-4 border-end">
-                        <h6 class="fw-bold text-primary mb-3">
-                            <i class="bi bi-person-fill me-2"></i>Datos del Receptor
-                        </h6>
-                        <form id="formDatosReceptor">
-                            <div class="mb-3">
-                                <label for="receptorRFC" class="form-label fw-semibold small">RFC del Cliente *</label>
-                                <input type="text" class="form-control text-uppercase" id="receptorRFC" placeholder="XAXX010101000" maxlength="13" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="receptorNombre" class="form-label fw-semibold small">Razón Social *</label>
-                                <input type="text" class="form-control" id="receptorNombre" placeholder="Nombre o Razón Social" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="receptorCP" class="form-label fw-semibold small">Código Postal *</label>
-                                <input type="text" class="form-control" id="receptorCP" placeholder="12345" maxlength="5" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="receptorRegimen" class="form-label fw-semibold small">Régimen Fiscal *</label>
-                                <select class="form-select" id="receptorRegimen" required>
-                                    <option value="">Selecciona régimen...</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="receptorUsoCFDI" class="form-label fw-semibold small">Uso de CFDI *</label>
-                                <select class="form-select" id="receptorUsoCFDI" required>
-                                    <option value="">Selecciona uso...</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="receptorFormaPago" class="form-label fw-semibold small">Forma de Pago *</label>
-                                <select class="form-select" id="receptorFormaPago" required>
-                                    <option value="">Selecciona forma...</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="receptorEmail" class="form-label fw-semibold small">Correo Electrónico</label>
-                                <input type="email" class="form-control" id="receptorEmail" placeholder="correo@ejemplo.com">
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <!-- Panel de vista previa -->
-                    <div class="col-lg-8 p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold text-primary mb-0">
-                                <i class="bi bi-eye me-2"></i>Vista Previa
-                            </h6>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="actualizarPrevisualizacion()">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
-                            </button>
-                        </div>
-                        
-                        <!-- Contenedor de la factura -->
-                        <div id="facturaPreviewContainer" class="border rounded-3 bg-white shadow-sm" style="max-height: 60vh; overflow-y: auto;">
-                            <div class="p-4" id="facturaPreviewContent">
-                                <!-- Header de la factura -->
-                                <div class="row mb-4 pb-3 border-bottom">
-                                    <div class="col-6">
-                                        <div id="previewEmisorLogo" class="mb-2">
-                                            <div class="bg-primary text-white px-3 py-2 rounded d-inline-block">LOGO</div>
-                                        </div>
-                                        <h5 class="fw-bold mb-1" id="previewEmisorNombre">Empresa Emisora</h5>
-                                        <p class="text-muted small mb-1" id="previewEmisorRFC">RFC: ---</p>
-                                        <p class="text-muted small mb-0" id="previewEmisorDireccion">Dirección fiscal</p>
-                                    </div>
-                                    <div class="col-6 text-end">
-                                        <h4 class="fw-bold text-primary mb-2">FACTURA</h4>
-                                        <p class="mb-1"><strong>Serie:</strong> <span id="previewSerie">A</span></p>
-                                        <p class="mb-1"><strong>Folio:</strong> <span id="previewFolio">001</span></p>
-                                        <p class="mb-1"><strong>Fecha:</strong> <span id="previewFecha"><?php echo date('d/m/Y H:i'); ?></span></p>
-                                        <p class="mb-0"><strong>Ticket:</strong> <span id="previewTicketFolio">---</span></p>
-                                    </div>
-                                </div>
-                                
-                                <!-- Datos del receptor -->
-                                <div class="row mb-4 pb-3 border-bottom">
-                                    <div class="col-6">
-                                        <h6 class="fw-bold text-secondary">RECEPTOR</h6>
-                                        <p class="fw-bold mb-1" id="previewReceptorNombre">Nombre del Cliente</p>
-                                        <p class="text-muted small mb-1" id="previewReceptorRFC">RFC: ---</p>
-                                        <p class="text-muted small mb-0" id="previewReceptorCP">C.P.: ---</p>
-                                    </div>
-                                    <div class="col-6 text-end">
-                                        <p class="mb-1"><strong>Uso CFDI:</strong> <span id="previewUsoCFDI">---</span></p>
-                                        <p class="mb-1"><strong>Forma Pago:</strong> <span id="previewFormaPago">---</span></p>
-                                        <p class="mb-0"><strong>Método Pago:</strong> <span id="previewMetodoPago">PUE</span></p>
-                                    </div>
-                                </div>
-                                
-                                <!-- Tabla de conceptos -->
-                                <div class="table-responsive mb-4">
-                                    <table class="table table-sm table-bordered">
-                                        <thead class="table-primary">
-                                            <tr>
-                                                <th style="width: 15%">Clave SAT</th>
-                                                <th>Descripción</th>
-                                                <th class="text-center" style="width: 10%">Cant.</th>
-                                                <th class="text-end" style="width: 12%">P. Unit.</th>
-                                                <th class="text-end" style="width: 12%">Importe</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="previewConceptos">
-                                            <tr>
-                                                <td colspan="5" class="text-center text-muted">Cargando conceptos...</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                
-                                <!-- Totales -->
-                                <div class="row">
-                                    <div class="col-7">
-                                        <div class="bg-light p-3 rounded">
-                                            <p class="small mb-1"><strong>Moneda:</strong> MXN - Peso Mexicano</p>
-                                            <p class="small mb-0"><strong>Tipo Comprobante:</strong> I - Ingreso</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-5">
-                                        <table class="table table-sm table-borderless mb-0">
-                                            <tr>
-                                                <td class="text-end"><strong>Subtotal:</strong></td>
-                                                <td class="text-end" id="previewSubtotal">$0.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="text-end"><strong>IVA (16%):</strong></td>
-                                                <td class="text-end" id="previewIVA">$0.00</td>
-                                            </tr>
-                                            <tr class="border-top">
-                                                <td class="text-end"><h5 class="fw-bold mb-0">Total:</h5></td>
-                                                <td class="text-end"><h5 class="fw-bold text-primary mb-0" id="previewTotal">$0.00</h5></td>
-                                            </tr>
-                                        </table>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pie de factura -->
-                                <div class="mt-4 pt-3 border-top">
-                                    <div class="row">
-                                        <div class="col-3 text-center">
-                                            <div class="border p-3 rounded bg-light">
-                                                <i class="bi bi-qr-code display-5 text-muted"></i>
-                                                <small class="d-block text-muted mt-1">Código QR</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-9">
-                                            <p class="small text-muted mb-1" id="previewLeyenda">Este documento es una representación impresa de un CFDI</p>
-                                            <p class="small text-muted mb-0"><strong>Sello Digital:</strong> <span class="text-break" style="font-size: 0.7rem;">••••••••••••••••••••••••••••••••</span></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer bg-light rounded-bottom-4">
-                <div class="d-flex justify-content-between w-100">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg me-2"></i>Cancelar
-                    </button>
-                    <div>
-                        <button type="button" class="btn btn-outline-primary me-2" onclick="imprimirPrevisualizacion()">
-                            <i class="bi bi-printer me-2"></i>Imprimir
-                        </button>
-                        <button type="button" class="btn btn-success" onclick="confirmarFacturacion()">
-                            <i class="bi bi-check-circle me-2"></i>Generar Factura
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     let datosTickets = [];
     let config = {
@@ -475,9 +287,9 @@
                                     </div>
                                     <div class="col-md-3 d-flex align-items-center justify-content-center border-start">
                                         ${!esFacturado 
-                                            ? `<button class="btn btn-outline-info w-100 shadow-sm" onclick="facturar(${ticket.id_ticket})">
-                                            Facturar
-                                            </button>` 
+                                            ? `<a href="panel?pg=crear-factura" class="btn btn-outline-primary w-100 mt-2 shadow-sm">
+                                                Facturar
+                                            </a>` 
                                             : `
                                             <div class="d-grid gap-2 col-12 mx-auto">
                                                 <button class="btn btn-outline-primary w-100" onclick="descargar(${ticket.id_ticket})">
@@ -639,24 +451,6 @@
     
     let ticketSeleccionado = null;
     let configFactura = null;
-    let modalPrevisualizacion = null;
-
-    // Inicializar modal
-    document.addEventListener('DOMContentLoaded', function() {
-        modalPrevisualizacion = new bootstrap.Modal(document.getElementById('modalPrevisualizacion'));
-        
-        // Cargar catálogos para el formulario del receptor
-        cargarCatalogosReceptor();
-        
-        // Listeners para actualizar preview en tiempo real
-        ['receptorRFC', 'receptorNombre', 'receptorCP', 'receptorRegimen', 'receptorUsoCFDI', 'receptorFormaPago'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', actualizarPrevisualizacion);
-                el.addEventListener('change', actualizarPrevisualizacion);
-            }
-        });
-    });
 
     async function cargarCatalogosReceptor() {
         try {
@@ -740,32 +534,6 @@
         if (configFactura.formaPago) {
             document.getElementById('receptorFormaPago').value = configFactura.formaPago;
         }
-    }
-
-    function facturar(idTicket) {
-        // Buscar el ticket en los datos cargados
-        ticketSeleccionado = datosTickets.find(t => t.id_ticket == idTicket);
-        
-        if (!ticketSeleccionado) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se encontró el ticket seleccionado'
-            });
-            return;
-        }
-
-        // Limpiar formulario del receptor
-        document.getElementById('formDatosReceptor').reset();
-        
-        // Cargar configuración del emisor
-        cargarConfigFactura();
-        
-        // Mostrar datos del ticket en la preview
-        cargarDatosTicketEnPreview();
-        
-        // Mostrar modal
-        modalPrevisualizacion.show();
     }
 
     function cargarDatosTicketEnPreview() {
@@ -1102,4 +870,3 @@
         });
     }
 </script>
-

@@ -21,60 +21,55 @@ try {
         throw new Exception('Sesión no válida o expirada.');
     }
 
+    // Obtener ID de sucursal del parámetro GET
+    $id_sucursal = (int)($_GET['sucursalId'] ?? 0);
+
     $db = new Database();
     $conn = $db->getConnection();
 
-    // Obtener configuración del usuario
-    $stmt = $conn->prepare("
-        SELECT 
-            id_config,
-            id_usuario,
-            nombre_empresa,
-            rfc_empresa,
-            regimen_fiscal,
-            cp_emisor,
-            direccion_empresa,
-            uso_cfdi,
-            forma_pago,
-            metodo_pago,
-            moneda,
-            tipo_comprobante,
-            exportacion,
-            logo_url,
-            color_primario,
-            color_secundario,
-            tipo_letra,
-            tamano_letra,
-            serie_factura,
-            folio_inicial,
-            folio_actual,
-            mostrar_logo,
-            mostrar_sello_digital,
-            mostrar_observaciones,
-            leyenda_factura,
-            condiciones_pago,
-            observaciones_default
-        FROM config_facturas 
-        WHERE id_usuario = ?
-    ");
-    $stmt->execute([$id_usuario]);
-    $config = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Si se especificó una sucursal, buscar su configuración
+    if ($id_sucursal > 0) {
+        $stmt = $conn->prepare("
+            SELECT 
+                id_config,
+                id_usuario,
+                id_sucursal,
+                nombre_empresa,
+                rfc_empresa,
+                regimen_fiscal,
+                cp_emisor,
+                direccion_empresa,
+                logo_url,
+                color_primario,
+                color_secundario,
+                tipo_letra,
+                tamano_letra,
+                serie_factura,
+                folio_inicial,
+                folio_actual,
+                leyenda_factura,
+                condiciones_pago,
+                observaciones_default
+            FROM config_facturas 
+            WHERE id_usuario = ? AND id_sucursal = ?
+        ");
+        $stmt->execute([$id_usuario, $id_sucursal]);
+    } else {
+        // Si no se especificó sucursal, no devolver configuración
+        $stmt = null;
+    }
+    
+    $config = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : false;
 
     if ($config) {
         // Mapear nombres de BD a nombres de campos del formulario
         $respuesta['data'] = [
+            'sucursalId' => (int)($config['id_sucursal'] ?? 0),
             'nombreEmpresa' => $config['nombre_empresa'] ?? '',
             'rfcEmpresa' => $config['rfc_empresa'] ?? '',
             'regimenFiscal' => $config['regimen_fiscal'] ?? '',
             'cpEmisor' => $config['cp_emisor'] ?? '',
             'direccionEmpresa' => $config['direccion_empresa'] ?? '',
-            
-            'usoCfdi' => $config['uso_cfdi'] ?? 'G03',
-            'formaPago' => $config['forma_pago'] ?? '04',
-            'metodoPagoDefault' => $config['metodo_pago'] ?? 'PUE',
-            'monedaDefault' => $config['moneda'] ?? 'MXN',
-            'tipoComprobante' => $config['tipo_comprobante'] ?? 'I',
-            'exportacionDefault' => $config['exportacion'] ?? '01',
             
             'logoEmpresa' => $config['logo_url'] ?? '',
             'colorPrimario' => $config['color_primario'] ?? '#0d6efd',
@@ -85,10 +80,6 @@ try {
             'serieFactura' => $config['serie_factura'] ?? 'A',
             'folioInicial' => (int)($config['folio_inicial'] ?? 1),
             'folioActual' => (int)($config['folio_actual'] ?? 0),
-            
-            'mostrarLogo' => (int)($config['mostrar_logo'] ?? 1),
-            'mostrarSelloDigital' => (int)($config['mostrar_sello_digital'] ?? 1),
-            'mostrarObservaciones' => (int)($config['mostrar_observaciones'] ?? 1),
             
             'leyendaFactura' => $config['leyenda_factura'] ?? '',
             'condicionesPagoTexto' => $config['condiciones_pago'] ?? '',

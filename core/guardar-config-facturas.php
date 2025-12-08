@@ -23,6 +23,12 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
 
+    // Validar que se envió el ID de sucursal
+    $id_sucursal = (int)($_POST['sucursalId'] ?? 0);
+    if ($id_sucursal <= 0) {
+        throw new Exception('Debe seleccionar una sucursal.');
+    }
+
     // Obtener datos del POST
     $datos = [
         'nombre_empresa' => trim($_POST['nombreEmpresa'] ?? ''),
@@ -31,13 +37,6 @@ try {
         'cp_emisor' => trim($_POST['cpEmisor'] ?? ''),
         'direccion_empresa' => trim($_POST['direccionEmpresa'] ?? ''),
         
-        'uso_cfdi' => $_POST['usoCfdi'] ?? 'G03',
-        'forma_pago' => $_POST['formaPago'] ?? '04',
-        'metodo_pago' => $_POST['metodoPagoDefault'] ?? 'PUE',
-        'moneda' => $_POST['monedaDefault'] ?? 'MXN',
-        'tipo_comprobante' => $_POST['tipoComprobante'] ?? 'I',
-        'exportacion' => $_POST['exportacionDefault'] ?? '01',
-        
         'color_primario' => $_POST['colorPrimario'] ?? '#0d6efd',
         'color_secundario' => $_POST['colorSecundario'] ?? '#6c757d',
         'tipo_letra' => $_POST['tipoLetra'] ?? 'Arial',
@@ -45,10 +44,6 @@ try {
         
         'serie_factura' => strtoupper(trim($_POST['serieFactura'] ?? 'A')),
         'folio_inicial' => (int)($_POST['folioInicial'] ?? 1),
-        
-        'mostrar_logo' => isset($_POST['mostrarLogo']) ? (int)$_POST['mostrarLogo'] : 1,
-        'mostrar_sello_digital' => isset($_POST['mostrarSelloDigital']) ? (int)$_POST['mostrarSelloDigital'] : 1,
-        'mostrar_observaciones' => isset($_POST['mostrarObservaciones']) ? (int)$_POST['mostrarObservaciones'] : 1,
         
         'leyenda_factura' => trim($_POST['leyendaFactura'] ?? ''),
         'condiciones_pago' => trim($_POST['condicionesPagoTexto'] ?? ''),
@@ -76,8 +71,8 @@ try {
             mkdir($dir_logos, 0755, true);
         }
         
-        // Generar nombre único
-        $nombre_archivo = 'logo_' . $id_usuario . '_' . time() . '.' . $extension;
+        // Generar nombre único con usuario y sucursal
+        $nombre_archivo = 'logo_u' . $id_usuario . '_s' . $id_sucursal . '_' . time() . '.' . $extension;
         $ruta_destino = $dir_logos . $nombre_archivo;
         
         if (move_uploaded_file($archivo['tmp_name'], $ruta_destino)) {
@@ -85,9 +80,9 @@ try {
         }
     }
 
-    // Verificar si ya existe configuración para este usuario
-    $stmt = $conn->prepare("SELECT id_config, logo_url FROM config_facturas WHERE id_usuario = ?");
-    $stmt->execute([$id_usuario]);
+    // Verificar si ya existe configuración para este usuario y sucursal
+    $stmt = $conn->prepare("SELECT id_config, logo_url FROM config_facturas WHERE id_usuario = ? AND id_sucursal = ?");
+    $stmt->execute([$id_usuario, $id_sucursal]);
     $config_existente = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($config_existente) {
@@ -112,8 +107,9 @@ try {
         }
         
         $valores_update[] = $id_usuario;
+        $valores_update[] = $id_sucursal;
         
-        $sql = "UPDATE config_facturas SET " . implode(', ', $campos_update) . " WHERE id_usuario = ?";
+        $sql = "UPDATE config_facturas SET " . implode(', ', $campos_update) . " WHERE id_usuario = ? AND id_sucursal = ?";
         $stmt = $conn->prepare($sql);
         $stmt->execute($valores_update);
         
@@ -123,6 +119,7 @@ try {
     } else {
         // Insertar nueva configuración
         $datos['id_usuario'] = $id_usuario;
+        $datos['id_sucursal'] = $id_sucursal;
         if ($logo_url) {
             $datos['logo_url'] = $logo_url;
         }

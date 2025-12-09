@@ -3,7 +3,7 @@
         background: white;
         border-radius: 12px;
         padding: 25px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
     }
 
     .concepto-row {
@@ -20,7 +20,7 @@
         top: 10px;
         right: 10px;
     }
-    
+
     .table-hover tbody tr:hover {
         background-color: rgba(13, 110, 253, 0.05);
         cursor: pointer;
@@ -77,7 +77,7 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <!-- Resultados de búsqueda -->
                             <div id="resultadosTickets" class="mt-3" style="display:none;">
                                 <div class="table-responsive">
@@ -96,7 +96,7 @@
                                     </table>
                                 </div>
                             </div>
-                            
+
                             <!-- Ticket seleccionado -->
                             <div id="ticketSeleccionado" class="alert alert-info mt-3" style="display:none;">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -202,7 +202,16 @@
                             </div>
                             <div id="conceptosContainer"></div>
                         </div>
-                        
+
+                        <!-- Observaciones -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-chat-left-text me-2"></i>Observaciones
+                            </label>
+                            <textarea class="form-control" id="observaciones" rows="3"
+                                placeholder="Observaciones adicionales (opcional)"></textarea>
+                        </div>
+
                         <!-- Totales -->
                         <div class="card bg-light border-0 mb-4">
                             <div class="card-body">
@@ -301,13 +310,13 @@
 
                 select.innerHTML = '<option value="">Selecciona una sucursal</option>';
                 selectBusqueda.innerHTML = '<option value="">Todas las sucursales...</option>';
-                
+
                 result.data.forEach(sucursal => {
                     const option1 = document.createElement('option');
                     option1.value = sucursal.id_empresa;
                     option1.textContent = sucursal.nombre || sucursal.razon_social;
                     select.appendChild(option1);
-                    
+
                     const option2 = document.createElement('option');
                     option2.value = sucursal.id_empresa;
                     option2.textContent = sucursal.nombre || sucursal.razon_social;
@@ -325,15 +334,15 @@
     // ============================================
     // BÚSQUEDA Y CARGA DE TICKETS
     // ============================================
-    
+
     let ticketActual = null;
     let conceptoCounter = 0;
-    
+
     // Función para agregar concepto manualmente
     function agregarConcepto() {
         conceptoCounter++;
         const container = document.getElementById('conceptosContainer');
-        
+
         const conceptoHtml = `
             <div class="concepto-row" id="concepto-${conceptoCounter}">
                 <button type="button" class="btn btn-sm btn-danger btn-eliminar-concepto" onclick="eliminarConcepto(${conceptoCounter})">
@@ -363,44 +372,44 @@
                 </div>
             </div>
         `;
-        
+
         container.insertAdjacentHTML('beforeend', conceptoHtml);
     }
-    
+
     function eliminarConcepto(id) {
         document.getElementById(`concepto-${id}`).remove();
         calcularTotales();
     }
-    
+
     function calcularTotales() {
         let subtotal = 0;
-        
+
         document.querySelectorAll('.concepto-row').forEach(row => {
             const cantidad = parseFloat(row.querySelector('.concepto-cantidad').value) || 0;
             const precio = parseFloat(row.querySelector('.concepto-precio').value) || 0;
             subtotal += cantidad * precio;
         });
-        
+
         const iva = subtotal * 0.16;
         const total = subtotal + iva;
-        
+
         document.getElementById('subtotalDisplay').textContent = `$${subtotal.toFixed(2)}`;
         document.getElementById('ivaDisplay').textContent = `$${iva.toFixed(2)}`;
         document.getElementById('totalDisplay').textContent = `$${total.toFixed(2)}`;
     }
-    
+
     async function buscarTickets() {
         const sucursalId = document.getElementById('sucursalBusqueda').value;
         const folio = document.getElementById('folioTicketBusqueda').value;
-        
+
         try {
             let url = 'core/consultar-tickets.php?estatus=pendiente&limite=10';
             if (sucursalId) url += `&id_empresa=${sucursalId}`;
             if (folio) url += `&folio=${folio}`;
-            
+
             const response = await fetch(url);
             const result = await response.json();
-            
+
             if (result.success && result.tickets.length > 0) {
                 mostrarResultadosTickets(result.tickets);
             } else {
@@ -411,11 +420,11 @@
             Swal.fire('Error', 'No se pudo realizar la búsqueda', 'error');
         }
     }
-    
+
     function mostrarResultadosTickets(tickets) {
         const tbody = document.getElementById('tablaTickets');
         tbody.innerHTML = '';
-        
+
         tickets.forEach(ticket => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -432,22 +441,22 @@
             `;
             tbody.appendChild(tr);
         });
-        
+
         document.getElementById('resultadosTickets').style.display = 'block';
     }
-    
+
     function cargarTicket(ticket) {
         ticketActual = ticket;
-        
+
         // Ocultar resultados de búsqueda
         document.getElementById('resultadosTickets').style.display = 'none';
-        
+
         // Mostrar ticket seleccionado
-        document.getElementById('infoTicket').textContent = 
+        document.getElementById('infoTicket').textContent =
             `Folio: ${ticket.folio_ticket} | Sucursal: ${ticket.nombre_sucursal} | Importe: $${ticket.importe_fmt}`;
         document.getElementById('ticketSeleccionado').style.display = 'block';
         document.getElementById('ticketIdActual').value = ticket.id_ticket;
-        
+
         // Seleccionar sucursal del ticket
         const sucursalSelect = document.getElementById('sucursalSelect');
         const sucursalId = listaSucursales.find(s => s.nombre === ticket.nombre_sucursal)?.id_empresa;
@@ -455,7 +464,7 @@
             sucursalSelect.value = sucursalId;
             sucursalSelect.dispatchEvent(new Event('change'));
         }
-        
+
         // Cargar conceptos del ticket
         limpiarConceptos();
         if (ticket.productos && ticket.productos.length > 0) {
@@ -463,22 +472,22 @@
                 agregarConceptoDesdeTicket(producto);
             });
         }
-        
+
         // Prellenar forma de pago si existe
         if (ticket.forma_pago) {
             document.getElementById('formaPago').value = ticket.forma_pago;
         }
-        
+
         calcularTotales();
     }
-    
+
     function limpiarTicket() {
         ticketActual = null;
         document.getElementById('ticketSeleccionado').style.display = 'none';
         document.getElementById('ticketIdActual').value = '';
         document.getElementById('resultadosTickets').style.display = 'block';
     }
-    
+
     function limpiarFormulario() {
         document.getElementById('formFactura').reset();
         document.getElementById('sucursalBusqueda').value = '';
@@ -490,16 +499,16 @@
         document.getElementById('ivaDisplay').textContent = '$0.00';
         document.getElementById('totalDisplay').textContent = '$0.00';
     }
-    
+
     function limpiarConceptos() {
         document.getElementById('conceptosContainer').innerHTML = '';
         conceptoCounter = 0;
     }
-    
+
     function agregarConceptoDesdeTicket(producto) {
         conceptoCounter++;
         const container = document.getElementById('conceptosContainer');
-        
+
         const conceptoHtml = `
             <div class="concepto-row" id="concepto-${conceptoCounter}">
                 <button type="button" class="btn btn-sm btn-danger btn-eliminar-concepto" onclick="eliminarConcepto(${conceptoCounter})">
@@ -529,14 +538,285 @@
                 </div>
             </div>
         `;
-        
+
         container.insertAdjacentHTML('beforeend', conceptoHtml);
+    }
+
+    // ============================================
+    // PREVISUALIZACIÓN DE FACTURA
+    // ============================================
+
+    async function previsualizarFactura() {
+        // Validar que haya sucursal
+        const sucursalId = document.getElementById('sucursalSelect').value;
+        if (!sucursalId) {
+            Swal.fire('Error', 'Seleccione una sucursal primero', 'warning');
+            return;
+        }
+
+        // Validar que haya conceptos
+        const conceptos = document.querySelectorAll('.concepto-row');
+        if (conceptos.length === 0) {
+            Swal.fire('Error', 'Agregue al menos un concepto para previsualizar', 'warning');
+            return;
+        }
+
+        // Abrir ventana con la plantilla dinámica (backend + frontend separados)
+        const url = `index.php?page=plantilla-factura&preview=1&id_sucursal=${sucursalId}`;
+        const ventana = window.open(url, '_blank', 'width=900,height=800,scrollbars=yes');
+
+        if (!ventana) {
+            Swal.fire('Error', 'Por favor permita ventanas emergentes para ver la vista previa', 'warning');
+        }
+    }
+        if (!sucursalId) {
+            Swal.fire('Error', 'Seleccione una sucursal primero', 'warning');
+            return;
+        }
+
+        const conceptos = document.querySelectorAll('.concepto-row');
+        if (conceptos.length === 0) {
+            Swal.fire('Error', 'Agregue al menos un concepto para previsualizar', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch(`core/obtener-config-facturas.php?sucursalId=${sucursalId}`);
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                Swal.fire('Error', 'No se pudo cargar la configuración de la sucursal', 'error');
+                return;
+            }
+
+            const config = result.data;
+
+            // Obtener datos del emisor (sucursal)
+            const sucursalData = listaSucursales.find(s => s.id_empresa == sucursalId);
+
+            // Preparar conceptos
+            let conceptosHTML = '';
+            let subtotal = 0;
+
+            document.querySelectorAll('.concepto-row').forEach(row => {
+                const descripcion = row.querySelector('.concepto-descripcion').value || 'Producto/Servicio';
+                const cantidad = parseFloat(row.querySelector('.concepto-cantidad').value) || 0;
+                const precio = parseFloat(row.querySelector('.concepto-precio').value) || 0;
+                const importe = cantidad * precio;
+                subtotal += importe;
+
+                conceptosHTML += `
+                    <tr>
+                        <td class="text-center">${cantidad.toFixed(2)}</td>
+                        <td>${descripcion}</td>
+                        <td class="text-end">$${precio.toFixed(2)}</td>
+                        <td class="text-end fw-bold">$${importe.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            const iva = subtotal * 0.16;
+            const total = subtotal + iva;
+
+            // Datos del receptor
+            const receptorNombre = document.getElementById('receptorNombre').value || 'CLIENTE';
+            const receptorRFC = document.getElementById('receptorRFC').value || 'XEXX010101000';
+            const receptorCP = document.getElementById('receptorCP').value || '00000';
+            const receptorDomicilio = document.getElementById('receptorDomicilio').value || '';
+
+            // Generar folio de vista previa
+            const serie = config.serieFactura || 'A';
+            const folioActual = parseInt(config.folioActual || 0) + 1;
+            const folio = serie + String(folioActual).padStart(6, '0');
+
+            // Crear HTML de la factura
+            const facturaHTML = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista Previa - Factura ${folio}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background: #f8f9fa;
+            padding: 20px;
+            font-family: ${config.tipoLetra || 'Arial'}, sans-serif;
+            font-size: ${config.tamanoLetra || '12'}pt;
+        }
+        .factura-container {
+            max-width: 21cm;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header-factura {
+            border-bottom: 3px solid ${config.colorPrimario || '#0d6efd'};
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .logo-empresa {
+            max-width: 200px;
+            max-height: 80px;
+        }
+        .info-box {
+            border: 2px solid ${config.colorPrimario || '#0d6efd'};
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(${hexToRgb(config.colorPrimario || '#0d6efd')}, 0.05);
+        }
+        .table-conceptos th {
+            background: ${config.colorPrimario || '#0d6efd'};
+            color: white;
+        }
+        .totales-box {
+            background: ${config.colorSecundario || '#6c757d'};
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px;
+            color: rgba(255, 0, 0, 0.1);
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">VISTA PREVIA</div>
+    
+    <div class="no-print text-center mb-3">
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer me-2"></i>Imprimir
+        </button>
+        <button class="btn btn-secondary" onclick="window.close()">
+            <i class="bi bi-x-circle me-2"></i>Cerrar
+        </button>
+    </div>
+    
+    <div class="factura-container">
+        <!-- Header -->
+        <div class="header-factura">
+            <div class="row align-items-center">
+                <div class="col-6">
+                    ${config.logoEmpresa ? `<img src="${config.logoEmpresa}" class="logo-empresa" alt="Logo">` : ''}
+                    <h4 class="mt-2 mb-0">${config.nombreEmpresa || (sucursalData && sucursalData.nombre) || 'EMPRESA'}</h4>
+                    <p class="mb-0"><small>RFC: ${config.rfcEmpresa || (sucursalData && sucursalData.rfc) || 'XXX000000XXX'}</small></p>
+                </div>
+                <div class="col-6 text-end">
+                    <div class="info-box">
+                        <h5 class="mb-0">FACTURA</h5>
+                        <h3 class="mb-0">${folio}</h3>
+                        <small>Fecha: ${new Date().toLocaleDateString('es-MX')}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datos Emisor y Receptor -->
+        <div class="row mb-4">
+            <div class="col-6">
+                <div class="info-box">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-building me-2"></i>EMISOR</h6>
+                    <p class="mb-1"><strong>${config.nombreEmpresa || (sucursalData && sucursalData.nombre)}</strong></p>
+                    <p class="mb-1"><small>RFC: ${config.rfcEmpresa || (sucursalData && sucursalData.rfc)}</small></p>
+                    <p class="mb-1"><small>${config.direccionEmpresa || ''}</small></p>
+                    <p class="mb-0"><small>CP: ${config.cpEmisor || (sucursalData && sucursalData.codigo_postal) || ''}</small></p>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="info-box">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-person me-2"></i>RECEPTOR</h6>
+                    <p class="mb-1"><strong>${receptorNombre}</strong></p>
+                    <p class="mb-1"><small>RFC: ${receptorRFC}</small></p>
+                    <p class="mb-1"><small>${receptorDomicilio}</small></p>
+                    <p class="mb-0"><small>CP: ${receptorCP}</small></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conceptos -->
+        <h6 class="fw-bold mb-3"><i class="bi bi-card-list me-2"></i>CONCEPTOS</h6>
+        <table class="table table-bordered table-conceptos">
+            <thead>
+                <tr>
+                    <th width="10%">Cant.</th>
+                    <th width="50%">Descripción</th>
+                    <th width="20%" class="text-end">P. Unit.</th>
+                    <th width="20%" class="text-end">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${conceptosHTML}
+            </tbody>
+        </table>
+
+        <!-- Totales -->
+        <div class="row mt-4">
+            <div class="col-7">
+                <p class="mb-1"><small><strong>Observaciones:</strong></small></p>
+                <p><small>${document.getElementById('observaciones').value || 'N/A'}</small></p>
+            </div>
+            <div class="col-5">
+                <div class="totales-box">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>$${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>IVA (16%):</span>
+                        <span>$${iva.toFixed(2)}</span>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>TOTAL:</strong>
+                        <strong class="fs-5">$${total.toFixed(2)}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-5 text-center">
+            <p class="mb-0"><small class="text-muted">${config.leyendaFactura || 'Este documento es una representación impresa de un CFDI'}</small></p>
+            <p class="mb-0"><small class="text-muted">UUID: (Se generará al timbrar)</small></p>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
+
+        } catch (error) {
+            console.error('Error al previsualizar factura:', error);
+            Swal.fire('Error', 'No se pudo generar la vista previa', 'error');
+        }
+    }
+    // Función auxiliar para convertir hex a rgb
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ?
+            parseInt(result[1], 16) + ', ' + parseInt(result[2], 16) + ', ' + parseInt(result[3], 16) :
+            '13, 110, 253';
     }
 
     // ============================================
     // GENERAR FACTURA
     // ============================================
-    
+
     async function generarFactura() {
         // Validar que haya sucursal seleccionada
         const sucursalId = document.getElementById('sucursalSelect').value;
@@ -550,7 +830,7 @@
         const receptorNombre = document.getElementById('receptorNombre').value;
         const receptorCP = document.getElementById('receptorCP').value;
         const usoCFDI = document.getElementById('usoCFDI').value;
-        
+
         if (!receptorRFC || !receptorNombre || !receptorCP || !usoCFDI) {
             Swal.fire('Error', 'Complete todos los datos del receptor', 'warning');
             return;
@@ -618,9 +898,9 @@
                 },
                 body: JSON.stringify(datosFactura)
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 Swal.fire({
                     icon: 'success',
@@ -644,13 +924,12 @@
         }
     }
 
-    // ============================================
-    // INICIALIZACIÓN
-    // ============================================
+    // Variable global para almacenar sucursales
+    let listaSucursales = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
         await Promise.all([cargarRegimenesFiscales(), cargarSucursales(), CargarUsoCFDI(), CargarFormaPago()]);
-        
+
         // Evento para buscar con Enter
         document.getElementById('folioTicketBusqueda').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {

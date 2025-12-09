@@ -81,7 +81,7 @@ $accessMap = [
     'editar-sucursales' => ['admin'],
     'config-correo' => ['admin'],
     'config-facturas' => ['admin'],
-    'template-factura' => ['admin'],
+    'plantilla-factura' => ['admin'],
     'crear-factura' => ['admin'],
 
 ];

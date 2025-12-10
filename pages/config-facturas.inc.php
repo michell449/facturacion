@@ -244,7 +244,7 @@
                                 <button type="button" class="btn btn-outline-secondary" onclick="resetearFormulario()">
                                     <i class="bi bi-arrow-counterclockwise me-2"></i>Restablecer
                                 </button>
-                                <button type="button" class="btn btn-outline-info" onclick="previsualizarPlantilla()">
+                                <button type="button" id="btnVistaPrevia" class="btn btn-outline-info">
                                     <i class="bi bi-file-earmark-pdf me-2"></i>Vista Previa Factura
                                 </button>
                                 <button type="button" class="btn btn-success" onclick="guardarConfiguracion()">
@@ -340,39 +340,7 @@
                 document.getElementById('regimenFiscal').value = sucursal.reg_fiscal;
             }
 
-            // Manejo del Logo (Evita el error 404 si no hay logo)
-            const logoPreview = document.getElementById('logoPreview');
-            if (sucursal.logo && sucursal.logo.trim() !== "") {
-                // Crear ruta completa del logo
-                let rutaLogo = sucursal.logo;
-                
-                // Si la ruta no incluye 'uploads/', agregarla
-                if (!rutaLogo.includes('uploads/')) {
-                    rutaLogo = `uploads/logos/${sucursal.logo}`;
-                }
-                
-                // Crear imagen y validar si existe antes de mostrarla
-                const img = new Image();
-                img.onload = function() {
-                    logoPreview.innerHTML = `<img src="${rutaLogo}" alt="Logo Empresa" />`;
-                };
-                img.onerror = function() {
-                    // Si la imagen no carga, mostrar placeholder
-                    logoPreview.innerHTML = `
-                        <div class="logo-placeholder">
-                            <i class="bi bi-image display-5 text-muted"></i>
-                            <p class="text-muted mb-0">Logo no disponible</p>
-                        </div>`;
-                };
-                img.src = rutaLogo;
-            } else {
-                // Placeholder si no hay logo
-                logoPreview.innerHTML = `
-                    <div class="logo-placeholder">
-                        <i class="bi bi-image display-5 text-muted"></i>
-                        <p class="text-muted mb-0">Sin logo registrado</p>
-                    </div>`;
-            }
+            // No cargar logo desde sucursal - solo permitir subir logo nuevo
         }
     });
 
@@ -397,6 +365,22 @@
             </div>`;
     }
 
+    //Mostrar alerta de vista previa, al dar click en el boton btnVistaPrevia
+    document.getElementById('btnVistaPrevia').addEventListener('click', function() {
+        Swal.fire({
+            title: 'Vista Previa de Factura',
+            text: 'Para ver la factura con los cambios aplicados, primero deberas guardar la configuración. ¿Deseas continuar?',
+            icon: 'info',
+            confirmButtonText: 'Continuar',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                previsualizarPlantilla();
+            }
+        });
+    });
+
     function resetearFormulario() {
         Swal.fire({
             title: '¿Restablecer?',
@@ -407,7 +391,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 limpiarFormulario();
-                document.getElementById('sucursalSelect').value = ""; // Reset del select
+                document.getElementById('sucursalSelect').value = ""; 
             }
         });
     }
@@ -440,47 +424,24 @@
         });
     }
 
-    async function previsualizarPlantilla() {
+    function previsualizarPlantilla() {
         try {
-            const response = await fetch('uploads/templates/template-factura.html');
-            if (!response.ok) throw new Error('No se pudo cargar la plantilla HTML');
-            let html = await response.text();
+            // Obtener ID de sucursal seleccionada
+            const sucursalId = document.getElementById('sucursalSelect').value;
+            
+            if (!sucursalId) {
+                Swal.fire('Error', 'Selecciona una sucursal primero', 'warning');
+                return;
+            }
 
-            // Datos actuales del DOM
-            const datos = {
-                COLOR_PRIMARIO: document.getElementById('colorPrimario').value,
-                COLOR_SECUNDARIO: document.getElementById('colorSecundario').value,
-                TIPO_LETRA: document.getElementById('tipoLetra').value,
-                TAMANO_LETRA: document.getElementById('tamanoLetra').value + 'px',
-                EMISOR_NOMBRE: document.getElementById('nombreEmpresa').value,
-                EMISOR_RFC: document.getElementById('rfcEmpresa').value,
-                EMISOR_REGIMEN: document.getElementById('regimenFiscal').selectedOptions[0]?.text || '',
-                EMISOR_DOMICILIO: document.getElementById('direccionEmpresa').value,
-                EMISOR_CP: document.getElementById('cpEmisor').value,
-                LOGO_URL: '', // Se llena abajo
-                // Datos Dummy
-                UUID: 'A1B2C3D4-E5F6-7890-ABCD-EF1234567890',
-                FECHA_EMISION: new Date().toLocaleString('es-MX'),
-                SERIE: document.getElementById('serieFactura').value,
-                FOLIO: document.getElementById('folioInicial').value,
-                TOTAL_LETRA: 'CIEN PESOS 00/100 M.N.'
-            };
-
-            // Obtener logo actual (ya sea de BD o recién subido)
-            const imgTag = document.getElementById('logoPreview').querySelector('img');
-            if (imgTag && imgTag.src) datos.LOGO_URL = imgTag.src;
-
-            // Reemplazo
-            Object.keys(datos).forEach(key => {
-                html = html.replace(new RegExp(key, 'g'), datos[key]);
-            });
-
-            const win = window.open('', '_blank', 'width=900,height=1200,scrollbars=yes');
-            if (win) {
-                win.document.write(html);
-                win.document.close();
-            } else {
-                Swal.fire('Bloqueado', 'Permite pop-ups para ver la factura', 'warning');
+            // Construir URL para la vista previa usando el formato correcto del panel
+            const url = `panel?pg=plantilla-factura&preview=1&id_sucursal=${sucursalId}`;
+            
+            // Abrir en nueva ventana
+            const win = window.open(url, '_blank', 'width=900,height=1200,scrollbars=yes');
+            
+            if (!win) {
+                Swal.fire('Bloqueado', 'Permite ventanas emergentes para ver la vista previa', 'warning');
             }
         } catch (e) {
             Swal.fire('Error', e.message, 'error');

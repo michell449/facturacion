@@ -588,15 +588,11 @@
                 Swal.fire({
                     icon: 'success',
                     title: data.message,
+                    text: data.first_login ? 'Completa tu información fiscal para continuar' : '',
                     confirmButtonText: 'Continuar',
                     allowOutsideClick: false
                 }).then(() => {
-                    // Redirigir según el tipo de usuario
-                    if (data.tipo_usuario === 'admin') {
-                        window.location.href = 'panel?pg=inicio-admin';
-                    } else {
-                        window.location.href = 'panel?pg=inicio';
-                    }
+                    window.location.href = data.redirect;
                 });
             } else {
                 Swal.fire({

@@ -74,6 +74,20 @@ try {
         echo '<div class="alert alert-danger">Sesión no válida</div>';
         return;
     }
+    
+    // Datos temporales de preview (desde sesión)
+    $previewData = null;
+    if ($isPreview && isset($_SESSION['preview_factura_data'])) {
+        $previewData = $_SESSION['preview_factura_data'];
+        // Limpiar datos de sesión después de usarlos
+        unset($_SESSION['preview_factura_data']);
+    }
+    
+    // Datos temporales de preview (desde sesión)
+    $previewData = null;
+    if ($isPreview && isset($_SESSION['preview_factura_data'])) {
+        $previewData = $_SESSION['preview_factura_data'];
+    }
 
     $db = new Database();
     $conn = $db->getConnection();
@@ -177,52 +191,83 @@ try {
             $total = $factura['total'] ?? 0;
         }
     } else {
-        // DATOS DE EJEMPLO PARA VISTA PREVIA
-        if (empty($emisor)) {
-            $emisor = [
-                'nombre' => 'EMPRESA EJEMPLO S.A. DE C.V.',
-                'rfc' => 'EEE010101AAA',
-                'direccion' => 'Calle Principal #123, Colonia Centro',
-                'cp' => '00000',
-                'regimen' => '601'
+        // DATOS DE PREVIEW (desde sesión) o EJEMPLO
+        if ($previewData) {
+            // Usar datos ingresados por el usuario
+            $receptor = [
+                'rfc' => $previewData['receptor']['rfc'] ?? 'XAXX010101000',
+                'nombre' => $previewData['receptor']['nombre'] ?? 'PÚBLICO EN GENERAL',
+                'domicilio' => $previewData['receptor']['domicilio'] ?? '',
+                'cp' => $previewData['receptor']['cp'] ?? '00000'
             ];
+            
+            $conceptos = $previewData['conceptos'] ?? [];
+            
+            $subtotal = $previewData['subtotal'] ?? 0;
+            $iva = $previewData['iva'] ?? 0;
+            $total = $previewData['total'] ?? 0;
+            
+            $factura = [
+                'folio' => ($config['serie_factura'] ?? 'A') . str_pad(($config['folio_actual'] ?? 1), 6, '0', STR_PAD_LEFT),
+                'serie' => $config['serie_factura'] ?? 'A',
+                'fecha_e' => date('Y-m-d H:i:s'),
+                'uuid' => 'PENDIENTE DE TIMBRADO',
+                'subtotal' => $subtotal,
+                'total' => $total,
+                'total_imp_tras' => $iva,
+                'form_pago' => $previewData['forma_pago'] ?? '01',
+                'met_pago' => $previewData['metodo_pago'] ?? 'PUE',
+                'uso_cfdi' => $previewData['uso_cfdi'] ?? 'G03',
+                'no_certificado' => '00000000000000000000'
+            ];
+        } else {
+            // DATOS DE EJEMPLO si no hay datos de preview
+            if (empty($emisor)) {
+                $emisor = [
+                    'nombre' => 'EMPRESA EJEMPLO S.A. DE C.V.',
+                    'rfc' => 'EEE010101AAA',
+                    'direccion' => 'Calle Principal #123, Colonia Centro',
+                    'cp' => '00000',
+                    'regimen' => '601'
+                ];
+            }
+
+            $receptor = [
+                'rfc' => 'XAXX010101000',
+                'nombre' => 'PÚBLICO EN GENERAL',
+                'domicilio' => 'Av. Ejemplo #456',
+                'cp' => '12345'
+            ];
+
+            $conceptos = [
+                [
+                    'descripcion' => 'Producto o Servicio de Ejemplo',
+                    'cantidad' => 1.00,
+                    'precio_unitario' => 1000.00,
+                    'importe' => 1000.00,
+                    'clave_producto' => '01010101',
+                    'unidad' => 'H87'
+                ]
+            ];
+
+            $factura = [
+                'folio' => ($config['serie_factura'] ?? 'A') . '000001',
+                'serie' => $config['serie_factura'] ?? 'A',
+                'fecha_e' => date('Y-m-d'),
+                'uuid' => 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX',
+                'subtotal' => 1000.00,
+                'total' => 1160.00,
+                'total_imp_tras' => 160.00,
+                'form_pago' => '01',
+                'met_pago' => 'PUE',
+                'uso_cfdi' => 'G03',
+                'no_certificado' => '00000000000000000000'
+            ];
+
+            $subtotal = 1000.00;
+            $iva = 160.00;
+            $total = 1160.00;
         }
-
-        $receptor = [
-            'rfc' => 'XAXX010101000',
-            'nombre' => 'PÚBLICO EN GENERAL',
-            'domicilio' => 'Av. Ejemplo #456',
-            'cp' => '12345'
-        ];
-
-        $conceptos = [
-            [
-                'descripcion' => 'Producto o Servicio de Ejemplo',
-                'cantidad' => 1.00,
-                'precio_unitario' => 1000.00,
-                'importe' => 1000.00,
-                'clave_producto' => '01010101',
-                'unidad' => 'H87'
-            ]
-        ];
-
-        $factura = [
-            'folio' => ($config['serie_factura'] ?? 'A') . '000001',
-            'serie' => $config['serie_factura'] ?? 'A',
-            'fecha_e' => date('Y-m-d'),
-            'uuid' => 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX',
-            'subtotal' => 0.00,
-            'total' =>0.00,
-            'total_imp_tras' => 0.00,
-            'form_pago' => '01',
-            'met_pago' => 'PUE',
-            'uso_cfdi' => 'G03',
-            'no_certificado' => '00000000000000000000'
-        ];
-
-        $subtotal = 0.00;
-        $iva = 0.00;
-        $total = 0.00;
     }
     
     // Generar total en letras

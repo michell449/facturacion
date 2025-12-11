@@ -13,7 +13,7 @@ spl_autoload_register(function ($class) {
         'PhpCfdi\\XmlSchemas\\'           => __DIR__ . '/../vendor/phpcfdi/xml-schemas/src/',
         'PhpCfdi\\XmlUtils\\'             => __DIR__ . '/../vendor/phpcfdi/xml-utils/src/',
         'Eclipxe\\Enum\\'                 => __DIR__ . '/../vendor/eclipxe/enum/src/',
-        'Eclipxe\\CfdiUtils\\'            => __DIR__ . '/../vendor/eclipxe/cfdiutils/src/',
+        'CfdiUtils\\'                     => __DIR__ . '/../vendor/eclipxe/cfdiutils/src/CfdiUtils/',
         'GuzzleHttp\\'                    => __DIR__ . '/../vendor/guzzlehttp/guzzle/src/',
         'Mpdf\\'                         => __DIR__ . '/../vendor/mpdf/mpdf/src/',
         'Psr\\Http\\Message\\'           => __DIR__ . '/../vendor/psr/http-message/src/',

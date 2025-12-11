@@ -232,9 +232,6 @@
 
                         <!-- Botones -->
                         <div class="d-flex gap-3">
-                            <button type="button" class="btn btn-outline-info flex-fill" onclick="previsualizarFactura()">
-                                <i class="bi bi-eye me-2"></i>Vista Previa
-                            </button>
                             <button type="button" class="btn btn-primary flex-fill" onclick="generarFactura()">
                                 <i class="bi bi-file-earmark-check me-2"></i>Generar Factura
                             </button>
@@ -543,34 +540,6 @@
     }
 
     // ============================================
-    // PREVISUALIZACIÓN DE FACTURA
-    // ============================================
-
-    async function previsualizarFactura() {
-        // Validar que haya sucursal
-        const sucursalId = document.getElementById('sucursalSelect').value;
-        if (!sucursalId) {
-            Swal.fire('Error', 'Seleccione una sucursal primero', 'warning');
-            return;
-        }
-
-        // Validar que haya conceptos
-        const conceptos = document.querySelectorAll('.concepto-row');
-        if (conceptos.length === 0) {
-            Swal.fire('Error', 'Agregue al menos un concepto para previsualizar', 'warning');
-            return;
-        }
-
-        // Abrir ventana con la plantilla usando el sistema de panel
-        const url = `panel?pg=plantilla-factura&preview=1&id_sucursal=${sucursalId}`;
-        const ventana = window.open(url, '_blank', 'width=1000,height=900,scrollbars=yes,resizable=yes');
-
-        if (!ventana) {
-            Swal.fire('Error', 'Por favor permita ventanas emergentes para ver la vista previa', 'warning');
-        }
-    }
-
-    // ============================================
     // GENERAR FACTURA
     // ============================================
 
@@ -695,4 +664,27 @@
             }
         });
     });
+
+    // al dar generar factura, tambien se generara el archivo xml
+    async function generarXMLFactura(id_factura) {
+        try {
+            const response = await fetch('core/generar-xml.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id_factura: id_factura })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log('XML generado correctamente para la factura ID:', id_factura);
+            } else {
+                console.error('Error al generar XML:', result.message);
+            }
+        } catch (error) {
+            console.error('Error al generar XML de la factura:', error);
+        }
+    }
 </script>

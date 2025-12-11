@@ -6,7 +6,12 @@ header('Content-Type: application/json; charset=utf-8');
 
 use CfdiUtils\CfdiCreator40;
 use CfdiUtils\Certificado\Certificado;
-use CfdiUtils\Cfdi40\Elements\Cfdi40;
+use CfdiUtils\Nodes\Node;
+use CfdiUtils\Nodes\Nodes;
+use CfdiUtils\Nodes\XmlNodeUtils;
+use CfdiUtils\XmlResolver\XmlResolver;
+
+
 
 function generarXmlFactura($id_factura) {
     $db = new Database();
@@ -144,7 +149,7 @@ function generarXmlFactura($id_factura) {
         throw new Exception("Error al crear XML: " . implode(", ", $errores));
     }
 
-    // ---------------------------------------------------
+    // ---------------------------------------------------      
     // 7. GUARDAR O RETORNAR EL XML SELLADO
     // ---------------------------------------------------
     

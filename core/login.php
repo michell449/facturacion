@@ -57,7 +57,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($user['tipo_usuario'] === 'admin') {
                     $response['redirect'] = 'panel?pg=inicio-admin';
                 } else {
-                    $response['redirect'] = 'panel?pg=inicio';
+                    // Verificar si ya tiene información fiscal registrada
+                    $stmtFiscal = $conn->prepare("SELECT COUNT(*) as total FROM datos_fiscales_usuario WHERE id_usuario = ?");
+                    $stmtFiscal->execute([$user['id_usuario']]);
+                    $fiscalData = $stmtFiscal->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($fiscalData['total'] > 0) {
+                        // Ya tiene información fiscal, ir al inicio normal
+                        $response['redirect'] = 'panel?pg=inicio';
+                    } else {
+                        // Primera vez, ir a registro de información fiscal
+                        $response['redirect'] = 'panel?pg=registro-info-usuarios';
+                        $response['first_login'] = true;
+                    }
                 }
             }
 

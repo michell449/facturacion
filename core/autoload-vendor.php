@@ -13,6 +13,9 @@ spl_autoload_register(function ($class) {
         'PhpCfdi\\XmlSchemas\\'           => __DIR__ . '/../vendor/phpcfdi/xml-schemas/src/',
         'PhpCfdi\\XmlUtils\\'             => __DIR__ . '/../vendor/phpcfdi/xml-utils/src/',
         'Eclipxe\\Enum\\'                 => __DIR__ . '/../vendor/eclipxe/enum/src/',
+        'Eclipxe\\MicroCatalog\\'         => __DIR__ . '/../vendor/eclipxe/micro-catalog/src/',
+        'XmlResourceRetriever\\'          => __DIR__ . '/../vendor/eclipxe/xmlresourceretriever/src/XmlResourceRetriever/',
+        'XmlSchemaValidator\\'            => __DIR__ . '/../vendor/eclipxe/xmlschemavalidator/src/XmlSchemaValidator/',
         'CfdiUtils\\'                     => __DIR__ . '/../vendor/eclipxe/cfdiutils/src/CfdiUtils/',
         'GuzzleHttp\\'                    => __DIR__ . '/../vendor/guzzlehttp/guzzle/src/',
         'Mpdf\\'                         => __DIR__ . '/../vendor/mpdf/mpdf/src/',
@@ -20,11 +23,11 @@ spl_autoload_register(function ($class) {
         'Psr\\Http\\Client\\'            => __DIR__ . '/../vendor/psr/http-client/src/',
         'GuzzleHttp\\Psr7\\'              => __DIR__ . '/../vendor/guzzlehttp/psr7/src/',
         'GuzzleHttp\\Promise\\'          => __DIR__ . '/../vendor/guzzlehttp/promises/src/',
-        'Eclipxe\\MicroCatalog\\'         => __DIR__ . '/../vendor/eclipxe/micro-catalog/src/',
         'PHPMailer\\PHPMailer\\'           => __DIR__ . '/../vendor/phpmailer/phpmailer/src/',
         'Smalot\\PdfParser\\'     => __DIR__ . '/../vendor/smalot/pdfparser/src/',
         'Spatie\\PdfToText'  => __DIR__ . '/../vendor/spatie/pdf-to-text/src/',
         'Dompdf\\'                       => __DIR__ . '/../vendor/dompdf/src/',
+        'Credentials\\'                  => __DIR__ . '/../vendor/credentials/src/',
     ];
     foreach ($prefixes as $prefix => $baseDir) {
         $len = strlen($prefix);

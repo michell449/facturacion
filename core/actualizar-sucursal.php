@@ -53,6 +53,9 @@ try {
     }
 
     $content_type = $_SERVER['CONTENT_TYPE'] ?? '';
+
+    $db = new Database();
+    $conn = $db->getConnection();
     
     if (strpos($content_type, 'multipart/form-data') !== false) {
         $data = $_POST;
@@ -117,9 +120,6 @@ try {
         $estatus = 1; 
     }
 
-    $db = new Database();
-    $conn = $db->getConnection();
-    
     $stmt_check_duplicidad = $conn->prepare("SELECT id_empresa FROM empresas WHERE id_usuario = ? AND codigo_suc = ? AND id_empresa != ? LIMIT 1");
     $stmt_check_duplicidad->execute([$id_usuario, $codigo_suc, $id_empresa]);
     if ($stmt_check_duplicidad->fetch(PDO::FETCH_ASSOC)) {

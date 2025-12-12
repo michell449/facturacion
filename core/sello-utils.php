@@ -43,6 +43,173 @@ class SelloUtils {
             return false;
         }
     }
+
+    /**
+     * Convierte un archivo .key DER/PKCS#12 encriptado a PEM para usar con addSello()
+     * Los archivos del SAT pueden ser PKCS#8, PKCS#12 o simple DER encriptados
+     * 
+     * @param string $rutaKey Ruta completa del archivo .key
+     * @param string $password Contraseña descifrada
+     * @return string|false Contenido PEM o false en error
+     */
+    public static function convertirKeyAPEM($rutaKey, $password) {
+        try {
+            if (!file_exists($rutaKey)) {
+                error_log("convertirKeyAPEM: Archivo no existe: $rutaKey");
+                return false;
+            }
+
+            // Leer el contenido binario del archivo
+            $keyContent = file_get_contents($rutaKey);
+            if (!$keyContent) {
+                error_log("convertirKeyAPEM: No se pudo leer el archivo: $rutaKey");
+                return false;
+            }
+
+            $fileSize = strlen($keyContent);
+            error_log("convertirKeyAPEM: Archivo leído, tamaño: $fileSize bytes");
+            error_log("convertirKeyAPEM: Primeros 20 bytes (hex): " . bin2hex(substr($keyContent, 0, 20)));
+
+            // Identificar formato basado en los primeros bytes
+            $magic = bin2hex(substr($keyContent, 0, 10));
+            
+            // PKCS#12: Inicia con "3082" o "3081" (ASN.1 SEQUENCE)
+            // y contiene "06092a864886f70d01050d" (Object ID para PKCS#12)
+            if ((substr($magic, 0, 4) === '3082' || substr($magic, 0, 4) === '3081') &&
+                strpos(bin2hex($keyContent), '06092a864886f70d01050d') !== false) {
+                error_log("convertirKeyAPEM: Formato detectado: PKCS#12");
+                return self::convertirPKCS12($keyContent, $password);
+            }
+            
+            // Intento normal: PKCS#8 o PKCS#1 encriptado
+            error_log("convertirKeyAPEM: Formato detectado: Probablemente PKCS#8 o DER");
+            $privateKey = openssl_pkey_get_private($keyContent, $password);
+            
+            if (!$privateKey) {
+                error_log("convertirKeyAPEM: openssl_pkey_get_private falló");
+                error_log("OpenSSL Error: " . (openssl_error_string() ?: "Sin detalles"));
+                
+                // Intento sin contraseña
+                $privateKey = openssl_pkey_get_private($keyContent);
+                
+                if (!$privateKey) {
+                    error_log("convertirKeyAPEM: También falló sin contraseña");
+                    return false;
+                } else {
+                    error_log("convertirKeyAPEM: Funciona sin contraseña (archivo no encriptado)");
+                }
+            } else {
+                error_log("convertirKeyAPEM: openssl_pkey_get_private OK con contraseña");
+            }
+
+            // Exportar la clave a formato PEM
+            $pem = '';
+            $exported = openssl_pkey_export($privateKey, $pem);
+            
+            if (!$exported || empty($pem)) {
+                error_log("convertirKeyAPEM: openssl_pkey_export falló");
+                openssl_free_key($privateKey);
+                return false;
+            }
+            
+            error_log("convertirKeyAPEM: Clave exportada a PEM, longitud: " . strlen($pem));
+            openssl_free_key($privateKey);
+
+            return $pem;
+
+        } catch (\Exception $e) {
+            error_log("convertirKeyAPEM Exception: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Extrae la clave privada de un archivo PKCS#12 encriptado
+     * 
+     * @param string $p12Content Contenido binario del archivo PKCS#12
+     * @param string $password Contraseña
+     * @return string|false PEM de la clave privada o false
+     */
+    private static function convertirPKCS12($p12Content, $password) {
+        error_log("convertirPKCS12: Iniciando extracción de PKCS#12");
+        
+        // Crear archivo temporal para el PKCS#12
+        $tempP12 = tempnam(sys_get_temp_dir(), 'sat_p12_');
+        if (file_put_contents($tempP12, $p12Content) === false) {
+            error_log("convertirPKCS12: No se pudo crear archivo temporal");
+            return false;
+        }
+
+        // Arreglo para almacenar datos del PKCS#12
+        $certs = [];
+        $privateKey = null;
+
+        // Cargar el PKCS#12
+        $loaded = openssl_pkcs12_read($p12Content, $certs, $password);
+        
+        unlink($tempP12);
+        
+        if (!$loaded) {
+            error_log("convertirPKCS12: openssl_pkcs12_read falló");
+            error_log("OpenSSL Error: " . (openssl_error_string() ?: "Sin detalles"));
+            return false;
+        }
+
+        error_log("convertirPKCS12: PKCS#12 cargado correctamente");
+        error_log("convertirPKCS12: Claves en array: " . implode(", ", array_keys($certs)));
+
+        // Obtener la clave privada del array
+        if (!isset($certs['pkey']) || empty($certs['pkey'])) {
+            error_log("convertirPKCS12: No hay clave privada en el PKCS#12");
+            return false;
+        }
+
+        $pem = $certs['pkey'];
+        error_log("convertirPKCS12: Clave privada extraída, longitud: " . strlen($pem));
+        
+        return $pem;
+    }
+
+    /**
+     * Crea un archivo PEM temporal a partir del archivo .key DER o PKCS#12
+     * Útil para métodos que requieren ruta a archivo en lugar de contenido
+     * 
+     * @param string $rutaKey Ruta del .key
+     * @param string $password Contraseña descifrada
+     * @return string|false Ruta al archivo PEM temporal o false
+     */
+    public static function crearKeyPEMTemporal($rutaKey, $password) {
+        error_log("crearKeyPEMTemporal: Iniciando conversión de $rutaKey");
+        
+        $pem = self::convertirKeyAPEM($rutaKey, $password);
+        
+        if (!$pem) {
+            error_log("crearKeyPEMTemporal: convertirKeyAPEM retornó false");
+            return false;
+        }
+
+        // Crear archivo temporal
+        $tempFile = tempnam(sys_get_temp_dir(), 'sat_key_');
+        if (!$tempFile) {
+            error_log("crearKeyPEMTemporal: tempnam falló");
+            return false;
+        }
+
+        error_log("crearKeyPEMTemporal: Archivo temporal creado: $tempFile");
+
+        if (file_put_contents($tempFile, $pem) === false) {
+            error_log("crearKeyPEMTemporal: file_put_contents falló");
+            unlink($tempFile);
+            return false;
+        }
+
+        // Restringir permisos del archivo
+        chmod($tempFile, 0600);
+        
+        error_log("crearKeyPEMTemporal: Éxito, archivo temporal listo: $tempFile");
+
+        return $tempFile;
+    }
     
     /**
      * Verifica que los archivos del sello digital existan

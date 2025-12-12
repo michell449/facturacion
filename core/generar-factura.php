@@ -1,8 +1,21 @@
 <?php
-require_once __DIR__ . '/../config.php';
+// Limpiar cualquier salida previa
+if (ob_get_level()) {
+    ob_end_clean();
+}
+
+// Suprimir warnings que puedan romper el JSON
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', '0');
+
+// Iniciar sesión sin cargar config.php completo
+session_start();
+
 require_once __DIR__ . '/class/db.php';
 
+// Enviar headers JSON
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-cache, must-revalidate');
 
 $respuesta = [
     'success' => false,
@@ -16,20 +29,41 @@ try {
     // 1. VALIDACIONES DE SEGURIDAD Y DATOS
     // ---------------------------------------------------------
     
+    error_log("=== INICIO GENERAR FACTURA ===");
+    
     // Validar Sesión
     $id_usuario = $_SESSION['usuario_id'] ?? $_SESSION['USR_ID'] ?? null;
     if (!$id_usuario) {
+        error_log("ERROR: Sesión no válida");
         throw new Exception('Sesión no válida o expirada.');
     }
+    
+    error_log("Usuario ID: {$id_usuario}");
 
     // Obtener datos del JSON
     $input = file_get_contents('php://input');
+    error_log("Input recibido: " . substr($input, 0, 200));
+    
     $datos = json_decode($input, true);
     
-    if (!$datos) throw new Exception('No se recibieron datos válidos.');
-    if (empty($datos['id_sucursal'])) throw new Exception('Falta la sucursal.');
-    if (empty($datos['receptor']['rfc'])) throw new Exception('Falta RFC del receptor.');
-    if (empty($datos['conceptos'])) throw new Exception('Debe haber al menos un concepto.');
+    if (!$datos) {
+        error_log("ERROR: JSON inválido - " . json_last_error_msg());
+        throw new Exception('No se recibieron datos válidos.');
+    }
+    if (empty($datos['id_sucursal'])) {
+        error_log("ERROR: Falta id_sucursal");
+        throw new Exception('Falta la sucursal.');
+    }
+    if (empty($datos['receptor']['rfc'])) {
+        error_log("ERROR: Falta RFC receptor");
+        throw new Exception('Falta RFC del receptor.');
+    }
+    if (empty($datos['conceptos'])) {
+        error_log("ERROR: Sin conceptos");
+        throw new Exception('Debe haber al menos un concepto.');
+    }
+    
+    error_log("Datos validados correctamente");
 
     $db = new Database();
     $conn = $db->getConnection();
@@ -186,8 +220,11 @@ try {
     }
 
 } catch (Exception $e) {
+    error_log("EXCEPCIÓN EN GENERAR-FACTURA: " . $e->getMessage());
+    error_log("Trace: " . $e->getTraceAsString());
     http_response_code(400);
     $respuesta['message'] = $e->getMessage();
 }
 
 echo json_encode($respuesta);
+exit;

@@ -576,14 +576,7 @@
             return;
         }
 
-        Swal.fire({
-            title: 'Generando factura...',
-            text: 'Por favor espere',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        
 
         // Preparar datos para enviar
         const conceptosData = [];
@@ -616,34 +609,91 @@
         };
 
         try {
-            // Llamar al backend para generar la factura
-            const response = await fetch('core/generar-factura.php', {
+            // mostrar loading guardar factura
+            Swal.fire({
+                title: 'Guardando factura...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }   
+            })
+
+            //Guardar datos en a base de datos
+            const responseBD = await fetch('core/generar-factura.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(datosFactura)
             });
+            const resultBD = await responseBD.json();
 
-            const result = await response.json();
+             if (resultBD.success) {
+                // SI SE GUARDÓ EN BD, PASAMOS AL XML
+                const idFacturaNueva = resultBD.id_factura; // Asegúrate que tu PHP devuelva este ID
 
-            if (result.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Factura generada',
-                    html: `La factura <strong>${result.folio}</strong> se ha generado correctamente`,
-                    showConfirmButton: true
-                }).then(() => {
-                    // Limpiar formulario
-                    limpiarFormulario();
+                // ACTUALIZAR ALERT (PASO 2)
+                Swal.update({
+                    title: 'Generando XML...',
+                    text: 'Creando estructura y aplicando sello digital...'
                 });
+
+                // 5. PETICIÓN 2: GENERAR XML
+                const responseXML = await fetch('core/generar-xml.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_factura: idFacturaNueva })
+                });
+
+                const resultXML = await responseXML.json();
+
+                if (resultXML.success) {
+                    // 6. ÉXITO TOTAL (BD + XML)
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Factura Creada Exitosamente!',
+                        html: `
+                            <div class="text-start">
+                                <p><strong>Folio:</strong> ${resultBD.folio}</p>
+                                <p>La factura se guardó y el XML fue sellado correctamente.</p>
+                                <div class="d-grid gap-2 mt-3">
+                                    <a href="${resultXML.xml_url}" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-filetype-xml me-2"></i>Descargar XML
+                                    </a>
+                                </div>
+                            </div>
+                        `,
+                        showConfirmButton: true,
+                        confirmButtonText: 'Nueva Factura'
+                    }).then(() => {
+                        limpiarFormulario();
+                    });
+
+                } else {
+                    // ERROR EN XML (PERO SE GUARDÓ EN BD)
+                    console.error("Errores validación:", resultXML.errores_validacion);
+                    
+                    let errorMsg = resultXML.message;
+                    if(resultXML.errores_validacion && resultXML.errores_validacion.length > 0){
+                        errorMsg += "<br><small class='text-danger'>" + resultXML.errores_validacion.join('<br>') + "</small>";
+                    }
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Guardada sin XML',
+                        html: `La factura se registró con folio <b>${resultBD.folio}</b>, pero hubo un error al crear el XML:<br>${errorMsg}`,
+                        confirmButtonText: 'Entendido'
+                    });
+                } 
             } else {
+                // ERROR AL GUARDAR EN BD
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: result.message || 'No se pudo generar la factura'
+                    title: 'Error al guardar factura',
+                    text: resultBD.message || 'No se pudo guardar la factura en la base de datos.'
                 });
             }
+
         } catch (error) {
             console.error('Error al generar factura:', error);
             Swal.fire('Error', 'No se pudo generar la factura', 'error');
@@ -687,4 +737,6 @@
             console.error('Error al generar XML de la factura:', error);
         }
     }
+
+    
 </script>

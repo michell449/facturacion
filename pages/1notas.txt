@@ -1,154 +1,38 @@
-// ============================================
-    // GENERAR FACTURA (LÓGICA INTEGRADA BD + XML)
-    // ============================================
+BEGIN TRANSACTION;                                                                                  F   M
+('601','General de Ley Personas Morales',                                                           '', 1,'2016-11-12','');
+('603','Personas Morales con Fines no Lucrativos',                                                  '', 1,'2016-11-12','');
+('605','Sueldos y Salarios e Ingresos Asimilados a Salarios',                                       1, '','2016-11-12','');
+('606','Arrendamiento',                                                                             1, '','2016-11-12','');
+('607','Régimen de Enajenación o Adquisición de Bienes',                                            1, '','2016-11-12','');
+('608','Demás ingresos',                                                                            1, '','2016-11-12','');
+('609','Consolidación',                                                                             '', 1,'2016-11-12','2019-12-31');
+('610','Residentes en el Extranjero sin Establecimiento Permanente en México',                      1,  1,'2016-11-12','');
+('611','Ingresos por Dividendos (socios y accionistas)',                                            1, '','2016-11-12','');
+('612','Personas Físicas con Actividades Empresariales y Profesionales',                            1, '','2016-11-12','');
+('614','Ingresos por intereses',                                                                    1, '','2016-11-12','');
+('615','Régimen de los ingresos por obtención de premios',                                          1, '','2016-11-12','');
+('616','Sin obligaciones fiscales',                                                                 1, '','2016-11-12','');
+('620','Sociedades Cooperativas de Producción que optan por diferir sus ingresos',                  '', 1,'2016-11-12','');
+('621','Incorporación Fiscal',                                                                      1, '','2016-11-12','');
+('622','Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras',                                  '', 1,'2016-11-12','');
+('623','Opcional para Grupos de Sociedades',                                                        '', 1,'2016-11-12','');
+('624','Coordinados',                                                                               '', 1,'2016-11-12','');
+('625','Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas',1, '','2020-06-01','');
+('626','Régimen Simplificado de Confianza',                                                         1,  1,'2022-01-01','');
+('628','Hidrocarburos',                                                                             '', 1,'2024-01-01','');
+('629','De los Regímenes Fiscales Preferentes y de las Empresas Multinacionales',                   1, '','2024-01-01','');
+('630','Enajenación de acciones en bolsa de valores',                                               1, '','2024-01-01','');
 
-    async function generarFactura() {
-        // 1. VALIDACIONES PREVIAS
-        const sucursalId = document.getElementById('sucursalSelect').value;
-        if (!sucursalId) {
-            Swal.fire('Error', 'Seleccione una sucursal', 'warning');
-            return;
-        }
+-- 3. Configurar PERSONAS FÍSICAS (1 = Sí aplica)
+UPDATE cat_regimen_fiscal 
+SET aplica_fisica = 1 
+WHERE codigo IN ('605', '606', '607', '608', '610', '611', '612', '614', '615', '616', '621', '625', '626', '629', '630');
 
-        const receptorRFC = document.getElementById('receptorRFC').value;
-        const receptorNombre = document.getElementById('receptorNombre').value;
-        const receptorCP = document.getElementById('receptorCP').value;
-        const usoCFDI = document.getElementById('usoCFDI').value;
+-- 4. DESACTIVAR Regímenes obsoletos para CFDI 4.0 (Esto arregla tu error XSD01)
+-- Ponemos fecha de fin en el pasado para que el sistema sepa que ya no sirven
+UPDATE cat_regimen_fiscal 
+SET vigencia_hasta = '2021-12-31', aplica_fisica = 0, aplica_moral = 0
+WHERE codigo IN ('602', '604', '613', '617', '618', '619', '627');
 
-        if (!receptorRFC || !receptorNombre || !receptorCP || !usoCFDI) {
-            Swal.fire('Error', 'Complete todos los datos del receptor', 'warning');
-            return;
-        }
-
-        const conceptos = document.querySelectorAll('.concepto-row');
-        if (conceptos.length === 0) {
-            Swal.fire('Error', 'Agregue al menos un concepto', 'warning');
-            return;
-        }
-
-        const formaPago = document.getElementById('formaPago').value;
-        if (!formaPago) {
-            Swal.fire('Error', 'Seleccione una forma de pago', 'warning');
-            return;
-        }
-
-        // 2. PREPARAR DATOS
-        const conceptosData = [];
-        document.querySelectorAll('.concepto-row').forEach(row => {
-            conceptosData.push({
-                descripcion: row.querySelector('.concepto-descripcion').value,
-                cantidad: row.querySelector('.concepto-cantidad').value,
-                precio: row.querySelector('.concepto-precio').value,
-                clave: row.querySelector('.concepto-clave').value,
-                unidad: row.querySelector('.concepto-unidad').value
-            });
-        });
-
-        const datosFactura = {
-            id_sucursal: sucursalId,
-            id_ticket: document.getElementById('ticketIdActual').value || null,
-            receptor: {
-                rfc: receptorRFC,
-                nombre: receptorNombre,
-                cp: receptorCP,
-                domicilio: document.getElementById('receptorDomicilio').value,
-                correo: document.getElementById('receptorCorreo').value,
-                regimen: document.getElementById('regimenFiscal').value,
-                uso_cfdi: usoCFDI
-            },
-            forma_pago: formaPago,
-            metodo_pago: document.getElementById('metodoPago').value,
-            conceptos: conceptosData,
-            observaciones: document.getElementById('observaciones').value
-        };
-
-        try {
-            // 3. MOSTRAR CARGANDO (PASO 1)
-            Swal.fire({
-                title: 'Guardando factura...',
-                text: 'Registrando en base de datos',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
-
-            // 4. PETICIÓN 1: GUARDAR EN BD
-            const responseBD = await fetch('core/generar-factura.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datosFactura)
-            });
-
-            const resultBD = await responseBD.json();
-
-            if (resultBD.success) {
-                // SI SE GUARDÓ EN BD, PASAMOS AL XML
-                const idFacturaNueva = resultBD.id_factura; // Asegúrate que tu PHP devuelva este ID
-
-                // ACTUALIZAR ALERT (PASO 2)
-                Swal.update({
-                    title: 'Generando XML...',
-                    text: 'Creando estructura y aplicando sello digital...'
-                });
-
-                // 5. PETICIÓN 2: GENERAR XML
-                const responseXML = await fetch('core/generar-xml.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_factura: idFacturaNueva })
-                });
-
-                const resultXML = await responseXML.json();
-
-                if (resultXML.success) {
-                    // 6. ÉXITO TOTAL (BD + XML)
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Factura Creada Exitosamente!',
-                        html: `
-                            <div class="text-start">
-                                <p><strong>Folio:</strong> ${resultBD.folio}</p>
-                                <p>La factura se guardó y el XML fue sellado correctamente.</p>
-                                <div class="d-grid gap-2 mt-3">
-                                    <a href="${resultXML.xml_url}" target="_blank" class="btn btn-outline-primary">
-                                        <i class="bi bi-filetype-xml me-2"></i>Descargar XML
-                                    </a>
-                                </div>
-                            </div>
-                        `,
-                        showConfirmButton: true,
-                        confirmButtonText: 'Nueva Factura'
-                    }).then(() => {
-                        limpiarFormulario();
-                    });
-
-                } else {
-                    // ERROR EN XML (PERO SE GUARDÓ EN BD)
-                    console.error("Errores validación:", resultXML.errores_validacion);
-                    
-                    let errorMsg = resultXML.message;
-                    if(resultXML.errores_validacion && resultXML.errores_validacion.length > 0){
-                        errorMsg += "<br><small class='text-danger'>" + resultXML.errores_validacion.join('<br>') + "</small>";
-                    }
-
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Guardada sin XML',
-                        html: `La factura se registró con folio <b>${resultBD.folio}</b>, pero hubo un error al crear el XML:<br>${errorMsg}`,
-                        confirmButtonText: 'Entendido'
-                    });
-                }
-
-            } else {
-                // ERROR AL GUARDAR EN BD
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error al guardar',
-                    text: resultBD.message || 'No se pudo registrar en la base de datos'
-                });
-            }
-
-        } catch (error) {
-            console.error('Error crítico:', error);
-            Swal.fire('Error del Sistema', 'Ocurrió un error de comunicación con el servidor.', 'error');
-        }
-    }
+-- Corrección específica para el 618 que te daba error:
+UPDATE cat_regimen_fiscal SET vigencia_hasta = '2021-12-31' WHERE codigo = '618';

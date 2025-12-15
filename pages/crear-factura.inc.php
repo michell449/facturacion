@@ -160,11 +160,6 @@
                                     <input type="text" class="form-control" id="receptorCP"
                                         placeholder="12345" maxlength="5" required>
                                 </div>
-                                <div class="col-8">
-                                    <label class="form-label fw-semibold">Domicilio Fiscal</label>
-                                    <textarea class="form-control" id="receptorDomicilio" rows="2"
-                                        placeholder="Calle, número, colonia"></textarea>
-                                </div>
                             </div>
                         </div>
 
@@ -597,7 +592,6 @@
                 rfc: receptorRFC,
                 nombre: receptorNombre,
                 cp: receptorCP,
-                domicilio: document.getElementById('receptorDomicilio').value,
                 correo: document.getElementById('receptorCorreo').value,
                 regimen: document.getElementById('regimenFiscal').value,
                 uso_cfdi: usoCFDI

@@ -94,6 +94,17 @@ try {
     $logo_filename = null;
     $eliminar_logo = isset($_POST['eliminar_logo']) && $_POST['eliminar_logo'] === 'true';
     
+    // VALIDACIÓN DE CERTIFICADOS DIGITALES
+    // Si se proporciona un nuevo certificado, validar que el RFC coincida
+    if (isset($_FILES['file_cer']) && $_FILES['file_cer']['error'] === UPLOAD_ERR_OK) {
+        $rutaCerTemporal = $_FILES['file_cer']['tmp_name'];
+        $validacionCert = SelloUtils::validarCertificado($rutaCerTemporal, $rfc);
+        
+        if (!$validacionCert) {
+            throw new Exception('El certificado (.cer) no coincide con el RFC proporcionado. Verifique que esté subiendo el certificado correcto.');
+        }
+    }
+    
     if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
         $logo_filename = manejarSubidaLogo($_FILES['logo'], $id_empresa);
     } elseif ($eliminar_logo) {

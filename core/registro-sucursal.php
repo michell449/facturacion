@@ -116,6 +116,17 @@ try {
     $sello = isset($data['sello']) && !empty($data['sello']) ? trim($data['sello']) : null;
     $clave_privada = isset($data['clave_privada']) && !empty($data['clave_privada']) ? trim($data['clave_privada']) : null;
 
+    // VALIDACIÓN DE CERTIFICADOS DIGITALES
+    // Si se proporcionan archivos de sello, validar que el RFC coincida
+    if (isset($_FILES['file_cer']) && $_FILES['file_cer']['error'] === UPLOAD_ERR_OK) {
+        $rutaCerTemporal = $_FILES['file_cer']['tmp_name'];
+        $validacionCert = SelloUtils::validarCertificado($rutaCerTemporal, $rfc);
+        
+        if (!$validacionCert) {
+            throw new Exception('El certificado (.cer) no coincide con el RFC proporcionado. Verifique que esté subiendo el certificado correcto.');
+        }
+    }
+
     $fields = ['rfc', 'razon_social', 'nombre', 'reg_fiscal', 'codigo_suc', 'cp', 'direccion', 'colonia', 'estatus', 'correo'];
     $values = [$rfc, $razon_social, $nombre_comercial, $reg_fiscal, $codigo_suc, $cp, $direccion, $colonia, $estatus, $email];
     

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="F" Folio="000019" Fecha="2025-12-15T14:43:53" SubTotal="600.00" Total="696.00" Moneda="MXN" TipoCambio="1.0000" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="01" LugarExpedicion="90860" NoCertificado="30001000000500003436" Certificado="MIIFoTCCA4mgAwIBAgIUMzAwMDEwMDAwMDA1MDAwMDM0MzYwDQYJKoZIhvcNAQELBQAwggErMQ8wDQYDVQQDDAZBQyBVQVQxLjAsBgNVBAoMJVNFUlZJQ0lPIERFIEFETUlOSVNUUkFDSU9OIFRSSUJVVEFSSUExGjAYBgNVBAsMEVNBVC1JRVMgQXV0aG9yaXR5MSgwJgYJKoZIhvcNAQkBFhlvc2Nhci5tYXJ0aW5lekBzYXQuZ29iLm14MR0wGwYDVQQJDBQzcmEgY2VycmFkYSBkZSBjYWxpejEOMAwGA1UEEQwFMDYzNzAxCzAJBgNVBAYTAk1YMRkwFwYDVQQIDBBDSVVEQUQgREUgTUVYSUNPMREwDwYDVQQHDAhDT1lPQUNBTjERMA8GA1UELRMIMi41LjQuNDUxJTAjBgkqhkiG9w0BCQITFnJlc3BvbnNhYmxlOiBBQ0RNQS1TQVQwHhcNMjMwNTE4MTI1MTQ3WhcNMjcwNTE4MTI1MTQ3WjCByDEiMCAGA1UEAxMZSklNRU5FWiBFU1RSQURBIFNBTEFTIEEgQTEiMCAGA1UEKRMZSklNRU5FWiBFU1RSQURBIFNBTEFTIEEgQTEiMCAGA1UEChMZSklNRU5FWiBFU1RSQURBIFNBTEFTIEEgQTElMCMGA1UELRMcSkVTOTAwMTA5UTkwIC8gVkFEQTgwMDkyN0RKMzEeMBwGA1UEBRMVIC8gVkFEQTgwMDkyN0hTUlNSTDA1MRMwEQYDVQQLEwpTdWN1cnNhbCAxMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqsVdDF7WpwMc3zCDdJHr2uqHBG5CPlV1gszap3xQZcx2h+bf+gxANJY8aNd2RaYXzVCo/SQlw3N/VZF9gaDkof7DJCt0UdZHFVo6FIoYoR4yuyWbhc0otl1KZsQa+NDoyDPHf2FIRYHzrZfh1kPIG1SUxdURgOeiWyb+QJWf8ysf2BYHzi5n2kTKirYw/fmp3xaDqBWEXZoiXXYzwq4S7lSW361DS5SKHvWbKUqCfnCNspRIh22cDON7Mt2QPmCC44ga15XhqTFmIMJP0fDWdF7xFrqPVA2LEctWM6TwWA7/Tik7+NybnIpNzxnDXs0IeAbrNrq2T4EAsQe1VcucMQIDAQABox0wGzAMBgNVHRMBAf8EAjAAMAsGA1UdDwQEAwIGwDANBgkqhkiG9w0BAQsFAAOCAgEAGQjigWZR+IW30VaFSMV2aQP1ru68AhRzbjzhZMM5i/TZLKSW9WshqpwESAwT8BcYcSugmMPWK499d6A7MiHNXRQPfX30F5/0dzmUmDhKc54utS/r03CjKwOQbgD0TgB0dDuRd6+9wukTxmFfYdfQ0n0gTheDDHnhtozlOas2u3WXSbafNunjzOvbOXGXkxvH+ywKJk0mB23cneUXl8vp+Tbd2dhce6KJ2S+rax043njZ1ibhDVJL2gjK202i8/4kiTHzhoJp3gOWclgU4ocYGL3jyQL3A18wYPSET1ptShCw+WQb6iLtpH4N9vCYQY7GcF4c+SQbuhIFiGRKFnMV20jYCBTcMuraYsfIkSEZEZfWLisalSyhue75qp3omZmIB76BQ3jJQQGZRU0o5M27IklqSjL0q92vKj9TnzQXZSVLDQ9JK89YqpDaltuFmJ5ppL99Akxx76wmk6l7D5rBNWP28k7tRsoCa3LSABeExSdI44Bd58/01StNFDdGVOCXWhKv984MXQiRAdS7tVtF0sM+z27+TygdqeCqht/MzyglGh0yVSgkhbWn8rF3Xs7fDaVSg7lMj8lcv8UTKVRxLQhzhdhKl2ninaP7guyPvTG8qRsNzK9t/rGzeJHHD9bOAGt8M7ustV5x9ZD3cVEaeQKQhSe/7ZnSM17U1neT+/A=" Sello="iWzPVwL9NNL1lVtttlFxcL5kcOBC85eeuhahAnyiCvNTZ4GCmC2L6yygwd9T6FdLeqRkTm5knvfGn7vShKi4FONKadJLXg9V9yQNUR8ZS3oa//Bbtjuq0UFJZsWlAG4yJQyvf21mxRG8V5t9cZLaRIcxyHt00+CywoR7tMqsQvy7Ss4wCVwKNpTlCuHVAsD8+M0JGMpKr6pqk6XznpmGmVC9M3GHyj2FntSqVdDGDj69zdJtqVYXhSHaOx2SfFIuNOV0Ko1GhKYw0wSl7tbbG4RHLsDJbw3lCb0c/UaNPicU8dDvVasfsYJ37U6EoWcIgP3FER56meaZyz/ELADfiQ==">
+  <cfdi:Emisor Nombre="JIMENEZ ESTRADA SALAS A A" Rfc="JES900109Q90" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="CUFC0408165F1" Nombre="Cristian Michell Cuatepitzi Flores" UsoCFDI="G03" DomicilioFiscalReceptor="90860" RegimenFiscalReceptor="616"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="01010101" NoIdentificacion="93" Cantidad="1.000000" ClaveUnidad="H87" Unidad="H87" Descripcion="Sistema de flujo de video" ValorUnitario="600.00" Importe="600.00" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="600.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="96.00"/>
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="96.00">
+    <cfdi:Traslados>
+      <cfdi:Traslado Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="96.00" Base="600.00"/>
+    </cfdi:Traslados>
+  </cfdi:Impuestos>
+</cfdi:Comprobante>

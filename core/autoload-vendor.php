@@ -15,7 +15,7 @@ spl_autoload_register(function ($class) {
         'Eclipxe\\Enum\\'                 => __DIR__ . '/../vendor/eclipxe/enum/src/',
         'Eclipxe\\MicroCatalog\\'         => __DIR__ . '/../vendor/eclipxe/micro-catalog/src/',
         'XmlResourceRetriever\\'          => __DIR__ . '/../vendor/eclipxe/xmlresourceretriever/src/XmlResourceRetriever/',
-        'XmlSchemaValidator\\'            => __DIR__ . '/../vendor/eclipxe/xmlschemavalidator/src/XmlSchemaValidator/',
+        'Eclipxe\\XmlSchemaValidator\\'   => __DIR__ . '/../vendor/eclipxe/xmlschemavalidator/src/',
         'CfdiUtils\\'                     => __DIR__ . '/../vendor/eclipxe/cfdiutils/src/CfdiUtils/',
         'GuzzleHttp\\'                    => __DIR__ . '/../vendor/guzzlehttp/guzzle/src/',
         'Mpdf\\'                         => __DIR__ . '/../vendor/mpdf/mpdf/src/',

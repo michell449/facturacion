@@ -18,7 +18,7 @@ $respuesta = [
 ];
 
 try {
-    // 1. Verificaciones de Sesión y Archivos (igual que antes)
+    // 1. Verificaciones de Sesión y Archivos
     $id_usuario = isset($_SESSION['usuario_id']) ? (int)$_SESSION['usuario_id'] : (isset($_SESSION['USR_ID']) ? (int)$_SESSION['USR_ID'] : null);
     
     if (!$id_usuario) {
@@ -63,7 +63,7 @@ try {
     }
 
     // ---------------------------------------------------------
-    // 2. VALIDACIÓN PODEROSA CON PHPCFDI/CREDENTIALS
+    // 2. VALIDACIÓN Y CONVERSIÓN CON PHPCFDI/CREDENTIALS
     // ---------------------------------------------------------
     try {
         // Leemos el contenido de los archivos temporales
@@ -74,16 +74,15 @@ try {
             throw new Exception('No se pudo leer el contenido de los archivos.');
         }
 
-        // Crear objetos Certificate y PrivateKey siguiendo la documentación oficial
-        // Certificate detecta automáticamente el formato (DER, DER base64 o PEM)
+        // Crear objetos Certificate y PrivateKey
+        // Certificate detecta automáticamente el formato
         $certificate = new Certificate($contenidoCer);
         
-        // PrivateKey detecta automáticamente el formato (PKCS#8 DER o PEM)
-        // Si la contraseña es incorrecta, lanzará excepción aquí
+        // PrivateKey intenta abrir la llave. Si es DER (binaria) y la contraseña es correcta, 
+        // la convierte internamente para poder usarla.
         $privateKey = new PrivateKey($contenidoKey, $clavePrivadaTexto);
 
-        // Crear credencial combinando certificado y llave privada
-        // Esto valida que la llave privada corresponda al certificado
+        // Crear credencial combinando certificado y llave privada para verificar paridad
         $credential = new Credential($certificate, $privateKey);
 
         // VALIDACIÓN OBLIGATORIA: Debe ser un CSD y NO una FIEL/e.firma
@@ -91,19 +90,8 @@ try {
             throw new Exception('El certificado proporcionado es una FIEL o e.firma. Debes subir un CSD (Certificado de Sello Digital).');
         }
 
-        // La creación de Credential ya valida la correspondencia
-        // Si necesitas confirmación extra, usa los métodos de la librería
-        try {
-            // Intentar usar la credencial - esto falla si no coinciden
-            $testData = 'verification_test';
-            $signed = $credential->sign($testData);
-            // Si llegamos aquí, la llave privada es válida
-        } catch (\Exception $e) {
-            throw new Exception('La llave privada no corresponde al certificado proporcionado.');
-        }
-
     } catch (\RuntimeException $e) {
-        // Errores de contraseña incorrecta o archivos inválidos
+        // Errores de contraseña incorrecta o archivos inválidos específicos de la librería
         $errorMsg = $e->getMessage();
         if (stripos($errorMsg, 'password') !== false || stripos($errorMsg, 'passphrase') !== false) {
             throw new Exception('La contraseña de la llave privada es incorrecta.');
@@ -115,25 +103,36 @@ try {
             throw new Exception('Error al procesar los archivos: ' . $errorMsg);
         }
     } catch (\Exception $e) {
-        // Aquí atrapamos errores específicos de validación
         throw new Exception('Validación fallida: ' . $e->getMessage());
     }
 
     // ---------------------------------------------------------
-    // 3. GUARDADO SEGURO (Si llegamos aquí, todo es válido)
+    // 3. VALIDACIÓN DE RFC DEL CERTIFICADO
     // ---------------------------------------------------------
 
     $db = new Database();
     $conn = $db->getConnection();
     
-    // Verificar permisos
-    $stmt_verify = $conn->prepare("SELECT codigo_suc, file_cer, file_key FROM empresas WHERE id_empresa = ? AND id_usuario = ?");
+    // Verificar permisos y obtener RFC registrado
+    $stmt_verify = $conn->prepare("SELECT codigo_suc, file_cer, file_key, rfc FROM empresas WHERE id_empresa = ? AND id_usuario = ?");
     $stmt_verify->execute([$id_empresa, $id_usuario]);
     $sucursal = $stmt_verify->fetch(PDO::FETCH_ASSOC);
     
     if (!$sucursal) {
         throw new Exception('No tienes permisos para modificar esta sucursal.');
     }
+
+    // Validar que el RFC del certificado coincida con el RFC registrado en la BD
+    $rfcCertificado = mb_strtoupper(trim($credential->rfc()));
+    $rfcRegistrado = mb_strtoupper(trim($sucursal['rfc']));
+
+    if ($rfcCertificado !== $rfcRegistrado) {
+        throw new Exception("El RFC del certificado ($rfcCertificado) no coincide con el RFC registrado en la sucursal ($rfcRegistrado). Verifique que esté subiendo el certificado correcto.");
+    }
+
+    // ---------------------------------------------------------
+    // 4. GUARDADO SEGURO CON CONVERSIÓN A PEM
+    // ---------------------------------------------------------
     
     $codigoSucursal = $sucursal['codigo_suc'] ?: 'sucursal_' . $id_empresa;
     
@@ -164,12 +163,18 @@ try {
         }
     }
 
-    // Mover archivos
+    // A) Guardar el archivo .cer (Usamos move_uploaded_file para el certificado, está bien)
     if (!move_uploaded_file($archivoCer['tmp_name'], $uploadDir . $nombreCer)) {
         throw new Exception('Error al guardar el archivo .cer');
     }
-    if (!move_uploaded_file($archivoKey['tmp_name'], $uploadDir . $nombreKey)) {
-        throw new Exception('Error al guardar el archivo .key');
+
+    // B) Guardar la llave privada convertida a PEM
+    // NO usamos move_uploaded_file para la llave porque el archivo original suele ser binario (DER).
+    // Usamos el método pem() del objeto $privateKey que ya lo tiene convertido.
+    $contenidoPEM = $privateKey->pem();
+    
+    if (file_put_contents($uploadDir . $nombreKey, $contenidoPEM) === false) {
+        throw new Exception('Error al guardar el archivo .key convertido a PEM');
     }
 
     // Rutas relativas para la BD

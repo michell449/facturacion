@@ -371,6 +371,7 @@
                             <i class="bi bi-info-circle-fill me-3 fs-5 text-info"></i>
                             <div>
                                 <h6 class="fw-bold mb-2">Sello Digital (CSD)</h6>
+                                <h6 class="fw-bold mb-2">ASEGURATE DE QUE LOS ARCHIVOS PERTENEZCAN AL RFC REGISTRADO PARA LA SUCURSAL</h6>
                                 <p class="small mb-0">
                                     Sube los archivos del certificado digital (.cer) y la llave privada (.key) 
                                     necesarios para la facturación electrónica. Los archivos se almacenarán de forma segura.

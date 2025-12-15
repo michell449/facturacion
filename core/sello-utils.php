@@ -108,12 +108,12 @@ class SelloUtils {
             
             if (!$exported || empty($pem)) {
                 error_log("convertirKeyAPEM: openssl_pkey_export falló");
-                openssl_free_key($privateKey);
+                // Nota: openssl_free_key está deprecado en PHP modernos; liberación es automática.
                 return false;
             }
             
             error_log("convertirKeyAPEM: Clave exportada a PEM, longitud: " . strlen($pem));
-            openssl_free_key($privateKey);
+            // Nota: openssl_free_key está deprecado en PHP modernos; liberación es automática.
 
             return $pem;
 
@@ -249,6 +249,96 @@ class SelloUtils {
             return false;
         } catch (Exception $e) {
             error_log("Error al obtener info del sello: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Valida que el RFC del certificado .cer coincida con el RFC esperado
+     * 
+     * @param string $rutaCer Ruta completa al archivo .cer
+     * @param string $rfcEsperado RFC esperado (en mayúsculas)
+     * @return array|false Array con detalles si válido, false si no coincide o error
+     */
+    public static function validarCertificado($rutaCer, $rfcEsperado) {
+        try {
+            if (!file_exists($rutaCer)) {
+                error_log("validarCertificado: Archivo .cer no existe: $rutaCer");
+                return false;
+            }
+
+            $certContent = file_get_contents($rutaCer);
+            if (!$certContent) {
+                error_log("validarCertificado: No se pudo leer el archivo .cer");
+                return false;
+            }
+
+            $x509 = openssl_x509_read($certContent);
+            if (!$x509) {
+                error_log("validarCertificado: El archivo no es un certificado X.509 válido");
+                return false;
+            }
+
+            $parsed = openssl_x509_parse($x509);
+            if (!$parsed) {
+                error_log("validarCertificado: No se pudo parsear el certificado");
+                return false;
+            }
+
+            // Extraer RFC del Subject - puede estar en CN o en el campo x500UniqueIdentifier
+            $subject = $parsed['subject'] ?? [];
+            
+            // El SAT usa diferentes formatos, intentamos varias ubicaciones
+            $rfcEnCert = null;
+            
+            // Opción 1: En el Common Name (CN)
+            if (isset($subject['CN'])) {
+                $rfcEnCert = $subject['CN'];
+            }
+            
+            // Opción 2: En x500UniqueIdentifier (usado frecuentemente por el SAT)
+            if (empty($rfcEnCert) && isset($subject['x500UniqueIdentifier'])) {
+                $rfcEnCert = $subject['x500UniqueIdentifier'];
+            }
+            
+            // Opción 3: En serialNumber
+            if (empty($rfcEnCert) && isset($subject['serialNumber'])) {
+                $rfcEnCert = $subject['serialNumber'];
+            }
+
+            if (!$rfcEnCert) {
+                error_log("validarCertificado: RFC no encontrado en el certificado");
+                error_log("validarCertificado: Subject completo: " . print_r($subject, true));
+                return false;
+            }
+
+            // Normalizar para comparación - extraer solo el RFC si viene con formato "RFC / Nombre"
+            $rfcEnCert = trim($rfcEnCert);
+            if (strpos($rfcEnCert, '/') !== false) {
+                $partes = explode('/', $rfcEnCert);
+                $rfcEnCert = trim($partes[0]);
+            }
+            
+            $rfcEnCert = mb_strtoupper($rfcEnCert);
+            $rfcEsperado = mb_strtoupper(trim($rfcEsperado));
+
+            error_log("validarCertificado: RFC en cert: '$rfcEnCert', RFC esperado: '$rfcEsperado'");
+
+            // Validar coincidencia
+            if ($rfcEnCert !== $rfcEsperado) {
+                error_log("validarCertificado: Los RFC no coinciden");
+                return false;
+            }
+
+            return [
+                'valido' => true,
+                'rfc_cert' => $rfcEnCert,
+                'vigencia_desde' => $parsed['validFrom_time_t'] ?? null,
+                'vigencia_hasta' => $parsed['validTo_time_t'] ?? null
+            ];
+
+        } catch (Exception $e) {
+            error_log("validarCertificado Exception: " . $e->getMessage());
             return false;
         }
     }

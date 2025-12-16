@@ -74,6 +74,9 @@ $hora_actual = date('H:i');
                                         <a href="panel?pg=facturas-generadas-admin" class="btn btn-outline-info btn-sm">
                                             <i class="bi bi-file-check me-2"></i>Ver Facturas
                                         </a>
+                                        <a href="panel?pg=crear-factura" class="btn btn-outline-info btn-sm">
+                                            <i class="bi bi-plus-circle me-2"></i>Crear Factura
+                                        </a>
                                     </div>
                                 </div>
                             </div>

@@ -1,0 +1,93 @@
+{
+    "name": "phpcfdi/finkok",
+    "description": "Librería para conectar con la API de servicios de FINKOK",
+    "license": "MIT",
+    "keywords": [
+        "phpcfdi",
+        "sat",
+        "cfdi",
+        "finkok"
+    ],
+    "authors": [
+        {
+            "name": "Carlos C Soto",
+            "email": "eclipxe13@gmail.com",
+            "homepage": "https://eclipxe.com.mx/"
+        }
+    ],
+    "homepage": "https://github.com/phpcfdi/finkok",
+    "support": {
+        "issues": "https://github.com/phpcfdi/finkok/issues",
+        "source": "https://github.com/phpcfdi/finkok"
+    },
+    "require": {
+        "php": ">=8.1",
+        "ext-dom": "*",
+        "ext-json": "*",
+        "ext-openssl": "*",
+        "ext-soap": "*",
+        "eclipxe/enum": "^0.2.7",
+        "eclipxe/micro-catalog": "^0.1.4",
+        "phpcfdi/cfdi-expresiones": "^3.3.0",
+        "phpcfdi/credentials": "^1.3.0",
+        "phpcfdi/xml-cancelacion": "^2.0.5",
+        "psr/log": "^3.0",
+        "robrichards/xmlseclibs": "^3.1.3"
+    },
+    "require-dev": {
+        "ext-fileinfo": "*",
+        "eclipxe/cfdiutils": "^3.0.1",
+        "phpcfdi/rfc": "^1.2",
+        "phpunit/phpunit": "^10.5",
+        "rector/rector": "^2.2",
+        "symfony/dotenv": "^6.0 || ^7.0"
+    },
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "PhpCfdi\\Finkok\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpCfdi\\Finkok\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": {
+            "*": "dist"
+        }
+    },
+    "scripts": {
+        "dev:build": [
+            "@dev:fix-style",
+            "@dev:check-style",
+            "@dev:test"
+        ],
+        "dev:check-style": [
+            "@php tools/composer-normalize normalize --dry-run",
+            "@php tools/php-cs-fixer fix --dry-run --verbose",
+            "@php tools/phpcs --colors -sp"
+        ],
+        "dev:coverage": [
+            "@php -dzend_extension=xdebug.so -dxdebug.mode=coverage vendor/bin/phpunit --coverage-html build/coverage/html/"
+        ],
+        "dev:fix-style": [
+            "@php tools/composer-normalize normalize",
+            "@php tools/php-cs-fixer fix --verbose",
+            "@php tools/phpcbf --colors -sp"
+        ],
+        "dev:test": [
+            "@php vendor/bin/phpunit --testdox --stop-on-failure tests/Unit",
+            "@php tools/phpstan analyse --no-progress --verbose"
+        ]
+    },
+    "scripts-descriptions": {
+        "dev:build": "DEV: run dev:fix-style dev:check-style and dev:tests, run before pull request",
+        "dev:check-style": "DEV: search for code style errors using composer-normalize, php-cs-fixer and phpcs",
+        "dev:coverage": "DEV: run phpunit with xdebug and storage coverage in build/coverage/html/",
+        "dev:fix-style": "DEV: fix code style errors using composer-normalize, php-cs-fixer and phpcbf",
+        "dev:test": "DEV: run phpunit and phpstan"
+    }
+}

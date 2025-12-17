@@ -11,11 +11,34 @@ require_once __DIR__ . '/autoload-vendor.php'; // Carga phpcfdi/finkok
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/class/db.php';
 
+use XmlResourceRetriever\Downloader\PhpDownloader;
 use PhpCfdi\Finkok\FinkokEnvironment;
 use PhpCfdi\Finkok\FinkokSettings;
 use PhpCfdi\Finkok\Services\Stamping\StampService;
 use PhpCfdi\Finkok\Services\Stamping\StampingCommand;
 use CfdiUtils\Cfdi; // Para leer el UUID del XML regresado (de eclipxe/cfdiutils)
+
+// Verificar librerías críticas
+error_log("[TIMBRAR-XML] Verificando librerías de timbrado...");
+
+$clasesRequeridas = [
+    'PhpCfdi\\Finkok\\FinkokEnvironment' => 'Finkok Environment',
+    'PhpCfdi\\Finkok\\FinkokSettings' => 'Finkok Settings',
+    'PhpCfdi\\Finkok\\Services\\Stamping\\StampService' => 'Stamp Service',
+    'CfdiUtils\\Cfdi' => 'CFDI Utils',
+    'Database' => 'Base de datos'
+];
+
+foreach ($clasesRequeridas as $clase => $descripcion) {
+    if (class_exists($clase)) {
+        error_log("[TIMBRAR-XML] ✓ $descripcion ($clase) cargada");
+    } else {
+        error_log("[TIMBRAR-XML] ✗ FALTA: $descripcion ($clase)");
+        throw new Exception("Clase requerida no disponible: $clase ($descripcion)");
+    }
+}
+
+error_log("[TIMBRAR-XML] Todas las librerías de timbrado están disponibles");
 
 $respuesta = [
     'success' => false,
@@ -28,9 +51,23 @@ try {
     // A. OBTENER DATOS DE ENTRADA
     // ---------------------------------------------------------
     $input = file_get_contents('php://input');
+    
+    // Registrar entrada para debugging
+    error_log("timbrar-xml.php - Input recibido: " . substr($input, 0, 200));
+    
+    if (empty($input)) {
+        throw new Exception("No se recibieron datos en la petición de timbrado");
+    }
+    
     $datos = json_decode($input, true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log("timbrar-xml.php - JSON Error: " . json_last_error_msg() . " | Input: " . $input);
+        throw new Exception("JSON inválido: " . json_last_error_msg());
+    }
 
     if (empty($datos['id_factura'])) {
+        error_log("timbrar-xml.php - Datos recibidos: " . print_r($datos, true));
         throw new Exception("No se recibió el ID de la factura a timbrar.");
     }
 
@@ -66,8 +103,8 @@ try {
     // ---------------------------------------------------------
     
     // IMPORTANTE: Cambia estos datos por tus credenciales REALES de prueba
-    $username = 'michellflores822@gmail.com'; 
-    $password = 'PankyContra2025.'; 
+    $username = 'integrador@finkok.com'; 
+    $password = 'Fin2023kok*'; 
 
     // Definimos que usaremos el entorno de DESARROLLO (Pruebas)
     // Cuando pases a producción, cambiarás makeDevelopment() por makeProduction()

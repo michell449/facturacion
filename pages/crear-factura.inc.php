@@ -215,7 +215,7 @@
                                     <span id="subtotalDisplay">$0.00</span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
-                                    <span class="fw-semibold">IVA (16%):</span>
+                                    <span class="fw-semibold">IVA:</span>
                                     <span id="ivaDisplay">$0.00</span>
                                 </div>
                                 <div class="d-flex justify-content-between border-top pt-2">
@@ -341,25 +341,21 @@
                     <i class="bi bi-trash"></i>
                 </button>
                 <div class="row g-2">
-                    <div class="col-md-6">
+                    <div class="col-md-9">
                         <label class="form-label fw-semibold">Descripción</label>
                         <input type="text" class="form-control concepto-descripcion" placeholder="Producto o servicio" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label fw-semibold">Cantidad</label>
                         <input type="number" class="form-control concepto-cantidad" value="1" min="0.01" step="0.01" onchange="calcularTotales()" required>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold">Precio Unitario</label>
                         <input type="number" class="form-control concepto-precio" value="0" min="0" step="0.01" onchange="calcularTotales()" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Clave SAT</label>
                         <input type="text" class="form-control concepto-clave" placeholder="01010101" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Unidad SAT</label>
-                        <input type="text" class="form-control concepto-unidad" placeholder="H87" required>
                     </div>
                 </div>
             </div>
@@ -507,25 +503,21 @@
                     <i class="bi bi-trash"></i>
                 </button>
                 <div class="row g-2">
-                    <div class="col-md-6">
+                    <div class="col-md-9">
                         <label class="form-label fw-semibold">Descripción</label>
                         <input type="text" class="form-control concepto-descripcion" value="${producto.descr}" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label fw-semibold">Cantidad</label>
                         <input type="number" class="form-control concepto-cantidad" value="${producto.cant}" min="0.01" step="0.01" onchange="calcularTotales()" required>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold">Precio Unitario</label>
                         <input type="number" class="form-control concepto-precio" value="${producto.precio_unit}" min="0" step="0.01" onchange="calcularTotales()" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Clave SAT</label>
-                        <input type="text" class="form-control concepto-clave" value="01010101" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Unidad SAT</label>
-                        <input type="text" class="form-control concepto-unidad" value="H87" required>
+                        <input type="text" class="form-control concepto-clave" value="${producto.id_prod_serv}" required>
                     </div>
                 </div>
             </div>
@@ -576,18 +568,20 @@
         // Preparar datos para enviar
         const conceptosData = [];
         document.querySelectorAll('.concepto-row').forEach(row => {
+            const unidadInput = row.querySelector('.concepto-unidad');
             conceptosData.push({
                 descripcion: row.querySelector('.concepto-descripcion').value,
                 cantidad: row.querySelector('.concepto-cantidad').value,
                 precio: row.querySelector('.concepto-precio').value,
                 clave: row.querySelector('.concepto-clave').value,
-                unidad: row.querySelector('.concepto-unidad').value
+                unidad: unidadInput ? unidadInput.value : 'ACT'
             });
         });
 
         const datosFactura = {
             id_sucursal: sucursalId,
-            id_ticket: document.getElementById('ticketIdActual').value || null,
+            // Si no hay ticket seleccionado enviamos 0 para evitar violar NOT NULL en BD
+            id_ticket: document.getElementById('ticketIdActual').value || 0,
             receptor: {
                 rfc: receptorRFC,
                 nombre: receptorNombre,
@@ -639,29 +633,68 @@
                     body: JSON.stringify({ id_factura: idFacturaNueva })
                 });
 
-                const resultXML = await responseXML.json();
+                let resultXML;
+                try {
+                    resultXML = await responseXML.json();
+                } catch (jsonError) {
+                    const textResponse = await responseXML.text();
+                    console.error('Error parseando JSON de generar-xml.php:', jsonError);
+                    console.error('Respuesta del servidor:', textResponse);
+                    throw new Exception(`Error en generación de XML: Respuesta no válida del servidor. ${textResponse.substring(0, 200)}`);
+                }
 
                 if (resultXML.success) {
-                    // 6. ÉXITO TOTAL (BD + XML)
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Factura Creada Exitosamente!',
-                        html: `
-                            <div class="text-start">
-                                <p><strong>Folio:</strong> ${resultBD.folio}</p>
-                                <p>La factura se guardó y el XML fue sellado correctamente.</p>
-                                <div class="d-grid gap-2 mt-3">
-                                    <a href="${resultXML.xml_url}" target="_blank" class="btn btn-outline-primary">
-                                        <i class="bi bi-filetype-xml me-2"></i>Descargar XML
-                                    </a>
-                                </div>
-                            </div>
-                        `,
-                        showConfirmButton: true,
-                        confirmButtonText: 'Nueva Factura'
-                    }).then(() => {
-                        limpiarFormulario();
+                    // --- NUEVO PASO: TIMBRAR ---
+                    Swal.update({
+                        title: 'Timbrando...',
+                        text: 'Conectando con el SAT/Finkok para certificar...'
                     });
+
+                    try {
+                        const responseTimbre = await fetch('core/timbrar-xml.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id_factura: idFacturaNueva })
+                        });
+                        
+                        let resultTimbre;
+                        try {
+                            resultTimbre = await responseTimbre.json();
+                        } catch (jsonError) {
+                            const textResponse = await responseTimbre.text();
+                            console.error('Error parseando JSON de timbrar-xml.php:', jsonError);
+                            console.error('Respuesta del servidor:', textResponse);
+                            throw new Error(`Respuesta no válida del servidor de timbrado. ${textResponse.substring(0, 200)}`);
+                        }
+
+                        if (resultTimbre.success) {
+                            // ÉXITO TOTAL (BD + XML + TIMBRE)
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Factura Timbrada! ',
+                                html: `
+                                    <div class="text-start">
+                                        <p><strong>Folio:</strong> ${resultBD.folio}</p>
+                                        <p><strong>UUID:</strong> ${resultTimbre.uuid}</p>
+                                        <div class="d-grid gap-2 mt-3">
+                                            <a href="${resultTimbre.xml_url || resultXML.xml_url}" target="_blank" class="btn btn-outline-primary">
+                                                <i class="bi bi-filetype-xml me-2"></i>Descargar XML
+                                            </a>
+                                        </div>
+                                    </div>
+                                `,
+                                showConfirmButton: true,
+                                confirmButtonText: 'Nueva Factura'
+                            }).then(() => {
+                                limpiarFormulario();
+                            });
+                        } else {
+                            // Error en timbrado (pero el XML pre-sellado sí se creó)
+                            Swal.fire('Error al Timbrar', resultTimbre.message || 'Ocurrió un error al timbrar la factura', 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error de conexión', 'No se pudo contactar al servidor de timbrado', 'error');
+                    }
 
                 } else {
                     // ERROR EN XML (PERO SE GUARDÓ EN BD)

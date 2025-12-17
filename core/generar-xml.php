@@ -11,6 +11,8 @@ error_reporting(E_ALL);
 use CfdiUtils\CfdiCreator40;
 use CfdiUtils\Certificado\Certificado;
 use XmlResourceRetriever\Downloader\PhpDownloader;
+use CfdiUtils\XmlResolver\XmlResolver;
+
 
 // Iniciamos buffer para capturar cualquier salida inesperada (warnings de PHP)
 ob_start();
@@ -41,25 +43,49 @@ try {
         require_once $path;
     }
 
-    // Verificar clases críticas
-    if (!class_exists('SelloUtils')) {
-        throw new Exception("La clase SelloUtils no está cargada. Verifica core/sello-utils.php");
+    // Verificar clases críticas y registrar en log
+    error_log("[GENERAR-XML] Verificando librerías...");
+    
+    $clasesRequeridas = [
+        'SelloUtils' => 'Utilidades de sello digital',
+        'CfdiUtils\\CfdiCreator40' => 'Creador CFDI 4.0',
+        'CfdiUtils\\Certificado\\Certificado' => 'Certificado digital',
+        'XmlResourceRetriever\\XsltRetriever' => 'XSLT Retriever',
+        'Database' => 'Conexión a base de datos'
+    ];
+    
+    foreach ($clasesRequeridas as $clase => $descripcion) {
+        if (class_exists($clase)) {
+            error_log("[GENERAR-XML] ✓ $descripcion ($clase) cargada correctamente");
+        } else {
+            error_log("[GENERAR-XML] ✗ FALTA: $descripcion ($clase)");
+            throw new Exception("La clase requerida no está disponible: $clase ($descripcion)");
+        }
     }
-    if (!class_exists('CfdiUtils\CfdiCreator40')) {
-        throw new Exception("La librería CfdiUtils no está cargada. Verifica vendor y autoload.");
-    }
+    
+    error_log("[GENERAR-XML] Todas las librerías requeridas están cargadas");
 
     // ---------------------------------------------------------
     // 3. RECEPCIÓN DE DATOS
     // ---------------------------------------------------------
     $input = file_get_contents('php://input');
+    
+    // Registrar entrada para debugging
+    error_log("generar-xml.php - Input recibido: " . substr($input, 0, 200));
+    
+    if (empty($input)) {
+        throw new Exception("No se recibieron datos en la petición");
+    }
+    
     $datos = json_decode($input, true);
 
     if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception("JSON inválido recibido: " . json_last_error_msg());
+        error_log("generar-xml.php - JSON Error: " . json_last_error_msg() . " | Input: " . $input);
+        throw new Exception("JSON inválido recibido: " . json_last_error_msg() . ". Verifique el formato de los datos enviados.");
     }
 
     if (empty($datos['id_factura'])) {
+        error_log("generar-xml.php - Datos recibidos: " . print_r($datos, true));
         throw new Exception("No se recibió el ID de la factura");
     }
 

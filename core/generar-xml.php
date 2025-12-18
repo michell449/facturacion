@@ -1,5 +1,22 @@
 <?php
 // core/generar-xml.php
+/**
+ * Endpoint: Generación de XML CFDI 4.0
+ *
+ * Entrada (JSON): { id_factura: number }
+ * Proceso:
+ *  - Recupera factura y conceptos desde BD
+ *  - Valida existencia y descifra CSD (cer/key)
+ *  - Ensambla Comprobante con CfdiUtils 4.0
+ *  - Reglas clave:
+ *      * CFDI40114: Si Moneda = MXN entonces TipoCambio = "1"
+ *      * Valida CP del receptor contra catálogo en BD
+ *      * Valida RFC y nombre del emisor (formato y no vacío)
+ *  - Firma (sella) el XML y valida estructura
+ *  - Guarda el archivo en uploads/xml_timbrados y actualiza BD
+ *
+ * Salida (JSON): { success: bool, message: string, xml_url?: string, errores_validacion?: string[] }
+ */
 
 // 1. CONFIGURACIÓN DE ERRORES PARA DEBUGGING
 // Desactivamos mostrar errores en pantalla para no romper el JSON
@@ -121,6 +138,27 @@ try {
     if (empty($conceptos)) throw new Exception("La factura no tiene conceptos.");
 
     // ---------------------------------------------------------
+    // 3.5 VALIDACIÓN DE CÓDIGO POSTAL
+    // ---------------------------------------------------------
+    $codigoPostalReceptor = trim($factura['codigo_postal_receptor'] ?? $factura['domicilio_fiscal_receptor'] ?? '');
+    
+    // Extraer solo los 5 dígitos si están en un domicilio completo
+    if (preg_match('/(\d{5})/', $codigoPostalReceptor, $matches)) {
+        $cp = $matches[1];
+    } else {
+        throw new Exception("Código postal del receptor inválido: debe contener 5 dígitos");
+    }
+
+    // Validar que el CP existe en la BD
+    $stmtCP = $conn->prepare("SELECT d_codigo FROM cat_codigo_postal WHERE d_codigo = ? LIMIT 1");
+    $stmtCP->execute([$cp]);
+    $cpValido = $stmtCP->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$cpValido) {
+        throw new Exception("Código postal {$cp} no encontrado en el catálogo del SAT. Verifique que sea válido.");
+    }
+
+    // ---------------------------------------------------------
     // 5. VALIDACIÓN DE CERTIFICADOS
     // ---------------------------------------------------------
     $rutaCertificados = __DIR__ . '/../uploads/sellos/';
@@ -163,6 +201,12 @@ try {
 
     $fechaEmision = date('Y-m-d\TH:i:s', strtotime($factura['fecha_emision']));
 
+    // Validación CFDI40114: Si la moneda es MXN, TipoCambio debe ser "1"
+    $tipoCambio = $factura['tipo_cambio'];
+    if ($factura['moneda'] === 'MXN') {
+        $tipoCambio = '1';
+    }
+
     $comprobanteAtributos = [
         'Serie'             => $factura['serie_interno'],
         'Folio'             => $factura['folio_interno'],
@@ -170,7 +214,7 @@ try {
         'SubTotal'          => number_format($factura['subtotal'], 2, '.', ''),
         'Total'             => number_format($factura['total'], 2, '.', ''),
         'Moneda'            => $factura['moneda'],
-        'TipoCambio'        => $factura['tipo_cambio'], 
+        'TipoCambio'        => $tipoCambio, 
         'TipoDeComprobante' => 'I', 
         'Exportacion'       => $factura['exportacion'], 
         'MetodoPago'        => $factura['metodo_pago'],
@@ -187,6 +231,21 @@ try {
         'Nombre'        => $factura['emisor_nombre'],
         'Rfc'           => mb_strtoupper($factura['emisor_rfc'], 'UTF-8') // forzar mayúsculas
     ]);
+
+    // Validación CFDI40138: Verificar que el nombre del emisor no esté vacío y sea válido
+    if (empty(trim($factura['emisor_nombre']))) {
+        throw new Exception("CFDI40138: El nombre del emisor no puede estar vacío. Asegúrese de que el emisor esté correctamente registrado en el SAT.");
+    }
+    
+    if (strlen(trim($factura['emisor_nombre'])) < 3) {
+        throw new Exception("CFDI40138: El nombre del emisor debe tener al menos 3 caracteres.");
+    }
+
+    // Validar RFC del emisor (13 caracteres, formato válido)
+    $rfcEmisor = mb_strtoupper($factura['emisor_rfc'], 'UTF-8');
+    if (!preg_match('/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/', $rfcEmisor)) {
+        throw new Exception("CFDI40138: El RFC del emisor '{$rfcEmisor}' tiene un formato inválido. Debe ser una clave válida del SAT.");
+    }
 
     // Receptor
     $comprobante->addReceptor([

@@ -157,8 +157,9 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Código Postal</label>
-                                    <input type="text" class="form-control" id="receptorCP"
-                                        placeholder="12345" maxlength="5" required>
+                                    <input type="text" class="form-control" id="receptorCP" list="cpSuggestions"
+                                        placeholder="12345" maxlength="5" required onblur="validarCodigoPostal()">
+                                    <small id="cpValidationMsg" class="form-text"></small>
                                 </div>
                             </div>
                         </div>
@@ -529,7 +530,13 @@
     // ============================================
     // GENERAR FACTURA
     // ============================================
-
+    /**
+     * Genera la factura en 3 pasos:
+     * 1) Guarda la factura en BD
+     * 2) Genera el XML (sellado con CSD)
+     * 3) Timbra el XML con el PAC
+     * Incluye validaciones previas de sucursal, receptor, CP, conceptos y forma/método de pago.
+     */
     async function generarFactura() {
         // Validar que haya sucursal seleccionada
         const sucursalId = document.getElementById('sucursalSelect').value;
@@ -549,6 +556,31 @@
             return;
         }
 
+        // Validar formato del código postal
+        if (!/^\d{5}$/.test(receptorCP)) {
+            Swal.fire('Error', 'El código postal debe ser exactamente 5 dígitos', 'warning');
+            return;
+        }
+
+        // Validar que el CP es válido antes de continuar
+        try {
+            const responseCP = await fetch('core/obtener-codigos-postales.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ termino: receptorCP, validar: true })
+            });
+            const resultCP = await responseCP.json();
+            
+            if (!resultCP.valid) {
+                Swal.fire('Error', `Código postal ${receptorCP} no válido. No se encontró en el catálogo del SAT`, 'warning');
+                return;
+            }
+        } catch (error) {
+            console.error('Error validando CP:', error);
+            Swal.fire('Error', 'No se pudo validar el código postal', 'warning');
+            return;
+        }
+
         // Validar conceptos
         const conceptos = document.querySelectorAll('.concepto-row');
         if (conceptos.length === 0) {
@@ -562,8 +594,6 @@
             Swal.fire('Error', 'Seleccione una forma de pago', 'warning');
             return;
         }
-
-        
 
         // Preparar datos para enviar
         const conceptosData = [];
@@ -729,6 +759,102 @@
 
     // Variable global para almacenar sucursales
     let listaSucursales = [];
+
+    // ============================================
+    // VALIDACIÓN DE CÓDIGO POSTAL
+    // ============================================
+    /**
+     * Valida el código postal del receptor contra el catálogo en BD.
+     * - Verifica formato (5 dígitos)
+     * - Consulta core/obtener-codigos-postales.php con validar=true
+     * - Actualiza UI con estados is-valid / is-invalid y mensaje de ayuda
+     */
+    async function validarCodigoPostal() {
+        const cpInput = document.getElementById('receptorCP');
+        const cp = cpInput.value.trim();
+        const validationMsg = document.getElementById('cpValidationMsg');
+
+        if (!cp) {
+            validationMsg.textContent = '';
+            validationMsg.className = 'form-text';
+            return;
+        }
+
+        if (!/^\d{5}$/.test(cp)) {
+            validationMsg.textContent = 'Deben ser 5 dígitos';
+            validationMsg.className = 'form-text text-warning';
+            cpInput.classList.remove('is-valid');
+            cpInput.classList.add('is-invalid');
+            return;
+        }
+
+        try {
+            const response = await fetch('core/obtener-codigos-postales.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ termino: cp, validar: true })
+            });
+
+            const result = await response.json();
+
+            if (result.valid) {
+                validationMsg.innerHTML = `CP válido - ${result.municipio}, ${result.estado}`;
+                validationMsg.className = 'form-text text-success';
+                cpInput.classList.remove('is-invalid');
+                cpInput.classList.add('is-valid');
+            } else {
+                validationMsg.textContent = `✗ CP no encontrado en el catálogo del SAT`;
+                validationMsg.className = 'form-text text-danger';
+                cpInput.classList.remove('is-valid');
+                cpInput.classList.add('is-invalid');
+            }
+        } catch (error) {
+            console.error('Error validando CP:', error);
+            validationMsg.textContent = 'Error al validar código postal';
+            validationMsg.className = 'form-text text-warning';
+        }
+    }
+
+    // Sugerencias de CP mientras se escribe
+    document.addEventListener('DOMContentLoaded', async () => {
+        document.getElementById('receptorCP').addEventListener('input', async function() {
+            const cp = this.value.trim();
+            
+            if (cp.length < 2) return;
+            
+            if (!/^\d{1,5}$/.test(cp)) return;
+
+            try {
+                const response = await fetch('core/obtener-codigos-postales.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ termino: cp, validar: false })
+                });
+
+                const result = await response.json();
+                
+                if (result.success && result.data.length > 0) {
+                    // Mostrar sugerencia si hay coincidencias
+                    const datalist = document.getElementById('cpSuggestions') || 
+                        (function() {
+                            const dl = document.createElement('datalist');
+                            dl.id = 'cpSuggestions';
+                            document.body.appendChild(dl);
+                            return dl;
+                        })();
+                    
+                    datalist.innerHTML = '';
+                    result.data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.d_codigo;
+                        datalist.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error obteniendo sugerencias de CP:', error);
+            }
+        });
+    });
 
     document.addEventListener('DOMContentLoaded', async () => {
         await Promise.all([cargarRegimenesFiscales(), cargarSucursales(), CargarUsoCFDI(), CargarFormaPago()]);

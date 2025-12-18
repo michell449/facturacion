@@ -24,12 +24,13 @@ spl_autoload_register(function ($class) {
         'PhpCfdi\\Finkok\\'                 => __DIR__ . '/../vendor/phpcfdi/finkok/src/',
 
         // --- HTTP / PSR / Guzzle ---
-        'Psr\\Http\\Message\\'              => __DIR__ . '/../vendor/psr/http-message/src/',
-        'Psr\\Http\\Client\\'               => __DIR__ . '/../vendor/psr/http-client/src/',
+        'Http\\Message\\'              => __DIR__ . '/../vendor/psr/http-message/src/',
+        'Http\\Client\\'               => __DIR__ . '/../vendor/psr/http-client/src/',
         'GuzzleHttp\\'                      => __DIR__ . '/../vendor/guzzlehttp/guzzle/src/',
         'GuzzleHttp\\Psr7\\'                => __DIR__ . '/../vendor/guzzlehttp/psr7/src/',
         'GuzzleHttp\\Promise\\'             => __DIR__ . '/../vendor/guzzlehttp/promises/src/',
-
+        'Psr\\Http\\Message\\'              => __DIR__ . '/../vendor/psr/http-message/src/',
+        'Psr\\Http\\Client\\'               => __DIR__ . '/../vendor/psr/http-client/src/',
         // --- Email ---
         'PHPMailer\\PHPMailer\\'            => __DIR__ . '/../vendor/phpmailer/phpmailer/src/',
 

@@ -88,7 +88,11 @@ define('MAIL_PSWD', '@Xub3*761');
 define('MAIL_AUT', TRUE);
 define('MAIL_SEC', 'tls');
 
-
+// Configuración de Timbrado DIGIBOX (Entorno de Pruebas)
+define('DIGIBOX_USER', 'demo2'); // Reemplaza con tu usuario
+define('DIGIBOX_PASS', '123456789'); // Reemplaza con tu contraseña
+define('DIGIBOX_URL_AUTH', 'https://testtimbrado.digibox.com.mx/api/autenticacion/autenticarbasico');
+define('DIGIBOX_URL_STAMP', 'https://testtimbrado.digibox.com.mx/apisellado/timbradojson/v2');
 
 
 date_default_timezone_set('America/Mexico_City');

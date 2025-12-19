@@ -60,15 +60,23 @@ class DigiboxApi {
             $this->autenticar();
         }
 
+        // El endpoint de json espera un body JSON con la propiedad "xml"
+        $payload = json_encode(['xml' => $xmlString]);
+        if ($payload === false) {
+            throw new Exception('No se pudo codificar el XML a JSON (json_encode falló).');
+        }
+
         $ch = curl_init(self::URL_TIMBRADO);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlString); // Enviar XML crudo como body
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         
         $headers = [
             'Token: ' . $this->token,
-            'Content-Type: application/xml'
+            'Content-Type: application/json',
+            'Accept: application/xml, application/json',
+            'Content-Length: ' . strlen($payload)
         ];
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
@@ -82,7 +90,7 @@ class DigiboxApi {
         }
 
         if ($httpCode == 200) {
-            // Si viene como cadena JSON escapada ("<cfdi..."), la limpiamos
+            // Puede venir como XML directo o como string JSON escapada
             if (substr($response, 0, 1) === '"') {
                 return json_decode($response);
             }

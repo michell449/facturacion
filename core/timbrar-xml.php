@@ -1,178 +1,96 @@
 <?php
-// core/timbrar-xml.php
-
-// 1. Configuración de errores y JSON (Para que el frontend entienda la respuesta)
+// core/timbrar.php
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 header('Content-Type: application/json; charset=utf-8');
 
-// 2. Cargar librerías y base de datos
-require_once __DIR__ . '/autoload-vendor.php'; // Carga phpcfdi/finkok
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../api/DigiboxApi.php';
 require_once __DIR__ . '/class/db.php';
 
-use XmlResourceRetriever\Downloader\PhpDownloader;
-use PhpCfdi\Finkok\FinkokEnvironment;
-use PhpCfdi\Finkok\FinkokSettings;
-use PhpCfdi\Finkok\Services\Stamping\StampService;
-use PhpCfdi\Finkok\Services\Stamping\StampingCommand;
-use CfdiUtils\Cfdi; // Para leer el UUID del XML regresado (de eclipxe/cfdiutils)
-
-// Verificar librerías críticas
-error_log("[TIMBRAR-XML] Verificando librerías de timbrado...");
-
-$clasesRequeridas = [
-    'PhpCfdi\\Finkok\\FinkokEnvironment' => 'Finkok Environment',
-    'PhpCfdi\\Finkok\\FinkokSettings' => 'Finkok Settings',
-    'PhpCfdi\\Finkok\\Services\\Stamping\\StampService' => 'Stamp Service',
-    'CfdiUtils\\Cfdi' => 'CFDI Utils',
-    'Database' => 'Base de datos'
-];
-
-foreach ($clasesRequeridas as $clase => $descripcion) {
-    if (class_exists($clase)) {
-        error_log("[TIMBRAR-XML] ✓ $descripcion ($clase) cargada");
-    } else {
-        error_log("[TIMBRAR-XML] ✗ FALTA: $descripcion ($clase)");
-        throw new Exception("Clase requerida no disponible: $clase ($descripcion)");
-    }
-}
-
-error_log("[TIMBRAR-XML] Todas las librerías de timbrado están disponibles");
-
-$respuesta = [
-    'success' => false,
-    'message' => 'Error desconocido',
-    'uuid'    => ''
-];
+$respuesta = ['success' => false, 'message' => ''];
 
 try {
-    // ---------------------------------------------------------
-    // A. OBTENER DATOS DE ENTRADA
-    // ---------------------------------------------------------
+    // 1. Obtener ID Factura
     $input = file_get_contents('php://input');
-    
-    // Registrar entrada para debugging
-    error_log("timbrar-xml.php - Input recibido: " . substr($input, 0, 200));
-    
-    if (empty($input)) {
-        throw new Exception("No se recibieron datos en la petición de timbrado");
-    }
-    
     $datos = json_decode($input, true);
-    
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        error_log("timbrar-xml.php - JSON Error: " . json_last_error_msg() . " | Input: " . $input);
-        throw new Exception("JSON inválido: " . json_last_error_msg());
-    }
+    $id_factura = $datos['id_factura'] ?? null;
 
-    if (empty($datos['id_factura'])) {
-        error_log("timbrar-xml.php - Datos recibidos: " . print_r($datos, true));
-        throw new Exception("No se recibió el ID de la factura a timbrar.");
-    }
+    if (!$id_factura) throw new Exception("ID de factura no proporcionado");
 
-    $id_factura = $datos['id_factura'];
+    // 2. Buscar Ruta del XML sin timbrar
     $db = new Database();
     $conn = $db->getConnection();
-
-    // ---------------------------------------------------------
-    // B. BUSCAR EL XML QUE GENERAMOS EN EL PASO ANTERIOR
-    // ---------------------------------------------------------
-    // Necesitamos saber dónde está el archivo físico para leerlo
-    $stmt = $conn->prepare("SELECT xml_path FROM facturas WHERE id_factura = ?");
+    
+    $stmt = $conn->prepare("SELECT xml_path FROM facturas WHERE id_factura = ? LIMIT 1");
     $stmt->execute([$id_factura]);
     $factura = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$factura || empty($factura['xml_path'])) {
-        throw new Exception("No se encontró el registro del archivo XML en la base de datos.");
+        throw new Exception("No se encontró el archivo XML generado en la BD");
     }
 
-    // Construir la ruta absoluta
-    $nombreArchivo = $factura['xml_path'];
-    $rutaArchivo = __DIR__ . '/../uploads/xml_timbrados/' . $nombreArchivo;
+    $ruta_xml = __DIR__ . '/../uploads/xml_timbrados/' . $factura['xml_path'];
 
-    if (!file_exists($rutaArchivo)) {
-        throw new Exception("El archivo XML físico no existe: $rutaArchivo");
+    if (!file_exists($ruta_xml)) {
+        throw new Exception("El archivo físico no existe: " . $factura['xml_path']);
     }
 
-    // Leer el contenido del XML (el string que enviaremos a Finkok)
-    $xmlContent = file_get_contents($rutaArchivo);
+    $xml_content = file_get_contents($ruta_xml);
 
-    // ---------------------------------------------------------
-    // C. CONFIGURAR FINKOK (Aquí ocurre la magia)
-    // ---------------------------------------------------------
+    // 3. Conectar a API Digibox y Timbrar
+    $digibox = new DigiboxApi();
     
-    // IMPORTANTE: Cambia estos datos por tus credenciales REALES de prueba
-    $username = 'integrador@finkok.com'; 
-    $password = 'Fin2023kok*'; 
+    // Aquí ocurre la magia. Si falla, saltará al catch
+    $xml_timbrado_str = $digibox->timbrar($xml_content);
 
-    // Definimos que usaremos el entorno de DESARROLLO (Pruebas)
-    // Cuando pases a producción, cambiarás makeDevelopment() por makeProduction()
-    $environment = FinkokEnvironment::makeDevelopment();
-
-    $settings = new FinkokSettings($username, $password, $environment);
-    $service = new StampService($settings);
-
-    // ---------------------------------------------------------
-    // D. EJECUTAR TIMBRADO (STAMP)
-    // ---------------------------------------------------------
-    // El método stamp() envía el XML, lo valida y si todo está bien,
-    // regresa un objeto con el XML firmado. Si falla, lanza una excepción.
-    try {
-        $command = new StampingCommand($xmlContent);
-        $result = $service->stamp($command);
-    } catch (Exception $eSoap) {
-        // Si Finkok dice que no, aquí atrapamos el error (ej: "RFC no está en la lista")
-        // Limpiamos el mensaje porque a veces viene con códigos técnicos feos
-        throw new Exception("Finkok rechazó el timbrado: " . $eSoap->getMessage());
+    if (empty($xml_timbrado_str) || strpos($xml_timbrado_str, 'TFD') === false) {
+        throw new Exception("La respuesta del PAC no parece un XML válido timbrado.");
     }
 
-    // Si llegamos aquí, ¡YA TENEMOS FACTURA LEGAL!
-    $xmlTimbrado = $result->xml(); // Este string ya contiene el nodo TimbreFiscalDigital
+    // 4. Sobreescribir el archivo con el XML YA TIMBRADO (Con el nodo TimbreFiscalDigital)
+    file_put_contents($ruta_xml, $xml_timbrado_str);
 
-    if (empty($xmlTimbrado)) {
-        throw new Exception("Finkok respondió éxito pero no devolvió el XML timbrado.");
+    // 5. Extraer UUID del XML Timbrado para guardar en BD
+    $dom = new DOMDocument();
+    // Suprimimos errores de formato al cargar para evitar warnings en logs
+    $oldVal = libxml_use_internal_errors(true);
+    $dom->loadXML($xml_timbrado_str);
+    libxml_use_internal_errors($oldVal);
+
+    $xpath = new DOMXPath($dom);
+    $xpath->registerNamespace('tfd', 'http://www.sat.gob.mx/TimbreFiscalDigital');
+    
+    $uuid = '';
+    $nodos = $xpath->query('//tfd:TimbreFiscalDigital');
+
+    if ($nodos->length > 0) {
+        $nodoTimbre = $nodos->item(0);
+        // CORRECCIÓN: Verificamos que sea un Elemento antes de pedir atributos
+        if ($nodoTimbre instanceof DOMElement) {
+            $uuid = $nodoTimbre->getAttribute('UUID');
+        }
     }
-
-    // ---------------------------------------------------------
-    // E. GUARDAR EL RESULTADO
-    // ---------------------------------------------------------
-
-    // 1. Sobrescribir el archivo XML original con la versión timbrada
-    // ¿Por qué? Porque el archivo anterior no servía de nada, este es el que vale.
-    if (file_put_contents($rutaArchivo, $xmlTimbrado) === false) {
-        throw new Exception("Se timbró, pero hubo error al guardar el archivo XML firmado.");
-    }
-
-    // 2. Extraer el UUID (Folio Fiscal) del XML nuevo para la base de datos
-    // Usamos CfdiUtils para leer el XML fácilmente
-    $cfdi = Cfdi::newFromString($xmlTimbrado);
-    $complemento = $cfdi->getQuickReader()->{'cfdi:Complemento'};
-    $tfd = $complemento ? $complemento->{'tfd:TimbreFiscalDigital'} : null;
-
-    $uuid = ($tfd && isset($tfd['UUID'])) ? (string) $tfd['UUID'] : '';
-    $fechaTimbrado = ($tfd && isset($tfd['FechaTimbrado'])) ? (string) $tfd['FechaTimbrado'] : '';
 
     if (empty($uuid)) {
+        // Opcional: Si no hay UUID, algo salió mal aunque el PAC dijera 200 OK
         throw new Exception("No se pudo leer el UUID del XML timbrado.");
     }
 
-    // 3. Actualizar la base de datos
+    // 6. Actualizar Base de Datos
     $sqlUpd = "UPDATE facturas SET 
-               uuid = ?, 
-               fecha_timbrado = ?, 
-               status = 'timbrada',
-               cadena_original_sat = ? -- Opcional si tienes este campo
+                uuid = ?, 
+                estado = 'timbrado', 
+                xml_timbrado = 1,
+                fecha_timbrado = NOW() 
                WHERE id_factura = ?";
-    
     $stmtUpd = $conn->prepare($sqlUpd);
-    // La cadena original del timbre la puedes generar después o dejar vacía por ahora
-    $stmtUpd->execute([$uuid, $fechaTimbrado, '', $id_factura]);
+    $stmtUpd->execute([$uuid, $id_factura]);
 
     $respuesta['success'] = true;
-    $respuesta['message'] = "Factura timbrada correctamente. Folio Fiscal: $uuid";
+    $respuesta['message'] = 'Factura timbrada exitosamente';
     $respuesta['uuid'] = $uuid;
-    $respuesta['xml_url'] = 'uploads/xml_timbrados/' . $nombreArchivo;
+    $respuesta['xml_url'] = 'uploads/xml_timbrados/' . $factura['xml_path'];
 
 } catch (Exception $e) {
     $respuesta['success'] = false;

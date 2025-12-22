@@ -21,10 +21,18 @@ class Database {
                 $this->username,
                 $this->password,
                 [
-                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4",
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                    PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
                 ]
             );
+            
+            // Asegurar UTF-8 en todas las consultas
+            $this->conn->exec("SET CHARACTER SET utf8mb4");
+            $this->conn->exec("SET character_set_connection=utf8mb4");
+            $this->conn->exec("SET character_set_client=utf8mb4");
+            $this->conn->exec("SET character_set_results=utf8mb4");
 
             // cargar tablas
             $sqlQuery = "SHOW TABLES FROM  {$this->database_name}";

@@ -1,103 +1,62 @@
-<?php
-class DigiboxApi {
-    private $user;
-    private $pass;
-    private $token;
-
-    // Usar las URLs definidas en config.php para mantener un solo punto de verdad
-    const URL_AUTH = DIGIBOX_URL_AUTH;
-    const URL_TIMBRADO = DIGIBOX_URL_STAMP;
-
-    public function __construct() {
-        // Asegúrate de tener estas constantes en tu config.php
-        $this->user = DIGIBOX_USER;
-        $this->pass = DIGIBOX_PASS;
-        $this->token = null;
-    }
-
-    /**
-     * 1. Autenticación
-     * Header: usuario, password
-     * Response: Token (string)
-     */
-    public function autenticar() {
-        $ch = curl_init(self::URL_AUTH);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        
-        // El body puede ir vacío, los datos van en Headers según tu especificación
-        curl_setopt($ch, CURLOPT_POSTFIELDS, ''); 
-
-        $headers = [
-            'usuario: ' . $this->user,
-            'password: ' . $this->pass,
-            'Content-Type: application/json'
-        ];
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode == 200) {
-            // Limpiamos comillas dobles que a veces envían los servicios .NET/WCF
-            $this->token = trim($response, '"');
-            return true;
-        }
-        
-        // Si falla, intentamos leer el JSON de error
-        throw new Exception("Error Auth ($httpCode): " . $response);
-    }
-
-    /**
-     * 2. Timbrado
-     * Header: Token
-     * Body (raw): XML
-     * Response 200: XML String (Raw)
-     */
-    public function timbrar($xmlString) {
-        if (!$this->token) {
-            $this->autenticar();
-        }
-
-        $ch = curl_init(self::URL_TIMBRADO);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlString); // Enviar XML crudo como body
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        
-        $headers = [
-            'Token: ' . $this->token,
-            'Content-Type: application/xml'
-        ];
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlErr = curl_error($ch);
-        curl_close($ch);
-
-        if ($response === false) {
-            throw new Exception('Error Timbrado (curl): ' . $curlErr);
-        }
-
-        if ($httpCode == 200) {
-            // Si viene como cadena JSON escapada ("<cfdi..."), la limpiamos
-            if (substr($response, 0, 1) === '"') {
-                return json_decode($response);
-            }
-            return $response; 
-        }
-
-        // Error 4xx/5xx: intentar leer JSON de error del PAC
-        $errorObj = json_decode($response);
-        $msg = $response;
-        if (json_last_error() === JSON_ERROR_NONE) {
-            $msg = isset($errorObj->ExceptionMessage) ? $errorObj->ExceptionMessage : 
-                   (isset($errorObj->Message) ? $errorObj->Message : $response);
-        }
-
-        throw new Exception("Error Timbrado ($httpCode): " . $msg);
-    }
-}
-?>
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd"
+                  Version="4.0"
+                  Serie="DIGIBOX"
+                  Folio="13"
+                  Fecha="2025-07-03T00:00:00"
+                  Sello=""
+                  FormaPago="01"
+                  NoCertificado=""
+                  Certificado=""
+                  CondicionesDePago="CondicionesDePago"
+                  SubTotal="200.00"
+                  Descuento="0.00"
+                  Moneda="MXN"
+                  Total="180.00"
+                  TipoDeComprobante="I"
+                  Exportacion="01"
+                  MetodoPago="PUE"
+                  LugarExpedicion="45610"
+                  xmlns:cfdi="http://www.sat.gob.mx/cfd/4"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<cfdi:Emisor Rfc="EKU9003173C9"
+	             Nombre="ESCUELA KEMPER URGATE"
+	             RegimenFiscal="603"/>
+	<cfdi:Receptor Rfc="IVD920810GU2"
+	               Nombre="INNOVACION VALOR Y DESARROLLO"
+	               DomicilioFiscalReceptor="10000"
+	               RegimenFiscalReceptor="601"
+	               UsoCFDI="G03"/>
+	<cfdi:Conceptos>
+		<cfdi:Concepto ClaveProdServ="50211503"
+		               NoIdentificacion="None"
+		               Cantidad="1.0"
+		               ClaveUnidad="H87"
+		               Unidad="Pieza"
+		               Descripcion="Cigarros"
+		               ValorUnitario="200.00"
+		               Importe="200.00"
+		               Descuento="0.00"
+		               ObjetoImp="02">
+			<cfdi:Impuestos>
+				<cfdi:Retenciones>
+					<cfdi:Retencion Base="200.00"
+					                Impuesto="001"
+					                TipoFactor="Tasa"
+					                TasaOCuota="0.100000"
+					                Importe="20.00"/>
+				</cfdi:Retenciones>
+			</cfdi:Impuestos>
+			<cfdi:ACuentaTerceros RfcACuentaTerceros="CACX7605101P8"
+			                      NombreACuentaTerceros=".XOCHITL CASAS CHAVEZ"
+			                      RegimenFiscalACuentaTerceros="601"
+			                      DomicilioFiscalACuentaTerceros="36257"/>
+		</cfdi:Concepto>
+	</cfdi:Conceptos>
+	<cfdi:Impuestos TotalImpuestosRetenidos="20.00">
+		<cfdi:Retenciones>
+			<cfdi:Retencion Impuesto="001"
+			                Importe="20.00"/>
+		</cfdi:Retenciones>
+	</cfdi:Impuestos>
+</cfdi:Comprobante>

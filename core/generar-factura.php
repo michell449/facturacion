@@ -12,6 +12,10 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
+// CUARTO: Configurar UTF-8 interno de PHP
+mb_internal_encoding('UTF-8');
+ini_set('default_charset', 'UTF-8');
+
 // Headers JSON (ANTES de cualquier salida)
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-cache, must-revalidate');

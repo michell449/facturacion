@@ -158,7 +158,8 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Código Postal</label>
                                     <input type="text" class="form-control" id="receptorCP" list="cpSuggestions"
-                                        placeholder="12345" maxlength="5" required onblur="validarCodigoPostal()">
+                                        placeholder="12345" maxlength="5" required>
+                                    <!-- onblur="validarCodigoPostal()" COMENTADO TEMPORALMENTE -->
                                     <small id="cpValidationMsg" class="form-text"></small>
                                 </div>
                             </div>
@@ -241,6 +242,234 @@
 
 
 <script>
+    // ============================================
+    // MATRIZ DE COMPATIBILIDAD CFDI 4.0
+    // ============================================
+
+    /**
+     * Catálogo de compatibilidad Uso CFDI con Régimen Fiscal
+     * Cada uso tiene un array de regímenes permitidos
+     */
+    const compatibilidadUsoCFDI = {
+        'G01': { // Adquisición de mercancías
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true, // Aplica para Morales
+            fisica: true, //Aplica para Físicas
+            descripcion: 'Adquisición de mercancías'
+        },
+        'G02': { // Devoluciones, descuentos o bonificaciones
+            regimenes: ['601', '603', '606', '612', '616', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Devoluciones, descuentos o bonificaciones'
+        },
+        'G03': { // Gastos en general
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Gastos en general'
+        },
+        'I01': { // Construcciones
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Construcciones'
+        },
+        'I02': { // Mobilario y equipo de oficina por inversiones
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Mobilario y equipo de oficina por inversiones'
+        },
+        'I03': { // Equipo de transporte
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Equipo de transporte'
+        },
+        'I04': { // Equipo de computo y accesorios
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Equipo de computo y accesorios'
+        },
+        'I05': { // Dados, troqueles, moldes, matrices y herramental
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Dados, troqueles, moldes, matrices y herramental'
+        },
+        'I06': { // Comunicaciones telefónicas
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Comunicaciones telefónicas'
+        },
+        'I07': { // Comunicaciones satelitales
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Comunicaciones satelitales'
+        },
+        'I08': { // Otra maquinaria y equipo
+            regimenes: ['601', '603', '606', '612', '620', '621', '622', '623', '624', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Otra maquinaria y equipo'
+        },
+        'D01': { // Honorarios médicos, dentales y gastos hospitalarios
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: false, // No aplica para Morales
+            fisica: true, // Aplica para Físicas
+            descripcion: 'Honorarios médicos, dentales y gastos hospitalarios'
+        },
+        'D02': { // Gastos médicos por incapacidad o discapacidad
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: false,
+            fisica: true,
+            descripcion: 'Gastos médicos por incapacidad o discapacidad'
+        },
+        'D03': { // Gastos funerales
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: false,
+            fisica: true,
+            descripcion: 'Gastos funerales'
+        },
+        'D04': { // Donativos
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Donativos'
+        },
+        'D05': { // Intereses reales efectivamente pagados por créditos hipotecarios (casa habitación)
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: false,
+            fisica: true,
+            descripcion: 'Intereses reales efectivamente pagados por créditos hipotecarios (casa habitación)'
+        },
+        'D06': { // Aportaciones voluntarias al SAR
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: false,
+            fisica: true,
+            descripcion: 'Aportaciones voluntarias al SAR'
+        },
+        'D07': { // Primas por seguros de gastos médicos
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: false,
+            fisica: true,
+            descripcion: 'Primas por seguros de gastos médicos'
+        },
+        'D08': { // Gastos de transportación escolar obligatoria
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: false,
+            fisica: true,
+            descripcion: 'Gastos de transportación escolar obligatoria'
+        },
+        'D09': { // Depósitos en cuentas para el ahorro, primas que tengan como base planes de pensiones
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: false,
+            fisica: true,
+            descripcion: 'Depósitos en cuentas para el ahorro, primas que tengan como base planes de pensiones'
+        },
+        'D10': { // Pagos por servicios educativos (colegiaturas)
+            regimenes: ['605', '606', '608', '611', '612', '614', '607', '615', '625'],
+            moral: false,
+            fisica: true,
+            descripcion: 'Pagos por servicios educativos (colegiaturas)'
+        },
+        'S01': { // Sin efectos fiscales
+            regimenes: ['601', '603', '605', '606', '608', '610', '611', '612', '614', '616', '620', '621', '622', '623', '624', '607', '615', '625', '626'], // Régimen sin obligaciones fiscales
+            moral: true,
+            fisica: true,
+            descripcion: 'Sin efectos fiscales (Público en General)'
+        },
+        'CP01': { // Por definir
+            regimenes: ['601', '603', '605', '606', '608', '610', '611', '612', '614', '616', '620', '621', '622', '623', '624', '607', '615', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Pagos'
+        },
+        'CN01': { // Nómina
+            regimenes: ['601', '603', '605', '606', '608', '610', '611', '612', '614', '616', '620', '621', '622', '623', '624', '607', '615', '625', '626'],
+            moral: true,
+            fisica: true,
+            descripcion: 'Nómina'
+        }
+    };
+
+    /**
+     * Detecta si un RFC es Persona Física o Moral
+     * @param {string} rfc - RFC a validar
+     * @returns {string} 'fisica', 'moral' o 'generico'
+     */
+    function detectarTipoPersona(rfc) {
+        rfc = rfc.toUpperCase().trim();
+
+        // RFC Genérico
+        if (rfc === 'XAXX010101000' || rfc === 'XEXX010101000') {
+            return 'generico';
+        }
+
+        // Persona Física: 13 caracteres (4 letras + 6 dígitos + 3 homoclave)
+        if (rfc.length === 13) {
+            return 'fisica';
+        }
+
+        // Persona Moral: 12 caracteres (3 letras + 6 dígitos + 3 homoclave)
+        if (rfc.length === 12) {
+            return 'moral';
+        }
+
+        return null; // RFC inválido
+    }
+
+    /**
+     * Valida compatibilidad entre Uso CFDI y Régimen Fiscal
+     * @param {string} usoCfdi - Código de Uso CFDI
+     * @param {string} regimenFiscal - Código de Régimen Fiscal
+     * @param {string} tipoPersona - 'fisica', 'moral', 'generico'
+     * @returns {object} {valido: boolean, mensaje: string}
+     */
+    function validarCompatibilidadUsoCfdiRegimen(usoCfdi, regimenFiscal, tipoPersona) {
+        // Si no existe el uso en el catálogo, permitir (para no bloquear usos no catalogados)
+        if (!compatibilidadUsoCFDI[usoCfdi]) {
+            return {
+                valido: true,
+                mensaje: ''
+            };
+        }
+
+        const catalogoUso = compatibilidadUsoCFDI[usoCfdi];
+
+        // Validar que el régimen esté en la lista permitida
+        if (!catalogoUso.regimenes.includes(regimenFiscal)) {
+            return {
+                valido: false,
+                mensaje: `El Uso CFDI ${usoCfdi} (${catalogoUso.descripcion}) no es compatible con el Régimen ${regimenFiscal}. Regímenes permitidos: ${catalogoUso.regimenes.join(', ')}`
+            };
+        }
+
+        // Validar tipo de persona si aplica
+        if (tipoPersona === 'fisica' && !catalogoUso.fisica) {
+            return {
+                valido: false,
+                mensaje: `El Uso CFDI ${usoCfdi} no aplica para Personas Físicas`
+            };
+        }
+
+        if (tipoPersona === 'moral' && !catalogoUso.moral) {
+            return {
+                valido: false,
+                mensaje: `El Uso CFDI ${usoCfdi} no aplica para Personas Morales`
+            };
+        }
+
+        return {
+            valido: true,
+            mensaje: 'Compatibilidad correcta'
+        };
+    }
+
     async function CargarUsoCFDI() {
         try {
             const response = await fetch('core/listar-uso-cfdi.php');
@@ -557,20 +786,28 @@
         }
 
         // Validar formato del código postal
+        /* VALIDACIÓN CP COMENTADA TEMPORALMENTE
         if (!/^\d{5}$/.test(receptorCP)) {
             Swal.fire('Error', 'El código postal debe ser exactamente 5 dígitos', 'warning');
             return;
         }
+        */
 
         // Validar que el CP es válido antes de continuar
+        /* VALIDACIÓN CP CATÁLOGO SAT COMENTADA TEMPORALMENTE
         try {
             const responseCP = await fetch('core/obtener-codigos-postales.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ termino: receptorCP, validar: true })
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    termino: receptorCP,
+                    validar: true
+                })
             });
             const resultCP = await responseCP.json();
-            
+
             if (!resultCP.valid) {
                 Swal.fire('Error', `Código postal ${receptorCP} no válido. No se encontró en el catálogo del SAT`, 'warning');
                 return;
@@ -580,6 +817,7 @@
             Swal.fire('Error', 'No se pudo validar el código postal', 'warning');
             return;
         }
+        */
 
         // Validar conceptos
         const conceptos = document.querySelectorAll('.concepto-row');
@@ -592,6 +830,41 @@
         const formaPago = document.getElementById('formaPago').value;
         if (!formaPago) {
             Swal.fire('Error', 'Seleccione una forma de pago', 'warning');
+            return;
+        }
+
+        const metodoPago = document.getElementById('metodoPago').value;
+
+        // Validación Forma 99 con Método PPD
+        if (formaPago === '99' && metodoPago !== 'PPD') {
+            Swal.fire('Error', 'La Forma de Pago 99 solo es compatible con Método PPD', 'warning');
+            return;
+        }
+
+        // Validación Método PUE no puede usar Forma 99
+        if (metodoPago === 'PUE' && formaPago === '99') {
+            Swal.fire('Error', 'El Método PUE no es compatible con Forma de Pago 99', 'warning');
+            return;
+        }
+
+        // Validar compatibilidad Uso CFDI - Régimen Fiscal - Tipo Persona
+        const regimenFiscal = document.getElementById('regimenFiscal').value;
+        const tipoPersona = detectarTipoPersona(receptorRFC);
+
+        if (!tipoPersona) {
+            Swal.fire('Error', 'RFC inválido. Debe tener 12 (Moral) o 13 (Física) caracteres', 'warning');
+            return;
+        }
+
+        const validacionUsoRegimen = validarCompatibilidadUsoCfdiRegimen(usoCFDI, regimenFiscal, tipoPersona);
+
+        if (!validacionUsoRegimen.valido) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Incompatibilidad CFDI',
+                html: validacionUsoRegimen.mensaje,
+                confirmButtonText: 'Corregir'
+            });
             return;
         }
 
@@ -633,7 +906,7 @@
                 allowOutsideClick: false,
                 didOpen: () => {
                     Swal.showLoading();
-                }   
+                }
             })
 
             //Guardar datos en a base de datos
@@ -646,7 +919,7 @@
             });
             const resultBD = await responseBD.json();
 
-             if (resultBD.success) {
+            if (resultBD.success) {
                 // SI SE GUARDÓ EN BD, PASAMOS AL XML
                 const idFacturaNueva = resultBD.id_factura; // Asegúrate que tu PHP devuelva este ID
 
@@ -659,8 +932,12 @@
                 // 5. PETICIÓN 2: GENERAR XML
                 const responseXML = await fetch('core/generar-xml.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_factura: idFacturaNueva })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_factura: idFacturaNueva
+                    })
                 });
 
                 let resultXML;
@@ -683,10 +960,14 @@
                     try {
                         const responseTimbre = await fetch('core/timbrar-xml.php', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id_factura: idFacturaNueva })
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                id_factura: idFacturaNueva
+                            })
                         });
-                        
+
                         let resultTimbre;
                         try {
                             resultTimbre = await responseTimbre.json();
@@ -729,9 +1010,9 @@
                 } else {
                     // ERROR EN XML (PERO SE GUARDÓ EN BD)
                     console.error("Errores validación:", resultXML.errores_validacion);
-                    
+
                     let errorMsg = resultXML.message;
-                    if(resultXML.errores_validacion && resultXML.errores_validacion.length > 0){
+                    if (resultXML.errores_validacion && resultXML.errores_validacion.length > 0) {
                         errorMsg += "<br><small class='text-danger'>" + resultXML.errores_validacion.join('<br>') + "</small>";
                     }
 
@@ -741,7 +1022,7 @@
                         html: `La factura se registró con folio <b>${resultBD.folio}</b>, pero hubo un error al crear el XML:<br>${errorMsg}`,
                         confirmButtonText: 'Entendido'
                     });
-                } 
+                }
             } else {
                 // ERROR AL GUARDAR EN BD
                 Swal.fire({
@@ -768,8 +1049,11 @@
      * - Verifica formato (5 dígitos)
      * - Consulta core/obtener-codigos-postales.php con validar=true
      * - Actualiza UI con estados is-valid / is-invalid y mensaje de ayuda
+     * 
+     * COMENTADA TEMPORALMENTE PARA PERMITIR DATOS DE PRUEBA
      */
     async function validarCodigoPostal() {
+        /* FUNCIÓN COMPLETA COMENTADA
         const cpInput = document.getElementById('receptorCP');
         const cp = cpInput.value.trim();
         const validationMsg = document.getElementById('cpValidationMsg');
@@ -791,8 +1075,13 @@
         try {
             const response = await fetch('core/obtener-codigos-postales.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ termino: cp, validar: true })
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    termino: cp,
+                    validar: true
+                })
             });
 
             const result = await response.json();
@@ -813,36 +1102,44 @@
             validationMsg.textContent = 'Error al validar código postal';
             validationMsg.className = 'form-text text-warning';
         }
+        */
     }
 
     // Sugerencias de CP mientras se escribe
+    // COMENTADO TEMPORALMENTE PARA PERMITIR DATOS DE PRUEBA
+    /*
     document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('receptorCP').addEventListener('input', async function() {
             const cp = this.value.trim();
-            
+
             if (cp.length < 2) return;
-            
+
             if (!/^\d{1,5}$/.test(cp)) return;
 
             try {
                 const response = await fetch('core/obtener-codigos-postales.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ termino: cp, validar: false })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        termino: cp,
+                        validar: false
+                    })
                 });
 
                 const result = await response.json();
-                
+
                 if (result.success && result.data.length > 0) {
                     // Mostrar sugerencia si hay coincidencias
-                    const datalist = document.getElementById('cpSuggestions') || 
+                    const datalist = document.getElementById('cpSuggestions') ||
                         (function() {
                             const dl = document.createElement('datalist');
                             dl.id = 'cpSuggestions';
                             document.body.appendChild(dl);
                             return dl;
                         })();
-                    
+
                     datalist.innerHTML = '';
                     result.data.forEach(item => {
                         const option = document.createElement('option');
@@ -855,6 +1152,7 @@
             }
         });
     });
+    */
 
     document.addEventListener('DOMContentLoaded', async () => {
         await Promise.all([cargarRegimenesFiscales(), cargarSucursales(), CargarUsoCFDI(), CargarFormaPago()]);
@@ -864,6 +1162,124 @@
             if (e.key === 'Enter') {
                 e.preventDefault();
                 buscarTickets();
+            }
+        });
+
+        // ============================================
+        // VALIDACIONES EN TIEMPO REAL
+        // ============================================
+
+        // Validar Forma de Pago 99 con Método PPD
+        const formaPagoSelect = document.getElementById('formaPago');
+        const metodoPagoSelect = document.getElementById('metodoPago');
+
+        function validarFormaPagoMetodo() {
+            const formaPago = formaPagoSelect.value;
+            const metodoPago = metodoPagoSelect.value;
+
+            // Forma de Pago 99 (Por definir) solo puede usar Método PPD
+            if (formaPago === '99' && metodoPago === 'PUE') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incompatibilidad detectada',
+                    text: 'La Forma de Pago 99 (Por definir) solo puede usarse con Método de Pago PPD',
+                    confirmButtonText: 'Corregir'
+                }).then(() => {
+                    metodoPagoSelect.value = 'PPD';
+                });
+            }
+
+            // Método PUE no puede usar Forma 99
+            if (metodoPago === 'PUE' && formaPago === '99') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incompatibilidad detectada',
+                    text: 'El Método PUE no puede usarse con Forma de Pago 99',
+                    confirmButtonText: 'Corregir'
+                }).then(() => {
+                    formaPagoSelect.value = '';
+                });
+            }
+        }
+
+        formaPagoSelect.addEventListener('change', validarFormaPagoMetodo);
+        metodoPagoSelect.addEventListener('change', validarFormaPagoMetodo);
+
+        // Validar Uso CFDI con Régimen Fiscal
+        const usoCfdiSelect = document.getElementById('usoCFDI');
+        const regimenFiscalSelect = document.getElementById('regimenFiscal');
+        const rfcInput = document.getElementById('receptorRFC');
+
+        function validarUsoRegimenRFC() {
+            const usoCfdi = usoCfdiSelect.value;
+            const regimenFiscal = regimenFiscalSelect.value;
+            const rfc = rfcInput.value.trim().toUpperCase();
+
+            if (!usoCfdi || !regimenFiscal || !rfc) return;
+
+            const tipoPersona = detectarTipoPersona(rfc);
+
+            if (!tipoPersona) {
+                // RFC inválido
+                return;
+            }
+
+            const validacion = validarCompatibilidadUsoCfdiRegimen(usoCfdi, regimenFiscal, tipoPersona);
+
+            if (!validacion.valido) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Incompatibilidad CFDI',
+                    html: validacion.mensaje,
+                    confirmButtonText: 'Entendido'
+                });
+            }
+        }
+
+        usoCfdiSelect.addEventListener('change', validarUsoRegimenRFC);
+        regimenFiscalSelect.addEventListener('change', validarUsoRegimenRFC);
+        rfcInput.addEventListener('blur', validarUsoRegimenRFC);
+
+        // Detectar tipo de persona al escribir RFC
+        rfcInput.addEventListener('input', function() {
+            const rfc = this.value.trim().toUpperCase();
+            this.value = rfc;
+
+            if (rfc.length >= 12) {
+                const tipoPersona = detectarTipoPersona(rfc);
+                const tipoLabel = document.getElementById('tipoPersonaLabel') ||
+                    (function() {
+                        const label = document.createElement('small');
+                        label.id = 'tipoPersonaLabel';
+                        label.className = 'form-text';
+                        rfcInput.parentElement.appendChild(label);
+                        return label;
+                    })();
+
+                if (tipoPersona === 'fisica') {
+                    tipoLabel.innerHTML = '<i class="bi bi-person"></i> Persona Física';
+                    tipoLabel.className = 'form-text text-info';
+                } else if (tipoPersona === 'moral') {
+                    tipoLabel.innerHTML = '<i class="bi bi-building"></i> Persona Moral';
+                    tipoLabel.className = 'form-text text-info';
+                } else if (tipoPersona === 'generico') {
+                    tipoLabel.innerHTML = '<i class="bi bi-people"></i> RFC Genérico (Público en General)';
+                    tipoLabel.className = 'form-text text-warning';
+
+                    // Autocompletar Régimen 616 y Uso S01 para RFC Genérico
+                    if (regimenFiscalSelect.value !== '616') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'RFC Genérico detectado',
+                            text: 'Se configurará automáticamente Régimen 616 y Uso CFDI S01',
+                            timer: 2000
+                        });
+                        regimenFiscalSelect.value = '616';
+                        usoCfdiSelect.value = 'S01';
+                    }
+                } else {
+                    tipoLabel.textContent = '';
+                }
             }
         });
     });
@@ -876,7 +1292,9 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ id_factura: id_factura })
+                body: JSON.stringify({
+                    id_factura: id_factura
+                })
             });
 
             const result = await response.json();
@@ -890,6 +1308,4 @@
             console.error('Error al generar XML de la factura:', error);
         }
     }
-
-    
 </script>

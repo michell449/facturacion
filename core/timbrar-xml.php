@@ -1,7 +1,8 @@
 <?php
-// core/timbrar.php
+// core/timbrar-xml.php
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
+ob_start(); // Buffer para evitar salidas sucias
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../config.php';
@@ -11,73 +12,67 @@ require_once __DIR__ . '/class/db.php';
 $respuesta = ['success' => false, 'message' => ''];
 
 try {
-    // 1. Obtener ID Factura
+    // 1. Obtener ID
     $input = file_get_contents('php://input');
     $datos = json_decode($input, true);
     $id_factura = $datos['id_factura'] ?? null;
 
     if (!$id_factura) throw new Exception("ID de factura no proporcionado");
 
-    // 2. Buscar Ruta del XML sin timbrar
+    // 2. Buscar Ruta del XML generado (pre-sellado)
     $db = new Database();
     $conn = $db->getConnection();
-    
+
     $stmt = $conn->prepare("SELECT xml_path FROM facturas WHERE id_factura = ? LIMIT 1");
     $stmt->execute([$id_factura]);
     $factura = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$factura || empty($factura['xml_path'])) {
-        throw new Exception("No se encontró el archivo XML generado en la BD");
+        throw new Exception("No se encontró registro del XML en la BD.");
     }
 
     $ruta_xml = __DIR__ . '/../uploads/xml_timbrados/' . $factura['xml_path'];
 
     if (!file_exists($ruta_xml)) {
-        throw new Exception("El archivo físico no existe: " . $factura['xml_path']);
+        throw new Exception("El archivo XML físico no existe.");
     }
 
+    // 3. Leer contenido
     $xml_content = file_get_contents($ruta_xml);
+    if (empty($xml_content)) throw new Exception("El archivo XML está vacío.");
 
-    // 3. Conectar a API Digibox y Timbrar
+    // 4. Conectar y Timbrar
     $digibox = new DigiboxApi();
-    
-    // Aquí ocurre la magia. Si falla, saltará al catch
+
+    // Digibox V4 devuelve el XML STRING timbrado si es exitoso
     $xml_timbrado_str = $digibox->timbrar($xml_content);
 
-    if (empty($xml_timbrado_str) || strpos($xml_timbrado_str, 'TFD') === false) {
-        throw new Exception("La respuesta del PAC no parece un XML válido timbrado.");
-    }
-
-    // 4. Sobreescribir el archivo con el XML YA TIMBRADO (Con el nodo TimbreFiscalDigital)
+    // 5. Sobreescribir el archivo con el XML TIMBRADO
     file_put_contents($ruta_xml, $xml_timbrado_str);
 
-    // 5. Extraer UUID del XML Timbrado para guardar en BD
+    // 6. Extraer UUID del XML (Usando DOMDocument)
     $dom = new DOMDocument();
-    // Suprimimos errores de formato al cargar para evitar warnings en logs
-    $oldVal = libxml_use_internal_errors(true);
     $dom->loadXML($xml_timbrado_str);
-    libxml_use_internal_errors($oldVal);
 
     $xpath = new DOMXPath($dom);
     $xpath->registerNamespace('tfd', 'http://www.sat.gob.mx/TimbreFiscalDigital');
-    
+
     $uuid = '';
     $nodos = $xpath->query('//tfd:TimbreFiscalDigital');
 
     if ($nodos->length > 0) {
         $nodoTimbre = $nodos->item(0);
-        // CORRECCIÓN: Verificamos que sea un Elemento antes de pedir atributos
+
         if ($nodoTimbre instanceof DOMElement) {
             $uuid = $nodoTimbre->getAttribute('UUID');
         }
     }
 
     if (empty($uuid)) {
-        // Opcional: Si no hay UUID, algo salió mal aunque el PAC dijera 200 OK
-        throw new Exception("No se pudo leer el UUID del XML timbrado.");
+        throw new Exception("Se recibió respuesta del PAC pero no se pudo leer el UUID.");
     }
 
-    // 6. Actualizar Base de Datos
+    // 7. Actualizar BD
     $sqlUpd = "UPDATE facturas SET 
                 uuid = ?, 
                 estado = 'timbrado', 
@@ -91,11 +86,10 @@ try {
     $respuesta['message'] = 'Factura timbrada exitosamente';
     $respuesta['uuid'] = $uuid;
     $respuesta['xml_url'] = 'uploads/xml_timbrados/' . $factura['xml_path'];
-
 } catch (Exception $e) {
     $respuesta['success'] = false;
     $respuesta['message'] = $e->getMessage();
 }
 
+ob_end_clean();
 echo json_encode($respuesta);
-?>

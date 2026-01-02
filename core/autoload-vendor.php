@@ -31,6 +31,7 @@ spl_autoload_register(function ($class) {
         'GuzzleHttp\\Promise\\'             => __DIR__ . '/../vendor/guzzlehttp/promises/src/',
         'Psr\\Http\\Message\\'              => __DIR__ . '/../vendor/psr/http-message/src/',
         'Psr\\Http\\Client\\'               => __DIR__ . '/../vendor/psr/http-client/src/',
+        'Psr\\Log\\'                        => __DIR__ . '/../vendor/psr/log/src/',
         // --- Email ---
         'PHPMailer\\PHPMailer\\'            => __DIR__ . '/../vendor/phpmailer/phpmailer/src/',
 
@@ -39,6 +40,9 @@ spl_autoload_register(function ($class) {
         'Dompdf\\'                          => __DIR__ . '/../vendor/dompdf/dompdf/src/',
         'Smalot\\PdfParser\\'               => __DIR__ . '/../vendor/smalot/pdfparser/src/',
         'Spatie\\PdfToText\\'               => __DIR__ . '/../vendor/spatie/pdf-to-text/src/',
+
+        //--- Cancelacion SAT ---
+        'Phpcfdi//xml-cancelacion/'          => __DIR__ . '/../vendor/phpcfdi/xml-cancelacion/src/',
     ];
     
     foreach ($prefixes as $prefix => $baseDir) {

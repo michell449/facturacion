@@ -1126,7 +1126,7 @@ class PHPMailer
                     '[!#-\'*+\/-9=?^-~-]+|"(?>(?>[\x01-\x08\x0B\x0C\x0E-!#-\[\]-\x7F]|\\\[\x00-\xFF]))*")' .
                     '(?>\.(?>[!#-\'*+\/-9=?^-~-]+|"(?>(?>[\x01-\x08\x0B\x0C\x0E-!#-\[\]-\x7F]|\\\[\x00-\xFF]))*"))*' .
                     '@(?>(?![a-z0-9-]{64,})(?>[a-z0-9](?>[a-z0-9-]*[a-z0-9])?)(?>\.(?![a-z0-9-]{64,})' .
-                    '(?>[a-z0-9](?>[a-z0-9-]*[a-z0-9])?)){0,126}|\[(?:(?>IPv6:(?>(?>[a-f0-9]{1,4})(?>:' .
+                    '(?>[a-z0-9](?>[a-z0-9-]*[a-z0-9])?)){0,126}|\[(?:(?>IPv6:(?>(?>(?>[a-f0-9]{1,4})(?>:' .
                     '[a-f0-9]{1,4}){7}|(?!(?:.*[a-f0-9][:\]]){8,})(?>[a-f0-9]{1,4}(?>:[a-f0-9]{1,4}){0,6})?' .
                     '::(?>[a-f0-9]{1,4}(?>:[a-f0-9]{1,4}){0,6})?))|(?>(?>IPv6:(?>[a-f0-9]{1,4}(?>:' .
                     '[a-f0-9]{1,4}){5}:|(?!(?:.*[a-f0-9]:){6,})(?>[a-f0-9]{1,4}(?>:[a-f0-9]{1,4}){0,4})?' .
@@ -1857,7 +1857,7 @@ class PHPMailer
                         } else {
                             $message .= $buf . $soft_break;
                         }
-                        $buf = '';
+                                               $buf = '';
                     }
                     while (strlen($word) > 0) {
                         if ($length <= 0) {
@@ -2649,24 +2649,13 @@ class PHPMailer
             // Compatibilidad con PHP >= 7.4 donde get_magic_quotes_runtime fue removido
             $magic_quotes = false;
             if (function_exists('get_magic_quotes_runtime')) {
-                $magic_quotes = get_magic_quotes_runtime();
+                $magic_quotes = @get_magic_quotes_runtime();
             }
             if ($magic_quotes) {
-                if (function_exists('set_magic_quotes_runtime')) {
-                    set_magic_quotes_runtime(false);
-                } else {
-                    @ini_set('magic_quotes_runtime', false);
-                }
+                @ini_set('magic_quotes_runtime', 0);
             }
             $file_buffer = file_get_contents($path);
             $file_buffer = $this->encodeString($file_buffer, $encoding);
-            if ($magic_quotes) {
-                if (function_exists('set_magic_quotes_runtime')) {
-                    set_magic_quotes_runtime($magic_quotes);
-                } else {
-                    @ini_set('magic_quotes_runtime', $magic_quotes);
-                }
-            }
             return $file_buffer;
         } catch (Exception $exc) {
             $this->setError($exc->getMessage());
@@ -2738,6 +2727,7 @@ class PHPMailer
             case 'comment':
                 $matchcount = preg_match_all('/[()"]/', $str, $matches);
                 // Intentional fall-through
+                // for this reason we build the $pattern without including delimiters and []
             case 'text':
             default:
                 $matchcount += preg_match_all('/[\000-\010\013\014\016-\037\177-\377]/', $str, $matches);

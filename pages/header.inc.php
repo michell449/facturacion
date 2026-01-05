@@ -20,8 +20,8 @@
                     </a>
                 </li>
                 <li class="nav-item mx-1">
-                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == 'facturar') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="panel?pg=facturar">
-                        <i class="bi bi-receipt-cutoff me-2"></i> Facturar
+                    <a class="nav-link d-flex align-items-center rounded-pill px-3 py-2 <?php echo ($pagePath == 'facturar-cliente') ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="panel?pg=facturar-cliente">
+                        <i class="bi bi-receipt-cutoff me-2"></i> Facturar mis Compras
                     </a>
                 </li>
                 <li class="nav-item mx-1">

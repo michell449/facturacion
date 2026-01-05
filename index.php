@@ -67,6 +67,7 @@ $accessMap = [
     'configuracion' => ['cliente'],
     'soporte' => ['cliente'],
     'registro-info-usuarios' => ['cliente'],
+    'detalle-ticket' => ['cliente'],
 
     // Páginas de Administrador 
     'inicio-admin' => ['admin'], 

@@ -74,7 +74,7 @@ try {
     // Crear instancia de la API de Finkok
     $finkok = new FinkokApi($finkokUser, $finkokPass, $enProduccion);
     
-    // Intentar cancelar en Finkok
+    // Intentar cancelar con el método SOAP estándar (corregido)
     $resultado = $finkok->cancelarFactura(
         $factura['rfc_emisor'],
         $factura['uuid'],

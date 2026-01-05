@@ -337,13 +337,18 @@
             ${(factura.pdf_path && factura.pdf_path !== '') ? `
                 <button type="button" class="btn btn-outline-success" onclick="descargarPDF('${factura.pdf_path.replace(/'/g, "\\'")}')"
                         title="Descargar PDF">
-                    <i class="bi bi-download me-1"></i>PDF
+                    <i class="bi bi-file-pdf me-1"></i>PDF
+                </button>
+            ` : factura.estatus === 'timbrada' ? `
+                <button type="button" class="btn btn-outline-success" onclick="generarPDF(${factura.id_factura})"
+                        title="Generar y descargar PDF">
+                    <i class="bi bi-file-pdf me-1"></i>Generar PDF
                 </button>
             ` : ''}
             ${(factura.xml_path && factura.xml_path !== '') ? `
                 <button type="button" class="btn btn-outline-info" onclick="descargarXML('${factura.xml_path.replace(/'/g, "\\'")}')"
                         title="Descargar XML">
-                    <i class="bi bi-download me-1"></i>XML
+                    <i class="bi bi-file-earmark-code me-1"></i>XML
                 </button>
             ` : ''}
             ${factura.estatus === 'timbrada' ? `
@@ -701,4 +706,68 @@
             document.getElementById(id).checked = true;
         });
     }
+
+    /**
+     * Generar PDF de una factura
+     */
+    function generarPDF(idFactura) {
+        Swal.fire({
+            title: 'Generando PDF...',
+            text: 'Por favor espera mientras se genera el PDF de la factura',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Abrir el PDF en una nueva ventana/pestaña
+        const url = `core/generar-pdf-factura.php?id_factura=${idFactura}&guardar=1`;
+        const ventana = window.open(url, '_blank');
+        
+        // Cerrar el loading después de un momento
+        setTimeout(() => {
+            Swal.close();
+            if (!ventana) {
+                Swal.fire('Advertencia', 'El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes para este sitio.', 'warning');
+            } else {
+                // Recargar las facturas para actualizar el botón
+                cargarFacturas();
+            }
+        }, 1500);
+    }
+
+    /**
+     * Descargar PDF existente
+     */
+    function descargarPDF(rutaPdf) {
+        if (!rutaPdf || rutaPdf === '') {
+            Swal.fire('Error', 'No se encontró la ruta del archivo PDF', 'error');
+            return;
+        }
+
+        // Construir la ruta completa
+        const rutaCompleta = rutaPdf.startsWith('http') ? rutaPdf : `${rutaPdf}`;
+        
+        // Crear un enlace temporal y hacer clic en él
+        fetch(rutaCompleta)
+            .then(response => {
+                if (!response.ok) throw new Error('Archivo no encontrado');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = rutaPdf.split('/').pop();
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('Error al descargar PDF:', error);
+                Swal.fire('Error', 'No se pudo descargar el archivo PDF: ' + error.message, 'error');
+            });
+    }
+
 </script>

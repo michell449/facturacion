@@ -23,23 +23,27 @@ spl_autoload_register(function ($class) {
         'PhpCfdi\\Credentials\\'            => __DIR__ . '/../vendor/phpcfdi/credentials/src/',
         'PhpCfdi\\Finkok\\'                 => __DIR__ . '/../vendor/phpcfdi/finkok/src/',
 
+        // --- PDF Generation (mPDF y dependencias) ---
+        'Mpdf\\'                            => __DIR__ . '/../vendor/mpdf/mpdf/src/',
+        'Mpdf\\PsrLogAwareTrait\\'          => __DIR__ . '/../vendor/mpdf/psr-log-aware-trait/src/',
+        'Mpdf\\PsrHttpMessageShim\\'        => __DIR__ . '/../vendor/mpdf/psr-http-message-shim/src/',
+        'setasign\\Fpdi\\'                  => __DIR__ . '/../vendor/setasign/fpdi/src/',
+        'Dompdf\\'                          => __DIR__ . '/../vendor/dompdf/dompdf/src/',
+        'Smalot\\PdfParser\\'               => __DIR__ . '/../vendor/smalot/pdfparser/src/',
+        'Spatie\\PdfToText\\'               => __DIR__ . '/../vendor/spatie/pdf-to-text/src/',
+
         // --- HTTP / PSR / Guzzle ---
-        'Http\\Message\\'              => __DIR__ . '/../vendor/psr/http-message/src/',
-        'Http\\Client\\'               => __DIR__ . '/../vendor/psr/http-client/src/',
+        'Http\\Message\\'                   => __DIR__ . '/../vendor/psr/http-message/src/',
+        'Http\\Client\\'                    => __DIR__ . '/../vendor/psr/http-client/src/',
         'GuzzleHttp\\'                      => __DIR__ . '/../vendor/guzzlehttp/guzzle/src/',
         'GuzzleHttp\\Psr7\\'                => __DIR__ . '/../vendor/guzzlehttp/psr7/src/',
         'GuzzleHttp\\Promise\\'             => __DIR__ . '/../vendor/guzzlehttp/promises/src/',
         'Psr\\Http\\Message\\'              => __DIR__ . '/../vendor/psr/http-message/src/',
         'Psr\\Http\\Client\\'               => __DIR__ . '/../vendor/psr/http-client/src/',
         'Psr\\Log\\'                        => __DIR__ . '/../vendor/psr/log/src/',
+        
         // --- Email ---
         'PHPMailer\\PHPMailer\\'            => __DIR__ . '/../vendor/phpmailer/phpmailer/src/',
-
-        // --- PDF ---
-        'Mpdf\\'                            => __DIR__ . '/../vendor/mpdf/mpdf/src/',
-        'Dompdf\\'                          => __DIR__ . '/../vendor/dompdf/dompdf/src/',
-        'Smalot\\PdfParser\\'               => __DIR__ . '/../vendor/smalot/pdfparser/src/',
-        'Spatie\\PdfToText\\'               => __DIR__ . '/../vendor/spatie/pdf-to-text/src/',
 
         //--- Cancelacion SAT ---
         'Phpcfdi//xml-cancelacion/'          => __DIR__ . '/../vendor/phpcfdi/xml-cancelacion/src/',

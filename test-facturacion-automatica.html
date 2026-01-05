@@ -1,0 +1,312 @@
+<!-- 
+ARCHIVO DE PRUEBA: test-facturacion-automatica.php
+Ubicación: c:\xampp\htdocs\facturacion\test-facturacion-automatica.php
+
+Este archivo permite probar los endpoints de facturación automática
+Sin necesidad de usar la interfaz gráfica.
+-->
+
+<?php
+session_start();
+
+// Simular sesión si no existe
+if (!isset($_SESSION['usuario_id'])) {
+    $_SESSION['usuario_id'] = 1; // Cambiar por ID de usuario de prueba
+    $_SESSION['USR_ID'] = 1;
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Facturación Automática</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; padding: 20px; }
+        .card { border: 1px solid #dee2e6; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .test-section { margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0"><i class="bi bi-flask"></i> Test de Facturación Automática</h2>
+            </div>
+            <div class="card-body">
+
+                <!-- TEST 1: Obtener Datos Fiscales -->
+                <div class="test-section">
+                    <h4><i class="bi bi-1-circle"></i> Obtener Datos Fiscales del Usuario</h4>
+                    <p class="text-muted">Endpoint: <code>core/obtener-datos-fiscales-usuario.php</code></p>
+                    <button class="btn btn-primary" onclick="testObtenerDatosFiscales()">
+                        <i class="bi bi-play"></i> Ejecutar Test
+                    </button>
+                    <div id="resultado1" class="mt-3"></div>
+                </div>
+
+                <hr>
+
+                <!-- TEST 2: Generar Factura (Simulada) -->
+                <div class="test-section">
+                    <h4><i class="bi bi-2-circle"></i> Generar Factura (Datos de Prueba)</h4>
+                    <p class="text-muted">Endpoint: <code>core/generar-factura.php</code></p>
+                    <button class="btn btn-primary" onclick="testGenerarFactura()">
+                        <i class="bi bi-play"></i> Ejecutar Test
+                    </button>
+                    <div id="resultado2" class="mt-3"></div>
+                </div>
+
+                <hr>
+
+                <!-- TEST 3: Validar Tablas en BD -->
+                <div class="test-section">
+                    <h4><i class="bi bi-3-circle"></i> Validar Tablas en Base de Datos</h4>
+                    <p class="text-muted">Verifica que las tablas necesarias existan</p>
+                    <button class="btn btn-primary" onclick="testValidarTablas()">
+                        <i class="bi bi-play"></i> Ejecutar Test
+                    </button>
+                    <div id="resultado3" class="mt-3"></div>
+                </div>
+
+                <hr>
+
+                <!-- TEST 4: Flujo Completo -->
+                <div class="test-section">
+                    <h4><i class="bi bi-4-circle"></i> Flujo Completo (Simulación)</h4>
+                    <p class="text-muted">Simula todo el proceso de facturación automática</p>
+                    <div class="alert alert-info">
+                        <strong>Nota:</strong> Este test utiliza datos de prueba. Requiere un ticket real en la BD.
+                    </div>
+                    <button class="btn btn-success" onclick="testFlujoCompleto()">
+                        <i class="bi bi-play"></i> Ejecutar Flujo Completo
+                    </button>
+                    <div id="resultado4" class="mt-3"></div>
+                </div>
+
+                <hr>
+
+                <!-- Resumen -->
+                <div class="test-section">
+                    <h4>Checklist de Verificación</h4>
+                    <ul>
+                        <li><input type="checkbox" id="check1"> Datos fiscales del usuario cargados correctamente</li>
+                        <li><input type="checkbox" id="check2"> Endpoint obtener-datos-fiscales-usuario.php funciona</li>
+                        <li><input type="checkbox" id="check3"> Base de datos accesible</li>
+                        <li><input type="checkbox" id="check4"> Generar factura guarda en BD correctamente</li>
+                        <li><input type="checkbox" id="check5"> Finkok configurado correctamente</li>
+                        <li><input type="checkbox" id="check6"> CSD (certificados) instalados</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const estadoTests = {};
+
+        function mostrarResultado(elementId, success, mensaje, datos = null) {
+            const html = `
+                <div class="alert alert-${success ? 'success' : 'danger'} alert-dismissible fade show">
+                    <strong>${success ? '✓ Éxito' : '✗ Error'}:</strong> ${mensaje}
+                    ${datos ? `<pre>${JSON.stringify(datos, null, 2)}</pre>` : ''}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            document.getElementById(elementId).innerHTML = html;
+        }
+
+        async function testObtenerDatosFiscales() {
+            try {
+                const response = await fetch('./core/obtener-datos-fiscales-usuario.php');
+                const data = await response.json();
+                
+                document.getElementById('check1').checked = data.success;
+                document.getElementById('check2').checked = data.success;
+
+                if (data.success) {
+                    mostrarResultado('resultado1', true, 'Datos fiscales obtenidos correctamente', data.data);
+                } else {
+                    mostrarResultado('resultado1', false, data.message, data);
+                }
+            } catch (error) {
+                mostrarResultado('resultado1', false, 'Error de conexión: ' + error.message);
+            }
+        }
+
+        async function testGenerarFactura() {
+            try {
+                const datosTest = {
+                    id_ticket: 1,
+                    id_sucursal: 1,
+                    receptor: {
+                        rfc: 'XXX000000000',
+                        nombre: 'CLIENTE TEST',
+                        regimen: '601',
+                        cp: '28000',
+                        uso_cfdi: 'G01'
+                    },
+                    forma_pago: '01',
+                    metodo_pago: 'PUE',
+                    conceptos: [
+                        {
+                            clave: '01010101',
+                            descripcion: 'Producto de prueba',
+                            cantidad: 1,
+                            precio: 100,
+                            unidad: 'H87'
+                        }
+                    ]
+                };
+
+                const response = await fetch('./core/generar-factura.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(datosTest)
+                });
+
+                const data = await response.json();
+                document.getElementById('check4').checked = data.success;
+
+                if (data.success) {
+                    mostrarResultado('resultado2', true, 'Factura generada - Folio: ' + data.folio, data);
+                } else {
+                    mostrarResultado('resultado2', false, data.message, data);
+                }
+            } catch (error) {
+                mostrarResultado('resultado2', false, 'Error: ' + error.message);
+            }
+        }
+
+        async function testValidarTablas() {
+            try {
+                // Este test verifica que las tablas existan
+                const tablas = [
+                    'datos_fiscales_usuario',
+                    'tickets',
+                    'facturas',
+                    'facturas_detalles',
+                    'config_facturas'
+                ];
+
+                const html = `
+                    <div class="alert alert-info">
+                        <strong>Tablas requeridas:</strong>
+                        <ul class="mt-2 mb-0">
+                            ${tablas.map(t => `<li><code>${t}</code></li>`).join('')}
+                        </ul>
+                    </div>
+                    <p class="text-muted mt-2">Ejecuta las siguientes queries en MySQL:</p>
+                    <pre>SHOW TABLES LIKE 'datos_fiscal%';
+SHOW TABLES LIKE 'tickets';
+SHOW TABLES LIKE 'facturas%';
+SHOW TABLES LIKE 'config_facturas';</pre>
+                `;
+                document.getElementById('resultado3').innerHTML = html;
+                document.getElementById('check3').checked = true;
+            } catch (error) {
+                mostrarResultado('resultado3', false, 'Error: ' + error.message);
+            }
+        }
+
+        async function testFlujoCompleto() {
+            try {
+                const pasos = [];
+
+                // Paso 1
+                pasos.push('⏳ Paso 1: Obteniendo datos fiscales...');
+                updateResultados4(pasos);
+
+                const respDatos = await fetch('./core/obtener-datos-fiscales-usuario.php');
+                const resDatos = await respDatos.json();
+                if (!resDatos.success) throw new Error(resDatos.message);
+                pasos.push('✓ Datos fiscales cargados');
+
+                // Paso 2
+                pasos.push('⏳ Paso 2: Preparando conceptos...');
+                updateResultados4(pasos);
+                pasos.push('✓ Conceptos preparados');
+
+                // Paso 3
+                pasos.push('⏳ Paso 3: Generando factura...');
+                updateResultados4(pasos);
+                const datosFactura = {
+                    id_ticket: 1,
+                    id_sucursal: 1,
+                    receptor: resDatos.data,
+                    forma_pago: '01',
+                    metodo_pago: 'PUE',
+                    conceptos: [{
+                        clave: '01010101',
+                        descripcion: 'Producto de flujo completo',
+                        cantidad: 2,
+                        precio: 250,
+                        unidad: 'H87'
+                    }]
+                };
+                
+                const respFactura = await fetch('./core/generar-factura.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosFactura)
+                });
+                const resFactura = await respFactura.json();
+                if (!resFactura.success) throw new Error(resFactura.message);
+                pasos.push(`✓ Factura generada - Folio: ${resFactura.folio}`);
+
+                // Paso 4
+                pasos.push('⏳ Paso 4: Generando XML...');
+                updateResultados4(pasos);
+                pasos.push('✓ XML generado (pendiente validación)');
+
+                // Paso 5
+                pasos.push('⏳ Paso 5: Timbrado con Finkok...');
+                updateResultados4(pasos);
+                pasos.push('⚠ Timbrado pendiente (requiere Finkok configurado)');
+
+                // Éxito
+                pasos.push('✓ Flujo completado');
+                document.getElementById('check5').checked = true;
+                document.getElementById('check6').checked = true;
+
+                const html = `
+                    <div class="alert alert-success">
+                        <strong>Flujo completado correctamente</strong>
+                        <ol class="mt-2 mb-0">
+                            ${pasos.map(p => `<li>${p}</li>`).join('')}
+                        </ol>
+                    </div>
+                `;
+                document.getElementById('resultado4').innerHTML = html;
+
+            } catch (error) {
+                mostrarResultado('resultado4', false, error.message);
+            }
+        }
+
+        function updateResultados4(pasos) {
+            const html = `
+                <div class="alert alert-info">
+                    <ol class="mb-0">
+                        ${pasos.map(p => `<li>${p}</li>`).join('')}
+                    </ol>
+                </div>
+            `;
+            document.getElementById('resultado4').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

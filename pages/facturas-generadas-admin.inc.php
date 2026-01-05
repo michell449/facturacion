@@ -200,15 +200,15 @@
 
     async function cargarSucursales() {
         try {
-            const response = await fetch('core/obtener-sucursales-usuario.php');
+            const response = await fetch('core/consultar-sucursales.php');
             const result = await response.json();
             
-            if (result.success) {
+            if (result.success && result.data) {
                 const select = document.getElementById('filtroSucursal');
-                result.sucursales.forEach(suc => {
+                result.data.forEach(suc => {
                     const option = document.createElement('option');
                     option.value = suc.id_empresa;
-                    option.textContent = suc.nombre_empresa;
+                    option.textContent = suc.razon_social || suc.nombre;
                     select.appendChild(option);
                 });
             }

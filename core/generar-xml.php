@@ -1,12 +1,31 @@
 <?php
-// core/generar-xml.php
+/**
+ * Generación de XML CFDI 4.0
+ * core/generar-xml.php
+ */
 
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
-header('Content-Type: application/json; charset=utf-8');
+// PRIMERO: Limpiar buffers previos
+while (ob_get_level() > 0) {
+    ob_end_clean();
+}
+
+// SEGUNDO: Iniciar buffer LIMPIO para capturar salida no deseada
 ob_start();
 
-require_once __DIR__ . '/autoload-vendor.php'; // Ajusta si usas composer directo
+// TERCERO: Configurar PHP para no mostrar errores en pantalla
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// CUARTO: Configurar UTF-8 interno de PHP
+mb_internal_encoding('UTF-8');
+ini_set('default_charset', 'UTF-8');
+
+// Headers JSON (ANTES de cualquier salida)
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-cache, must-revalidate');
+
+require_once __DIR__ . '/autoload-vendor.php';
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/class/db.php';
 require_once __DIR__ . '/sello-utils.php';
@@ -301,16 +320,23 @@ try {
             $descripcion
         );
         
-        $concepto = $creator->comprobante()->addConcepto([
+        // Preparar atributos del concepto
+        $atributosConcepto = [
             'ClaveProdServ' => trim($item['clave_prod_serv']),
-            'NoIdentificacion' => $item['no_identificacion'] ?? $item['id_detalle'],
             'Cantidad' => number_format($item['cantidad'], 6, '.', ''),
             'ClaveUnidad' => trim($item['clave_unidad']),
             'Descripcion' => $descripcion,
             'ValorUnitario' => number_format($item['valor_unitario'], 2, '.', ''),
             'Importe' => number_format($item['importe'], 2, '.', ''),
             'ObjetoImp' => trim($item['objeto_imp'])
-        ]);
+        ];
+        
+        // Solo agregar NoIdentificacion si no está vacío
+        if (!empty($item['no_identificacion'])) {
+            $atributosConcepto['NoIdentificacion'] = trim($item['no_identificacion']);
+        }
+        
+        $concepto = $creator->comprobante()->addConcepto($atributosConcepto);
 
         if ($item['objeto_imp'] === '02') {
             $traslados = $concepto->addImpuestos()->addTraslados();
@@ -355,9 +381,24 @@ try {
     $respuesta['xml_url'] = 'uploads/xml_timbrados/' . $nombreArchivo;
 
 } catch (Throwable $e) {
+    error_log("EXCEPCIÓN EN GENERAR-XML: " . $e->getMessage());
+    error_log("Trace: " . $e->getTraceAsString());
+    
+    http_response_code(500);
+    $respuesta['success'] = false;
     $respuesta['message'] = $e->getMessage();
+    $respuesta['debug'] = [
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ];
 }
 
-ob_end_clean();
-echo json_encode($respuesta);
-?>
+// ============================================================================
+// SALIDA FINAL: Siempre limpio, siempre JSON válido
+// ============================================================================
+$outputBuffer = ob_get_clean();
+if (!empty($outputBuffer)) {
+    error_log("OUTPUT INESPERADO CAPTURADO EN XML: " . substr($outputBuffer, 0, 200));
+}
+echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
+exit;

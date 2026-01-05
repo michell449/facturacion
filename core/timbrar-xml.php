@@ -1,15 +1,37 @@
 <?php
-//Ubicación: core/timbrar-xml.php
+/**
+ * Timbrado de XML con Finkok
+ * Ubicación: core/timbrar-xml.php
+ */
+
+// PRIMERO: Limpiar buffers previos
+while (ob_get_level() > 0) {
+    ob_end_clean();
+}
+
+// SEGUNDO: Iniciar buffer LIMPIO para capturar salida no deseada
+ob_start();
+
+// TERCERO: Configurar PHP para no mostrar errores en pantalla
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// CUARTO: Configurar UTF-8 interno de PHP
+mb_internal_encoding('UTF-8');
+ini_set('default_charset', 'UTF-8');
+
+// Headers JSON (ANTES de cualquier salida)
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-cache, must-revalidate');
+
 require_once __DIR__ . '/../core/autoload-vendor.php';
 require_once __DIR__ . '/../api/FinkokApi.php';
 require_once __DIR__ . '/class/db.php';
 
-header('Content-Type: application/json; charset=utf-8');
+$respuesta = ['success' => false, 'message' => 'Error desconocido'];
 
 try {
-    // =========================================================================
-    // 1. OBTENCIÓN DEL XML (SOLUCIÓN A TU ERROR)
-    // =========================================================================
     
     $xml_string = null;
     $id_factura = null;
@@ -64,14 +86,32 @@ try {
     if (empty($xml_string)) {
         throw new Exception("No se recibió el contenido XML ni se encontró una ruta de archivo válida.");
     }
+    
+    // Validar que el XML sea válido antes de enviar a Finkok
+    libxml_use_internal_errors(true);
+    $xmlDoc = simplexml_load_string($xml_string);
+    if ($xmlDoc === false) {
+        $errors = libxml_get_errors();
+        $errorMsg = "XML inválido: ";
+        foreach ($errors as $error) {
+            $errorMsg .= $error->message . " ";
+        }
+        libxml_clear_errors();
+        throw new Exception($errorMsg);
+    }
+    
+    // Log para debug
+    error_log("=== TIMBRADO FACTURA ID: $id_factura ===");
+    error_log("Tamaño XML: " . strlen($xml_string) . " bytes");
+    error_log("Primeros 200 caracteres: " . substr($xml_string, 0, 200));
 
     // =========================================================================
     // 2. CONFIGURACIÓN FINKOK
     // =========================================================================
     
-    $finkokUser   = 'michellflores822@gmail.com';  // CAMBIA A TUS DATOS REALES SI YA TIENES
-    $finkokPass   = 'Pankycontra2025.';        // CAMBIA A TUS DATOS REALES SI YA TIENES
-    $enProduccion = false;                 // false = Demo / true = Producción
+    $finkokUser   = 'michellflores822@gmail.com'; 
+    $finkokPass   = 'Pankycontra2025.';        
+    $enProduccion = false;                 
 
     $timbrador = new FinkokApi($finkokUser, $finkokPass, $enProduccion);
 
@@ -79,7 +119,10 @@ try {
     // 3. TIMBRAR
     // =========================================================================
 
+    error_log("Enviando XML a Finkok...");
     $resultado = $timbrador->timbrar($xml_string);
+    
+    error_log("Respuesta Finkok: " . json_encode($resultado));
 
     if ($resultado['success']) {
         // DATOS OBTENIDOS DE FINKOK
@@ -142,7 +185,7 @@ try {
         }
 
         // RESPUESTA EXITOSA
-        echo json_encode([
+        $respuesta = [
             'status'  => 'success',
             'success' => true,
             'message' => 'Factura timbrada correctamente',
@@ -150,24 +193,56 @@ try {
             'xml_url' => $rutaParaBD,
             'ruta_xml'=> $rutaParaBD,
             'fecha'   => $fechaTimbrado
-        ]);
+        ];
 
     } else {
         // ERROR DE FINKOK (Saldo agotado, RFC inválido, XML mal formado)
-        echo json_encode([
+        $mensajeError = $resultado['message'] ?? 'Error desconocido';
+        $detalle = $resultado['detail'] ?? '';
+        
+        error_log("ERROR FINKOK: $mensajeError");
+        if ($detalle) {
+            error_log("Detalle: $detalle");
+        }
+        
+        $respuesta = [
             'status'  => 'error',
-            'message' => 'Error de Finkok: ' . $resultado['message'],
-            'detail'  => $resultado['detail'] ?? null,
+            'success' => false,
+            'message' => 'Error de Finkok: ' . $mensajeError,
+            'detail'  => $detalle,
             'fault_code' => $resultado['fault_code'] ?? null,
             'fault_string' => $resultado['fault_string'] ?? null,
             'status_code' => $resultado['status_code'] ?? null
-        ]);
+        ];
     }
 
 } catch (Exception $e) {
-    echo json_encode([
+    error_log("EXCEPCIÓN TIMBRADO: " . $e->getMessage());
+    error_log("Stack: " . $e->getTraceAsString());
+    
+    http_response_code(500);
+    $respuesta = [
         'status'  => 'error',
-        'message' => 'Excepción del sistema: ' . $e->getMessage()
-    ]);
+        'success' => false,
+        'message' => 'Excepción del sistema: ' . $e->getMessage(),
+        'debug' => [
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]
+    ];
 }
+
+// ============================================================================
+// SALIDA FINAL: Siempre limpio, siempre JSON válido
+// ============================================================================
+$outputBuffer = ob_get_clean();
+if (!empty($outputBuffer)) {
+    error_log("OUTPUT INESPERADO CAPTURADO EN TIMBRADO: " . substr($outputBuffer, 0, 200));
+}
+
+// Si no se definió respuesta, usar la que capturó datos anteriores
+if (isset($respuesta) && !empty($respuesta)) {
+    echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
+}
+exit;
 ?>

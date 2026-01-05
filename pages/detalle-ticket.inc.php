@@ -1,197 +1,119 @@
-<!-- Página de detalle del ticket encontrado -->
+<!-- Página de detalle del ticket -->
 <div class="content-wrapper">
-    <!-- Header -->
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0 text-dark fw-bold">
-                        <i class="bi bi-receipt me-2 text-primary"></i>Detalles del Ticket
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="#" onclick="irABusqueda()">Inicio</a></li>
-                        <li class="breadcrumb-item active">Ticket</li>
-                    </ol>
+                    <h1 class="m-0"><i class="fas fa-receipt me-2"></i>Información del Ticket</h1>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Contenido principal -->
     <div class="content">
         <div class="container-fluid">
-            <!-- Información del Ticket Encontrado -->
-            <div class="row mb-3">
-                <div class="col-lg-12">
-                    <div class="card card-primary card-outline shadow-sm">
-                        <div class="card-header border-0 bg-white">
-                            <h3 class="card-title text-primary fw-bold">
-                                <i class="bi bi-check-circle me-2"></i>Información del Ticket
-                            </h3>
+            <!-- Card principal -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-info-circle me-2"></i>Datos del Ticket</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Información básica -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <label class="text-muted small">Folio</label>
+                            <div class="h5 mb-0" id="ticketFolio">-</div>
                         </div>
-
-                        <div class="card-body">
-                            <div class="row">
-                                <!-- Datos del Ticket -->
-                                <div class="col-md-3">
-                                    <div class="info-box bg-light">
-                                        <span class="info-box-icon bg-primary">
-                                            <i class="bi bi-receipt"></i>
-                                        </span>
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">Folio</span>
-                                            <span class="info-box-number text-primary fw-bold" id="ticketFolio">-</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="info-box bg-light">
-                                        <span class="info-box-icon bg-primary">
-                                            <i class="bi bi-calendar"></i>
-                                        </span>
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">Fecha de Venta</span>
-                                            <span class="info-box-number text-primary fw-bold" id="ticketFecha">-</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="info-box bg-light">
-                                        <span class="info-box-icon bg-primary">
-                                            <i class="bi bi-building"></i>
-                                        </span>
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">Sucursal</span>
-                                            <span class="info-box-number text-primary fw-bold" id="ticketSucursal">-</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="info-box bg-light">
-                                        <span class="info-box-icon bg-primary">
-                                            <i class="bi bi-code"></i>
-                                        </span>
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">Código</span>
-                                            <span class="info-box-number text-primary fw-bold" id="ticketCodigoSuc">-</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <label class="text-muted small">Fecha</label>
+                            <div class="h5 mb-0" id="ticketFecha">-</div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <label class="text-muted small">Sucursal</label>
+                            <div class="h5 mb-0" id="ticketSucursal">-</div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <label class="text-muted small">Código Sucursal</label>
+                            <div class="h5 mb-0" id="ticketCodigoSuc">-</div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Detalles de la Compra -->
-            <div class="card card-primary card-outline shadow-sm mb-3">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title fw-bold mb-0">
-                        <i class="bi bi-list-check me-2"></i>Detalles de la Compra
-                    </h3>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover mb-0 tabla-mejorada">
-                            <thead class="thead-azul">
+                    <hr>
+
+                    <!-- Productos -->
+                    <h5 class="mb-3"><i class="fas fa-list me-2"></i>Productos</h5>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover">
+                            <thead class="table-light">
                                 <tr>
-                                    <th class="ps-4">Descripción</th>
-                                    <th class="text-center" style="width: 12%;">Cantidad</th>
-                                    <th class="text-end" style="width: 15%;">Precio Unit.</th>
-                                    <th class="text-end pe-4" style="width: 15%;">Importe</th>
+                                    <th>Descripción</th>
+                                    <th class="text-center" style="width: 100px;">Cantidad</th>
+                                    <th class="text-end" style="width: 120px;">Precio Unit.</th>
+                                    <th class="text-end" style="width: 120px;">Importe</th>
                                 </tr>
                             </thead>
                             <tbody id="detallesTicket">
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Cargando...</span>
-                                        </div>
-                                        <p class="mt-2 mb-0">Cargando detalles...</p>
+                                    <td colspan="4" class="text-center py-3">
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        Cargando...
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
 
-            <!-- Resumen de Montos -->
-            <div class="row mb-3">
-                <div class="col-lg-5 ms-auto">
-                    <div class="card card-primary card-outline shadow-sm">
-                        <div class="card-header border-0 bg-white">
-                            <h3 class="card-title text-primary fw-bold">
-                                <i class="bi bi-calculator me-2"></i>Resumen
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">Subtotal:</span>
-                                <span class="fw-semibold" id="resumenSubtotal">$0.00</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
-                                <span class="text-muted">IVA (16%):</span>
-                                <span class="fw-semibold text-primary" id="resumenImpuesto">$0.00</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold fs-6">Total a Facturar:</span>
-                                <span class="fw-bold fs-5 text-primary">
-                                    <i class="bi bi-cash-coin me-1"></i>
-                                    <span id="resumenTotal">$0.00</span>
-                                </span>
-                            </div>
+                    <!-- Totales -->
+                    <div class="row">
+                        <div class="col-md-6 offset-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-end"><strong>Subtotal:</strong></td>
+                                    <td class="text-end" id="resumenSubtotal">$0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end"><strong>IVA (16%):</strong></td>
+                                    <td class="text-end" id="resumenImpuesto">$0.00</td>
+                                </tr>
+                                <tr class="table-active">
+                                    <td class="text-end"><strong>Total:</strong></td>
+                                    <td class="text-end"><strong class="text-primary fs-5" id="resumenTotal">$0.00</strong></td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Métodos de Pago -->
-            <div class="card card-primary card-outline shadow-sm mb-3">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title fw-bold mb-0">
-                        <i class="bi bi-credit-card me-2"></i>Métodos de Pago
-                    </h3>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover mb-0 tabla-mejorada">
-                            <thead class="thead-azul">
+                    <hr>
+
+                    <!-- Métodos de pago -->
+                    <h5 class="mb-3"><i class="fas fa-credit-card me-2"></i>Forma de Pago</h5>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm">
+                            <thead class="table-light">
                                 <tr>
-                                    <th class="ps-4" style="width: 30%;">Método de Pago</th>
-                                    <th class="ps-3" style="width: 50%;">Forma de Pago</th>
-                                    <th class="text-end pe-4" style="width: 20%;">Monto</th>
+                                    <th>Método de Pago</th>
+                                    <th>Forma de Pago</th>
+                                    <th class="text-end" style="width: 150px;">Monto</th>
                                 </tr>
                             </thead>
                             <tbody id="metodosTicket">
                                 <tr>
-                                    <td colspan="3" class="text-center text-muted py-4">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Cargando...</span>
-                                        </div>
-                                        <p class="mt-2 mb-0">Cargando métodos de pago...</p>
+                                    <td colspan="3" class="text-center py-3">
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        Cargando...
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-
-            <!-- Acciones -->
-            <div class="row mb-3">
-                <div class="col-12">
-                    <div class="d-flex gap-2 justify-content-end">
-                        <button type="button" class="btn btn-outline-primary" id="btnNuevaBusqueda">
-                            <i class="bi bi-arrow-counterclockwise me-2"></i>
-                            Nueva Búsqueda
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" id="btnNuevaBusqueda">
+                            <i class="fas fa-arrow-left me-2"></i>Nueva Búsqueda
                         </button>
                         <button type="button" class="btn btn-primary" id="btnFacturar">
-                            <i class="bi bi-file-earmark-pdf me-2"></i>
-                            Generar Factura
+                            <i class="fas fa-file-invoice me-2"></i>Generar Factura
                         </button>
                     </div>
                 </div>
@@ -229,9 +151,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Event Listeners
-    document.getElementById('btnVolverBusqueda').addEventListener('click', irABusqueda);
-    document.getElementById('btnNuevaBusqueda').addEventListener('click', irABusqueda);
-    document.getElementById('btnFacturar').addEventListener('click', facturarTicket);
+    const btnNuevaBusqueda = document.getElementById('btnNuevaBusqueda');
+    const btnFacturar = document.getElementById('btnFacturar');
+    
+    if (btnNuevaBusqueda) {
+        btnNuevaBusqueda.addEventListener('click', irABusqueda);
+    }
+    
+    if (btnFacturar) {
+        btnFacturar.addEventListener('click', facturarTicket);
+    }
 });
 
 // Mostrar información del ticket
@@ -254,28 +183,21 @@ function mostrarTicket(ticket) {
             const cant = detalle.cant || detalle.cantidad || 0;
             
             htmlDetalles += `
-                <tr class="fila-detalle">
-                    <td class="ps-4">
-                        <i class="bi bi-box-seam text-primary me-2"></i>
-                        <strong>${descr}</strong>
-                    </td>
-                    <td class="text-center">
-                        <span class="badge bg-light text-dark border">${cant}</span>
-                    </td>
+                <tr>
+                    <td>${descr}</td>
+                    <td class="text-center">${cant}</td>
                     <td class="text-end">$${precioUnit}</td>
-                    <td class="text-end pe-4">
-                        <strong class="text-primary">$${importe}</strong>
-                    </td>
+                    <td class="text-end"><strong>$${importe}</strong></td>
                 </tr>
             `;
         });
     }
-    document.getElementById('detallesTicket').innerHTML = htmlDetalles || '<tr><td colspan="4" class="text-center text-muted py-4">Sin detalles disponibles</td></tr>';
+    document.getElementById('detallesTicket').innerHTML = htmlDetalles || '<tr><td colspan="4" class="text-center text-muted py-3">Sin productos</td></tr>';
 
     // Resumen
-    document.getElementById('resumenSubtotal').textContent = '$' + parseFloat(ticket.subtotal).toFixed(2);
-    document.getElementById('resumenImpuesto').textContent = '$' + parseFloat(ticket.impuesto).toFixed(2);
-    document.getElementById('resumenTotal').textContent = '$' + parseFloat(ticket.total).toFixed(2);
+    document.getElementById('resumenSubtotal').textContent = '$' + parseFloat(ticket.subtotal || 0).toFixed(2);
+    document.getElementById('resumenImpuesto').textContent = '$' + parseFloat(ticket.impuesto || 0).toFixed(2);
+    document.getElementById('resumenTotal').textContent = '$' + parseFloat(ticket.total || 0).toFixed(2);
 
     // Métodos de pago
     let htmlPagos = '';
@@ -314,14 +236,14 @@ function mostrarTicket(ticket) {
             
             htmlPagos += `
                 <tr>
-                    <td class="ps-3"><span class="badge bg-primary">${metodoTexto}</span></td>
-                    <td class="ps-3">${formaTexto}</td>
-                    <td class="text-end pe-3"><strong>$${monto}</strong></td>
+                    <td>${metodoTexto}</td>
+                    <td>${formaTexto}</td>
+                    <td class="text-end"><strong>$${monto}</strong></td>
                 </tr>
             `;
         });
     }
-    document.getElementById('metodosTicket').innerHTML = htmlPagos || '<tr><td colspan="3" class="text-center text-muted py-3">Sin métodos de pago</td></tr>';
+    document.getElementById('metodosTicket').innerHTML = htmlPagos || '<tr><td colspan="3" class="text-center text-muted py-3">Sin información de pago</td></tr>';
 }
 
 // Ir a búsqueda
@@ -331,14 +253,14 @@ function irABusqueda() {
 }
 
 // Facturar ticket
-function facturarTicket() {
+async function facturarTicket() {
     if (!ticketActual) {
         mostrarAlerta('No hay ticket seleccionado', 'danger');
         return;
     }
 
     // Mostrar confirmación
-    if (!confirm('¿Estás seguro de que deseas generar la factura para este ticket?')) {
+    if (!confirm('¿Estás seguro de que deseas generar la factura para este ticket?\n\nSe generará el XML, se timbrará con Finkok y se creará el PDF.')) {
         return;
     }
 
@@ -346,42 +268,126 @@ function facturarTicket() {
     const btn = document.getElementById('btnFacturar');
     const textOriginal = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generando factura...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando factura...';
 
-    const formData = new FormData();
-    formData.append('id_ticket', ticketActual.id_ticket);
-    formData.append('id_empresa', ticketActual.id_empresa);
+    try {
+        // Preparar datos para enviar
+        const datosFactura = {
+            id_ticket: ticketActual.id_ticket,
+            id_empresa: ticketActual.id_empresa
+        };
 
-    fetch('./core/generar-factura.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
+        // Llamar al endpoint que procesa todo el flujo
+        const response = await fetch('./core/generar-factura-ticket.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosFactura)
+        });
+
         if (!response.ok) {
             throw new Error('Error en la respuesta del servidor: ' + response.status);
         }
-        return response.json();
-    })
-    .then(data => {
-        btn.disabled = false;
-        btn.innerHTML = textOriginal;
+
+        const data = await response.json();
 
         if (data.success) {
-            mostrarAlerta('¡Factura generada correctamente! Folio: ' + data.folio, 'success');
-            // Limpiar y volver a búsqueda
-            setTimeout(() => {
-                irABusqueda();
-            }, 1500);
+            // Mostrar mensaje de éxito con detalles
+            let mensaje = `¡Factura generada exitosamente!<br>`;
+            mensaje += `<strong>Folio:</strong> ${data.folio}<br>`;
+            if (data.uuid) {
+                mensaje += `<strong>UUID:</strong> ${data.uuid.substring(0, 20)}...<br>`;
+            }
+            
+            // Crear modal con opciones de descarga
+            mostrarModalExito(data);
         } else {
-            mostrarAlerta(data.message || 'Error al generar la factura', 'danger');
+            throw new Error(data.message || 'Error desconocido al generar la factura');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
+
+    } catch (error) {
+        console.error('Error al facturar:', error);
+        mostrarAlerta('Error: ' + error.message, 'danger');
         btn.disabled = false;
         btn.innerHTML = textOriginal;
-        mostrarAlerta('Error al procesar la factura', 'danger');
+    }
+}
+
+// Modal de éxito con opciones de descarga
+function mostrarModalExito(data) {
+    const modalHTML = `
+        <div class="modal fade" id="modalFacturaExitosa" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-check-circle me-2"></i>Factura Generada Exitosamente
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-file-invoice fa-4x text-success mb-3"></i>
+                            <h4>Folio: ${data.folio}</h4>
+                            ${data.uuid ? `<p class="small text-muted">UUID: ${data.uuid}</p>` : ''}
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Tu factura ha sido timbrada correctamente y está lista para descargar.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            ${data.xml_url ? `
+                            <a href="${data.xml_url}" download class="btn btn-outline-primary" target="_blank">
+                                <i class="fas fa-file-code me-2"></i>Descargar XML
+                            </a>
+                            ` : ''}
+                            
+                            ${data.pdf_url ? `
+                            <a href="${data.pdf_url}&guardar=1" class="btn btn-outline-danger" target="_blank">
+                                <i class="fas fa-file-pdf me-2"></i>Descargar PDF
+                            </a>
+                            ` : ''}
+                            
+                            <a href="?pagina=facturas" class="btn btn-primary">
+                                <i class="fas fa-list me-2"></i>Ver Mis Facturas
+                            </a>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="volverABusqueda()">
+                            <i class="fas fa-arrow-left me-2"></i>Nueva Búsqueda
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Agregar modal al DOM
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHTML;
+    document.body.appendChild(modalContainer);
+
+    // Mostrar modal usando Bootstrap
+    const modal = new bootstrap.Modal(document.getElementById('modalFacturaExitosa'));
+    modal.show();
+
+    // Limpiar al cerrar
+    document.getElementById('modalFacturaExitosa').addEventListener('hidden.bs.modal', function () {
+        modalContainer.remove();
     });
+}
+
+// Función para volver a búsqueda desde el modal
+function volverABusqueda() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalFacturaExitosa'));
+    if (modal) {
+        modal.hide();
+    }
+    irABusqueda();
 }
 
 // Función auxiliar para formatear fechas
@@ -416,60 +422,3 @@ function mostrarAlerta(mensaje, tipo = 'info') {
 }
 </script>
 
-<style>
-.info-box {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-}
-
-.info-box-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 1.5rem;
-    margin-right: 1rem;
-}
-
-.info-box-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.info-box-text {
-    font-size: 0.875rem;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-.info-box-number {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-top: 0.25rem;
-}
-
-.table-primary {
-    background-color: #007bff !important;
-}
-
-.table-primary th {
-    color: white;
-    border-color: #0056b3 !important;
-}
-
-.card-primary.card-outline {
-    border-top: 3px solid #007bff;
-}
-
-.bg-primary {
-    background-color: #007bff !important;
-}
-</style>

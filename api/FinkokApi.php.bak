@@ -1,0 +1,185 @@
+<?php
+// Ubicación: C:\xampp\htdocs\facturacion\api\FinkokApi.php
+
+require_once __DIR__ . '/../core/autoload-vendor.php';
+
+use PhpCfdi\Credentials\Credential;
+use PhpCfdi\Finkok\QuickFinkok;
+use PhpCfdi\Finkok\FinkokEnvironment;
+use PhpCfdi\Finkok\FinkokSettings;
+// REMOVE or comment out: use PhpCfdi\XmlCancelacion\Credentials;
+use PhpCfdi\XmlCancelacion\Models\CancelReason;
+use CfdiUtils\Certificado\Certificado;
+use CfdiUtils\PemPrivateKey\PemPrivateKey;
+use PhpCfdi\Finkok\Services\Cancel\GetSatStatusService;
+use PhpCfdi\Finkok\Services\Cancel\GetSatStatusCommand;
+
+class FinkokApi
+{
+    private $finkok;
+    private $username = 'michellflores822@gmail.com';
+    private $password = 'Pankycontra2025.'; 
+
+    public function __construct($username, $password, $isProduction = false)
+    {
+        $this->username = $username;
+        $this->password = $password;
+
+        // Definimos el entorno
+        $env = $isProduction ? FinkokEnvironment::makeProduction() : FinkokEnvironment::makeDevelopment();
+        $settings = new FinkokSettings($username, $password);
+
+        // Instanciamos QuickFinkok
+        $this->finkok = new QuickFinkok($settings, $env);
+    }
+
+    public function timbrar($xmlContent)
+    {
+        try {
+            // Intentamos timbrar el XML (Método Stamp)
+            $stampResult = $this->finkok->stamp($xmlContent);
+
+            // Obtenemos el XML ya timbrado y el UUID
+            $xmlTimbrado = $stampResult->xml();
+            $uuid = $stampResult->uuid();
+            $faultString = $stampResult->faultString();
+            $faultCode = $stampResult->faultCode();
+            $statusCode = $stampResult->statusCode();
+            $alerts = $stampResult->alerts();
+
+            // Validación de seguridad básica
+            if (empty($xmlTimbrado) || empty($uuid)) {
+                // Construimos mensaje de diagnóstico detallado
+                $alertasTxt = [];
+                if ($alerts && $alerts->count() > 0) {
+                    foreach ($alerts as $alerta) {
+                        $alertasTxt[] = trim(($alerta->errorCode() ?? '') . ' ' . ($alerta->message() ?? ''));
+                    }
+                }
+
+                $detalle = [];
+                if ($faultCode || $faultString) {
+                    $detalle[] = "faultcode: {$faultCode}";
+                    $detalle[] = "faultstring: {$faultString}";
+                }
+                if ($statusCode) {
+                    $detalle[] = "CodEstatus: {$statusCode}";
+                }
+                if (!empty($alertasTxt)) {
+                    $detalle[] = 'Incidencias: ' . implode(' | ', $alertasTxt);
+                }
+
+                return [
+                    'success' => false,
+                    'message' => 'Finkok respondió, pero no devolvió el XML timbrado. Revisa créditos o XML.',
+                    'detail'  => implode(' | ', $detalle)
+                ];
+            }
+
+            return [
+                'success' => true,
+                'xml_timbrado' => $xmlTimbrado,
+                'uuid' => $uuid,
+                'fecha' => $stampResult->date(),
+                'status_code' => $statusCode,
+                'fault_code' => $faultCode,
+                'fault_string' => $faultString
+            ];
+        } catch (\SoapFault $e) {
+            // Aquí capturamos los errores SOAP (Conexión, 301, 705, etc.)
+            return [
+                'success' => false,
+                'message' => "Error de Finkok (SOAP): " . $e->getMessage() . " (Código: " . $e->faultcode . ")"
+            ];
+        } catch (\Exception $e) {
+            // Errores generales de la librería o PHP
+            return [
+                'success' => false,
+                'message' => "Error interno al timbrar: " . $e->getMessage()
+            ];
+        }
+    }
+    /**
+     * Cancelar usando la librería nativa (Cancelación Firmada)
+     */
+    public function cancelarFactura(
+        $rfcEmisor,
+        $uuid,
+        $motivoCancelacion = '02',
+        $uuidSustitucion = null,
+        $cerPath = null,
+        $keyPath = null,
+        $keyPassword = null
+    ) {
+        try {
+            // 1. Preparar Certificados (Corrección del error openFile)
+            // Usamos CfdiUtils para asegurar que leemos correctamente formato DER o PEM
+            if (!file_exists($cerPath) || !file_exists($keyPath)) {
+                throw new \Exception("No se encuentran los archivos de certificado o llave.");
+            }
+
+            // Convertir CER a PEM
+            $certificado = new Certificado($cerPath);
+            $cerPem = $certificado->getPemContents();
+
+            // Convertir KEY a PEM (Si es DER, lo convierte. Si ya es PEM, lo limpia)
+            $keyContent = file_get_contents($keyPath);
+            // Detecta si el contenido es PEM (tiene encabezado PEM)
+            if (strpos($keyContent, '-----BEGIN') !== false) {
+                $keyPem = $keyContent;
+            } else {
+                // Si no tiene encabezado PEM, asumimos DER y convertimos
+                $keyPem = '-----BEGIN PRIVATE KEY-----' . PHP_EOL . chunk_split(base64_encode($keyContent), 64, PHP_EOL) . '-----END PRIVATE KEY-----';
+            }
+
+            // Instanciamos el objeto Credentials correcto para QuickFinkok
+            $credentials = Credential::create($cerPem, $keyPem, $keyPassword);
+
+           /**
+     * Consulta el estatus real de una factura en el SAT usando Finkok (get_sat_status)
+     * * @param string $rfcEmisor RFC de quien emitió la factura
+     * @param string $rfcReceptor RFC del cliente (Requerido por el SAT para la consulta)
+     * @param string $uuid UUID de la factura
+     * @param string $total Total exacto de la factura (formato string, ej: "1000.00")
+     * @return array
+     */
+    
+    public function consultarEstatusSat($rfcEmisor, $rfcReceptor, $uuid, $total)
+    {
+        try {
+            // 1. Instanciar el servicio de consulta
+            $service = new GetSatStatusService($this->settings);
+
+            // 2. Crear el comando con los datos requeridos
+            // NOTA: El total debe enviarse tal cual está en el XML (ej. con 2 decimales o 0 si es traslado)
+            $command = new GetSatStatusCommand(
+                $rfcEmisor,
+                $rfcReceptor,
+                $uuid,
+                $total
+            );
+
+            // 3. Ejecutar la consulta
+            $result = $service->getSatStatus($command);
+
+            // 4. Mapear la respuesta
+            // La librería devuelve un objeto GetSatStatusResult
+            return [
+                'success' => true,
+                'sat_estado' => $result->satStatus(), // Ej: Vigente, Cancelado, No Encontrado
+                'sat_es_cancelable' => $result->isCancelable(), // Ej: Cancelable con aceptación
+                'sat_estatus_cancelacion' => $result->cancellationStatus(), // Ej: En proceso, Plazo vencido
+                'codigo_estatus' => $result->statusCode(), // Ej: S - Comprobante obtenido satisfactoriamente
+                'efos_validacion' => $result->validationEfos(), // Ej: 200
+                'raw' => $result // Objeto completo por si necesitas más datos
+            ];
+
+        } catch (\Exception $e) {
+            error_log("Error GetSatStatus: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+}

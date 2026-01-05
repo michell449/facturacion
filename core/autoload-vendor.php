@@ -44,9 +44,7 @@ spl_autoload_register(function ($class) {
         
         // --- Email ---
         'PHPMailer\\PHPMailer\\'            => __DIR__ . '/../vendor/phpmailer/phpmailer/src/',
-
-        //--- Cancelacion SAT ---
-        'Phpcfdi//xml-cancelacion/'          => __DIR__ . '/../vendor/phpcfdi/xml-cancelacion/src/',
+        
     ];
     
     foreach ($prefixes as $prefix => $baseDir) {

@@ -26,6 +26,7 @@ try {
     $offset = ($pagina - 1) * $porPagina;
 
     // Construir consulta con filtros
+    // Mostrar todas las facturas de las sucursales registradas por el administrador
     $sql = "SELECT 
                 f.id_factura,
                 f.folio_interno,
@@ -43,7 +44,7 @@ try {
                 e.id_empresa
             FROM facturas f
             INNER JOIN empresas e ON f.id_empresa = e.id_empresa
-            WHERE f.id_usuario = ?";
+            WHERE e.id_usuario = ?";
     
     $params = [$id_usuario];
     
@@ -87,7 +88,11 @@ try {
     $facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Obtener total de registros para paginación
-    $sqlCount = "SELECT COUNT(*) as total FROM facturas f WHERE f.id_usuario = ?";
+    // Contar todas las facturas de las sucursales registradas por el administrador
+    $sqlCount = "SELECT COUNT(*) as total 
+                 FROM facturas f 
+                 INNER JOIN empresas e ON f.id_empresa = e.id_empresa 
+                 WHERE e.id_usuario = ?";
     $paramsCount = [$id_usuario];
     
     if (!empty($busqueda)) {

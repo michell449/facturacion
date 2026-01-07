@@ -5,6 +5,10 @@ require_once __DIR__ . '/class/db.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
 $respuesta = [
     'success' => false,
     'data'    => [],
@@ -33,6 +37,9 @@ try {
     // Conectar a BD
     $db = new Database();
     $conn = $db->getConnection();
+    if (!($conn instanceof PDO)) {
+        throw new Exception('No se pudo conectar a la base de datos.');
+    }
     
     // Consultar sucursales del usuario
     $sql = "SELECT id_empresa, razon_social, nombre, codigo_suc, rfc, reg_fiscal, cp, direccion, colonia, estatus, logo, correo, file_cer, file_key 

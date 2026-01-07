@@ -42,7 +42,7 @@ spl_autoload_register(function ($class) {
         'Psr\\Http\\Client\\'               => __DIR__ . '/../vendor/psr/http-client/src/',
         'Psr\\Log\\'                        => __DIR__ . '/../vendor/psr/log/src/',
         
-        // --- Email ---
+        // --- Email (PHPMailer) ---
         'PHPMailer\\PHPMailer\\'            => __DIR__ . '/../vendor/phpmailer/phpmailer/src/',
         
     ];
@@ -55,18 +55,25 @@ spl_autoload_register(function ($class) {
         }
 
         $relativeClass = substr($class, $len);
-        $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
-
-        // Log de intento de carga
-        error_log("[AUTOLOAD] Intentando cargar: $class desde $file");
-
-        if (file_exists($file)) {
-            require_once $file;
-            error_log("[AUTOLOAD] ✓ Cargado exitosamente: $class");
-            return;
+        $candidateFiles = [];
+        // PHPMailer puede estar en src/ o src/PHPMailer segun distribución
+        if ($prefix === 'PHPMailer\\PHPMailer\\') {
+            $candidateFiles[] = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+            $candidateFiles[] = rtrim($baseDir, '/\\') . '/PHPMailer/' . str_replace('\\', '/', $relativeClass) . '.php';
         } else {
-            error_log("[AUTOLOAD] ✗ No se encontró el archivo: $file");
+            $candidateFiles[] = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
         }
+
+        foreach ($candidateFiles as $file) {
+            // Log de intento de carga
+            error_log("[AUTOLOAD] Intentando cargar: $class desde $file");
+            if (file_exists($file)) {
+                require_once $file;
+                error_log("[AUTOLOAD] ✓ Cargado exitosamente: $class");
+                return;
+            }
+        }
+        error_log("[AUTOLOAD] ✗ No se encontró archivo para: $class");
     }
     
     // Si llegamos aquí, no se encontró ninguna coincidencia

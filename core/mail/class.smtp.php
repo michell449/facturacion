@@ -484,9 +484,17 @@ class SMTP
                  * http://technet.microsoft.com/en-us/library/aa995718%28EXCHG.65%29.aspx
                  * PROTOCOL Docs http://curl.haxx.se/rfc/ntlm.html#ntlmSmtpAuthentication
                  */
-                require_once 'extras/ntlm_sasl_client.php';
+                if (!file_exists(dirname(__FILE__) . '/extras/ntlm_sasl_client.php')) {
+                    $this->setError('NTLM authentication requires the NTLM SASL client library');
+                    return false;
+                }
+                require_once dirname(__FILE__) . '/extras/ntlm_sasl_client.php';
+                if (!class_exists('ntlm_sasl_client_class')) {
+                    $this->setError('NTLM SASL client class not found after loading library');
+                    return false;
+                }
                 $temp = new stdClass;
-                $ntlm_client = new ntlm_sasl_client_class;
+                $ntlm_client = new ntlm_sasl_client_class();
                 //Check that functions are available
                 if (!$ntlm_client->initialize($temp)) {
                     $this->setError($temp->error);

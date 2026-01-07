@@ -77,6 +77,18 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
 
+    // Asegurar columna para correo del receptor
+    try {
+        $columnaCorreo = $conn->query("SHOW COLUMNS FROM facturas LIKE 'correo_receptor'");
+        if ($columnaCorreo && !$columnaCorreo->fetch(PDO::FETCH_ASSOC)) {
+            $conn->exec(
+                "ALTER TABLE facturas ADD COLUMN correo_receptor VARCHAR(255) NULL AFTER razon_social_receptor"
+            );
+        }
+    } catch (PDOException $alterEx) {
+        error_log('No se pudo verificar/agregar la columna correo_receptor: ' . $alterEx->getMessage());
+    }
+
     // ---------------------------------------------------------
     // 2. OBTENER DATOS DE LA EMPRESA (EMISOR) Y CONFIG
     // ---------------------------------------------------------
@@ -153,7 +165,7 @@ try {
         $sqlCabecera = "INSERT INTO facturas (
             id_ticket, id_usuario, id_empresa,
             folio_interno, serie_interno, fecha_emision,
-            rfc_receptor, razon_social_receptor, regimen_fiscal_receptor,
+            rfc_receptor, razon_social_receptor, correo_receptor, regimen_fiscal_receptor,
             domicilio_fiscal_receptor, uso_cfdi,
             moneda, tipo_cambio,
             subtotal, impuestos_trasladados, total,
@@ -162,7 +174,7 @@ try {
         ) VALUES (
             ?, ?, ?,
             ?, ?, NOW(),
-            ?, ?, ?,
+            ?, ?, ?, ?,
             ?, ?,
             'MXN', 1,
             ?, ?, ?,
@@ -179,6 +191,7 @@ try {
             $serie,
             $datos['receptor']['rfc'],
             $datos['receptor']['nombre'],
+            $datos['receptor']['correo'] ?? null,
             $datos['receptor']['regimen'],
             $datos['receptor']['cp'],
             $datos['receptor']['uso_cfdi'],

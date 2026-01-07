@@ -1,7 +1,10 @@
 <?php
 // core/listar-facturas.php
 header('Content-Type: application/json; charset=utf-8');
-session_start();
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 require_once __DIR__ . '/class/db.php';
 
@@ -14,6 +17,9 @@ try {
 
     $db = new Database();
     $conn = $db->getConnection();
+    if (!($conn instanceof PDO)) {
+        throw new Exception('No se pudo conectar a la base de datos.');
+    }
 
     // Obtener parámetros de filtro
     $busqueda = $_GET['busqueda'] ?? '';

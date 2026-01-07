@@ -47,7 +47,8 @@ class Database {
             $this->tables = $record;
             
         } catch (PDOException $exception) {
-            echo "Database could not be connected: " . $exception->getMessage();
+            // No imprimir en salida para no romper respuestas JSON/HTML
+            error_log("[DB] Connection error: " . $exception->getMessage());
         }
 
         return $this->conn;

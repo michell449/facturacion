@@ -94,18 +94,26 @@ try {
     if (!file_exists($archivoKey)) throw new Exception("No se encuentra el archivo .key en: $archivoKey");
 
     // Descifrar contraseña de la llave privada
-    // Asumimos que SelloUtils::descifrarClave devuelve la contraseña en texto plano '12345678a'
+    error_log("[CANCELACION] Descifrando contraseña del CSD para empresa ID: {$factura['id_empresa']}");
     $passwordKey = SelloUtils::descifrarClave($factura['pass_key'], (int)$factura['id_empresa']);
     
     if (!$passwordKey) {
+        error_log("[ERROR] No se pudo descifrar la contraseña del CSD");
         throw new Exception("No se pudo descifrar la contraseña del CSD.");
     }
+    
+    error_log("[CANCELACION] Contraseña descifrada correctamente (longitud: " . strlen($passwordKey) . ")");
+    error_log("[CANCELACION] RFC Emisor: {$factura['rfc_emisor']}");
+    error_log("[CANCELACION] UUID a cancelar: {$factura['uuid']}");
+    error_log("[CANCELACION] Motivo: {$motivo}");
+    error_log("[CANCELACION] Archivo CER: {$archivoCer}");
+    error_log("[CANCELACION] Archivo KEY: {$archivoKey}");
 
     // 6. Instanciar API
     // AJUSTAR AQUÍ TUS CREDENCIALES REALES O DE PRUEBA
-    $finkokUser = 'michellflores822@gmail.com'; 
-    $finkokPass = 'Pankycontra2025.'; 
-    $enProduccion = false; // Cambiar a true cuando estés listo
+    $finkokUser = defined('FINKOK_USER') ? FINKOK_USER : 'michellflores822@gmail.com'; 
+    $finkokPass = defined('FINKOK_PASSWORD') ? FINKOK_PASSWORD : 'PankyContra1997.'; 
+    $enProduccion = defined('FINKOK_PRODUCCION') ? FINKOK_PRODUCCION : false; // Cambiar a true cuando estés listo
 
     $finkok = new FinkokApi($finkokUser, $finkokPass, $enProduccion);
 
@@ -128,15 +136,11 @@ try {
         // 8. Actualizar base de datos
         $stmtUpdate = $conn->prepare("
             UPDATE facturas 
-            SET estatus = 'cancelada',
-                fecha_cancelacion = NOW(),
-                motivo_cancelacion = ?,
-                acuse_cancelacion = ?
+            SET estatus = 'cancelada'
             WHERE id_factura = ?
         ");
         
-        $acuse = $resultado['acuse'] ?? ''; // XML string
-        $stmtUpdate->execute([$motivo, $acuse, $id_factura]);
+        $stmtUpdate->execute([$id_factura]);
 
         $respuesta = [
             'success' => true,
@@ -146,9 +150,13 @@ try {
         ];
     } else {
         // Error en la API
+        error_log("[ERROR] Finkok devolvió error: " . ($resultado['message'] ?? 'Sin mensaje'));
+        error_log("[ERROR] Código de estatus: " . ($resultado['status_code'] ?? 'N/A'));
         $respuesta = [
             'success' => false,
-            'message' => $resultado['message']
+            'message' => $resultado['message'],
+            'status_code' => $resultado['status_code'] ?? null,
+            'debug' => $resultado['raw_response'] ?? null
         ];
     }
 

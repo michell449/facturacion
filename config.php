@@ -39,7 +39,7 @@ if (!empty($_SERVER['HTTPS']) && ('on' == $_SERVER['HTTPS'])) {
 }
 
 define('VERSION', '1.0');
-define('SYSNAME', 'Admin-SRJ');
+define('SYSNAME', 'FacturaciónXUBE');
 
 if (!defined('ABS_PATH')) {
     define('ABS_PATH', str_replace('\\', '/', dirname(__FILE__) . '/'));
@@ -87,12 +87,11 @@ define('MAIL_USER', 'noreply@xube.com.mx');
 define('MAIL_PSWD', '@Xub3*761');
 define('MAIL_AUT', TRUE);
 define('MAIL_SEC', 'tls');
+define('MAIL_CONFIG_SECRET', 'cfg_mail_secret_v1_202501');
 
-// Configuración de Timbrado DIGIBOX (Entorno de Pruebas)
-define('DIGIBOX_USER', 'demo2'); // Reemplaza con tu usuario
-define('DIGIBOX_PASS', '123456789'); // Reemplaza con tu contraseña
-define('DIGIBOX_URL_AUTH', 'https://testtimbrado.digibox.com.mx/api/autenticacion/autenticarbasico');
-define('DIGIBOX_URL_STAMP', ' https://testtimbrado.digibox.com.mx/apisellado/timbradoxml/v4');
+define('FINKOK_USER', 'michellflores822@gmail.com');
+define('FINKOK_PASSWORD', 'PankyContra1997.');
+define('FINKOK_PRODUCCION', false); // false = pruebas, true = producción
 
 
 date_default_timezone_set('America/Mexico_City');

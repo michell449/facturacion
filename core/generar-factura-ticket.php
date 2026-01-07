@@ -78,18 +78,49 @@ try {
     // =========================================================================
     // 3. OBTENER DATOS DEL TICKET
     // =========================================================================
+    error_log("[TICKET] Consultando ticket {$id_ticket} de empresa {$id_empresa}");
     $sqlTicket = "SELECT * FROM tickets WHERE id_ticket = ? AND id_empresa = ?";
     $stmtTicket = $conn->prepare($sqlTicket);
     $stmtTicket->execute([$id_ticket, $id_empresa]);
     $ticket = $stmtTicket->fetch(PDO::FETCH_ASSOC);
 
     if (!$ticket) {
+        error_log("[ERROR] Ticket {$id_ticket} no encontrado en empresa {$id_empresa}");
         throw new Exception('Ticket no encontrado');
     }
+    
+    error_log("[TICKET] Encontrado - Folio: {$ticket['folio_ticket']}, Estatus: {$ticket['estatus']}, ID_Factura: " . ($ticket['id_factura'] ?? 'NULL'));
 
     // Validar que el ticket no esté ya facturado
     if (!empty($ticket['estatus']) && $ticket['estatus'] == 'facturado') {
-        throw new Exception('Este ticket ya ha sido facturado');
+        error_log("[VALIDACION] Ticket marcado como 'facturado', verificando factura asociada");
+        
+        // Verificar si ya tiene una factura activa (no cancelada)
+        if (!empty($ticket['id_factura'])) {
+            error_log("[VALIDACION] Consultando factura ID: {$ticket['id_factura']}");
+            $sqlVerificarFactura = "SELECT estatus FROM facturas WHERE id_factura = ?";
+            $stmtVerificar = $conn->prepare($sqlVerificarFactura);
+            $stmtVerificar->execute([$ticket['id_factura']]);
+            $facturaExistente = $stmtVerificar->fetch(PDO::FETCH_ASSOC);
+            
+            if ($facturaExistente) {
+                error_log("[VALIDACION] Factura encontrada con estatus: {$facturaExistente['estatus']}");
+                if ($facturaExistente['estatus'] !== 'cancelada') {
+                    error_log("[ERROR] Intento de re-facturar ticket con factura activa (ID: {$ticket['id_factura']})");
+                    throw new Exception('Este ticket ya tiene una factura activa. Primero cancela la factura anterior (ID: ' . $ticket['id_factura'] . ')');
+                }
+                error_log("[OK] Factura anterior está cancelada, permitiendo re-facturación");
+            } else {
+                error_log("[ADVERTENCIA] Factura ID {$ticket['id_factura']} no existe en BD, permitiendo re-facturación");
+            }
+        } else {
+            error_log("[ADVERTENCIA] Ticket marcado como facturado pero sin id_factura asociado");
+        }
+        
+        // Si la factura anterior fue cancelada o no existe, permitir re-facturar
+        error_log("[OK] Permitiendo re-facturación del ticket");
+    } else {
+        error_log("[OK] Ticket con estatus '" . ($ticket['estatus'] ?? 'NULL') . "', no facturado previamente");
     }
     
     error_log("Ticket encontrado: Folio {$ticket['folio_ticket']}");
@@ -111,14 +142,18 @@ try {
     // =========================================================================
     // 5. OBTENER DATOS FISCALES DEL EMISOR (SUCURSAL/EMPRESA)
     // =========================================================================
+    error_log("[EMISOR] Consultando datos de empresa ID: {$id_empresa}");
     $sqlEmisor = "SELECT * FROM empresas WHERE id_empresa = ?";
     $stmtEmisor = $conn->prepare($sqlEmisor);
     $stmtEmisor->execute([$id_empresa]);
     $emisor = $stmtEmisor->fetch(PDO::FETCH_ASSOC);
 
     if (!$emisor) {
+        error_log("[ERROR] Emisor no encontrado para empresa ID: {$id_empresa}");
         throw new Exception('Datos del emisor no encontrados');
     }
+    
+    error_log("[EMISOR] Encontrado - RFC: {$emisor['rfc']}, Razón Social: {$emisor['razon_social']}");
 
     // Validar datos fiscales del emisor
     if (empty($emisor['rfc'])) throw new Exception('El emisor no tiene RFC configurado');
@@ -133,14 +168,18 @@ try {
     // =========================================================================
     // 6. OBTENER DATOS FISCALES DEL RECEPTOR (USUARIO)
     // =========================================================================
+    error_log("[RECEPTOR] Consultando datos fiscales de usuario ID: {$id_usuario}");
     $sqlReceptor = "SELECT * FROM datos_fiscales_usuario WHERE id_usuario = ?";
     $stmtReceptor = $conn->prepare($sqlReceptor);
     $stmtReceptor->execute([$id_usuario]);
     $receptor = $stmtReceptor->fetch(PDO::FETCH_ASSOC);
 
     if (!$receptor) {
+        error_log("[ERROR] Datos fiscales no encontrados para usuario ID: {$id_usuario}");
         throw new Exception('No tienes datos fiscales registrados. Por favor, registra tus datos fiscales primero.');
     }
+    
+    error_log("[RECEPTOR] Encontrado - RFC: {$receptor['rfc']}, Razón Social: {$receptor['razon_social']}");
 
     // Validar datos fiscales del receptor
     if (empty($receptor['rfc'])) throw new Exception('Tu RFC no está registrado');
@@ -236,10 +275,13 @@ try {
     // =========================================================================
     // 12. INICIAR TRANSACCIÓN Y CREAR FACTURA
     // =========================================================================
+    error_log("[BD] Iniciando transacción para crear factura");
+    error_log("[BD] Datos a insertar - Serie: {$serieInterna}, Folio: {$nuevoFolio}, Subtotal: {$subtotal}, IVA: {$impuestos}, Total: {$total}");
     $conn->beginTransaction();
 
     try {
         // Insertar cabecera de factura
+        error_log("[BD] Insertando cabecera de factura");
         $sqlInsertFactura = "INSERT INTO facturas (
             id_usuario,
             id_empresa,
@@ -287,9 +329,10 @@ try {
 
         $id_factura = $conn->lastInsertId();
         
-        error_log("Factura creada con ID: {$id_factura}");
+        error_log("[BD] ✓ Factura creada exitosamente con ID: {$id_factura}");
 
         // Insertar conceptos/productos
+        error_log("[BD] Insertando " . count($detalles) . " conceptos/productos");
         $sqlInsertConcepto = "INSERT INTO facturas_detalles (
             id_factura,
             clave_prod_serv,
@@ -309,11 +352,23 @@ try {
 
         $stmtInsertConcepto = $conn->prepare($sqlInsertConcepto);
 
+        $conceptoNum = 1;
         foreach ($detalles as $detalle) {
             $cantidad = floatval($detalle['cant'] ?? 1);
             $precioUnitario = floatval($detalle['precio_unit'] ?? 0);
             $descripcion = $detalle['descr'] ?? 'Producto/Servicio';
+            
+            // Obtener clave producto/servicio y validar formato
             $claveProdServ = $detalle['id_prod_serv'] ?? '01010101';
+            
+            // Validar que sea de 8 dígitos, si no, usar genérico
+            if (empty($claveProdServ) || strlen($claveProdServ) != 8 || !ctype_digit($claveProdServ)) {
+                error_log("[BD] ⚠ Concepto {$conceptoNum}: Clave '{$claveProdServ}' inválida, usando genérica 01010101");
+                $claveProdServ = '01010101'; // Clave genérica para productos/servicios
+            } else {
+                error_log("[BD] Concepto {$conceptoNum}: '{$descripcion}' - Clave: {$claveProdServ}, Cant: {$cantidad}, Precio: {$precioUnitario}");
+            }
+            
             $noIdentificacion = $detalle['folio'] ?? '';
             
             // Si no hay identificación, no enviarla vacía
@@ -344,20 +399,25 @@ try {
                 '0.160000',
                 $importeIVA
             ]);
+            
+            $conceptoNum++;
         }
         
-        error_log("Conceptos insertados: " . count($detalles));
+        error_log("[BD] ✓ " . count($detalles) . " conceptos insertados exitosamente");
 
         // Marcar ticket como facturado
+        error_log("[BD] Actualizando ticket {$id_ticket} a estatus 'facturado'");
         $sqlUpdateTicket = "UPDATE tickets SET estatus = 'facturado', id_factura = ? WHERE id_ticket = ?";
         $stmtUpdateTicket = $conn->prepare($sqlUpdateTicket);
         $stmtUpdateTicket->execute([$id_factura, $id_ticket]);
 
         $conn->commit();
         
-        error_log("Transacción BD completada");
+        error_log("[BD] ✓✓✓ Transacción completada exitosamente ✓✓✓");
 
     } catch (Exception $e) {
+        error_log("[BD] ✗✗✗ ERROR en transacción: {$e->getMessage()} ✗✗✗");
+        error_log("[BD] Ejecutando ROLLBACK");
         $conn->rollBack();
         throw new Exception('Error en base de datos: ' . $e->getMessage());
     }
@@ -365,19 +425,20 @@ try {
     // =========================================================================
     // 13. GENERAR XML
     // =========================================================================
-    error_log("Generando XML...");
+    error_log("[XML] ═══ Iniciando generación de XML para factura {$id_factura} ═══");
     $resultadoXML = generarXMLFactura($id_factura);
     
     if (!isset($resultadoXML['success']) || !$resultadoXML['success']) {
+        error_log("[XML] ✗ Error al generar XML: " . ($resultadoXML['message'] ?? 'Error desconocido'));
         throw new Exception('Error al generar XML: ' . ($resultadoXML['message'] ?? 'Error desconocido'));
     }
     
-    error_log("XML generado exitosamente");
+    error_log("[XML] ✓ XML generado exitosamente");
 
     // =========================================================================
     // 14. TIMBRAR XML CON FINKOK
     // =========================================================================
-    error_log("Timbrando con Finkok...");
+    error_log("[TIMBRADO] ═══ Iniciando timbrado con Finkok para factura {$id_factura} ═══");
     $resultadoTimbrado = timbrarFactura($id_factura);
     
     // Verificar respuesta del timbrado
@@ -391,10 +452,12 @@ try {
     if (!$timbradoExitoso) {
         $mensajeError = $resultadoTimbrado['message'] ?? 'Error desconocido al timbrar';
         $detalle = $resultadoTimbrado['detail'] ?? '';
+        error_log("[TIMBRADO] ✗ Error: {$mensajeError}" . ($detalle ? " | {$detalle}" : ''));
         throw new Exception('Error al timbrar factura: ' . $mensajeError . ($detalle ? ' | ' . $detalle : ''));
     }
     
-    error_log("Factura timbrada exitosamente");
+    $uuid = $resultadoTimbrado['uuid'] ?? ($resultadoTimbrado['data']['uuid'] ?? 'N/A');
+    error_log("[TIMBRADO] ✓ Factura timbrada exitosamente - UUID: {$uuid}");
 
     // =========================================================================
     // 15. GENERAR PDF (OPCIONAL)
@@ -421,15 +484,26 @@ try {
         'pdf_url' => $resultadoPDF['pdf_url'] ?? null
     ];
     
-    error_log("=== FACTURACIÓN COMPLETADA EXITOSAMENTE ===");
+    error_log("╔═══════════════════════════════════════════════════╗");
+    error_log("║  ✓✓✓ FACTURACIÓN COMPLETADA EXITOSAMENTE ✓✓✓    ║");
+    error_log("║  Factura ID: {$id_factura}                       ║");
+    error_log("║  Folio: {$serieInterna}{$nuevoFolio}             ║");
+    error_log("║  UUID: {$uuid}                                   ║");
+    error_log("╚═══════════════════════════════════════════════════╝");
 
 } catch (Throwable $e) {
     if (isset($conn) && $conn->inTransaction()) {
+        error_log("[ERROR] Ejecutando ROLLBACK de transacción activa");
         $conn->rollBack();
     }
     
-    error_log("EXCEPCIÓN EN GENERAR-FACTURA-TICKET: " . $e->getMessage());
-    error_log("Trace: " . $e->getTraceAsString());
+    error_log("╔═══════════════════════════════════════════════════╗");
+    error_log("║  ✗✗✗ ERROR EN FACTURACIÓN ✗✗✗                    ║");
+    error_log("╚═══════════════════════════════════════════════════╝");
+    error_log("[ERROR] Mensaje: " . $e->getMessage());
+    error_log("[ERROR] Archivo: " . $e->getFile());
+    error_log("[ERROR] Línea: " . $e->getLine());
+    error_log("[ERROR] Trace: " . $e->getTraceAsString());
     
     http_response_code(500);
     $respuesta = [

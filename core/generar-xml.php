@@ -320,9 +320,16 @@ try {
             $descripcion
         );
         
+        // Validar y corregir ClaveProdServ (debe ser 8 dígitos)
+        $claveProdServ = trim($item['clave_prod_serv']);
+        if (empty($claveProdServ) || strlen($claveProdServ) != 8 || !ctype_digit($claveProdServ)) {
+            $claveProdServ = '01010101'; // Clave genérica del SAT
+            error_log("ClaveProdServ inválida '{$item['clave_prod_serv']}' corregida a '01010101' en factura {$id_factura}");
+        }
+        
         // Preparar atributos del concepto
         $atributosConcepto = [
-            'ClaveProdServ' => trim($item['clave_prod_serv']),
+            'ClaveProdServ' => $claveProdServ,
             'Cantidad' => number_format($item['cantidad'], 6, '.', ''),
             'ClaveUnidad' => trim($item['clave_unidad']),
             'Descripcion' => $descripcion,

@@ -248,8 +248,10 @@ function mostrarTicket(ticket) {
 
 // Ir a búsqueda
 function irABusqueda() {
+    // Limpiar el ticket del sessionStorage para hacer una nueva búsqueda
     sessionStorage.removeItem('ticketActual');
-    window.location.href = '?pagina=facturar';
+    // Redirigir a la página de facturación
+    window.location.href = 'panel?pg=facturar';
 }
 
 // Facturar ticket

@@ -17,69 +17,6 @@
             <div class="card shadow-lg border-0 rounded-4">
                 <div class="card-body p-4">
                     <form id="correoConfigForm">
-                        <!-- Datos del Correo Emisor -->
-                        <div class="mb-4">
-                            <h5 class="text-primary fw-bold mb-3">
-                                <i class="bi bi-person-badge me-2"></i>Correo Emisor
-                            </h5>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="remitenteNombre" class="form-label fw-semibold">Nombre del Remitente</label>
-                                    <input type="text" class="form-control form-control-lg" id="remitenteNombre" 
-                                           placeholder="Sistema de Facturación" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="remitenteEmail" class="form-label fw-semibold">Email del Remitente</label>
-                                    <input type="email" class="form-control form-control-lg" id="remitenteEmail" 
-                                           placeholder="noreply@empresa.com" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="smtpUsuario" class="form-label fw-semibold">Usuario SMTP</label>
-                                    <input type="email" class="form-control form-control-lg" id="smtpUsuario" 
-                                           placeholder="facturacion@empresa.com" required>
-                                    <small class="text-muted">Correo para autenticación SMTP</small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="smtpPassword" class="form-label fw-semibold">Contraseña SMTP</label>
-                                    <div class="input-group input-group-lg">
-                                        <input type="password" class="form-control" id="smtpPassword" 
-                                               placeholder="••••••••" required>
-                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
-                                            <i class="bi bi-eye" id="toggleIcon"></i>
-                                        </button>
-                                    </div>
-                                    <small class="text-muted">Para Gmail usa contraseña de aplicación</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <!-- Configuración del Servidor SMTP -->
-                        <div class="mb-4">
-                            <h5 class="text-primary fw-bold mb-3">
-                                <i class="bi bi-gear me-2"></i>Servidor SMTP
-                            </h5>
-                            <div class="row g-3">
-                                <div class="col-md-8">
-                                    <label for="smtpHost" class="form-label fw-semibold">Servidor</label>
-                                    <input type="text" class="form-control form-control-lg" id="smtpHost" 
-                                           placeholder="smtp.gmail.com" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="smtpPort" class="form-label fw-semibold">Puerto</label>
-                                    <select class="form-select form-select-lg" id="smtpPort" required>
-                                        <option value="587" selected>587 (TLS)</option>
-                                        <option value="465">465 (SSL)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <!-- Formato del Correo -->
-                        <div class="row mb-4">
                         <!-- Formato del Correo -->
                         <div class="mb-4">
                             <h5 class="text-primary fw-bold mb-3">
@@ -95,7 +32,7 @@
                                 </div>
                                 <div class="col-12">
                                     <label for="plantillaCorreo" class="form-label fw-semibold">Mensaje del Correo</label>
-                                    <textarea class="form-control" id="plantillaCorreo" rows="10" required>Estimado(a) {CLIENTE},
+                                    <textarea class="form-control" id="plantillaCorreo" rows="12" required>Estimado(a) {CLIENTE},
 
 Adjunto encontrará su factura electrónica con los siguientes detalles:
 
@@ -137,63 +74,17 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarConfiguracionCorreo();
 });
 
-function togglePassword() {
-    const input = document.getElementById('smtpPassword');
-    const icon = document.getElementById('toggleIcon');
-    
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.className = 'bi bi-eye-slash';
-    } else {
-        input.type = 'password';
-        icon.className = 'bi bi-eye';
-    }
-}
-
 function cargarConfiguracionCorreo() {
     fetch('./core/obtener-config-correo.php')
         .then(response => response.json())
         .then(data => {
             if (data.success && data.config) {
                 const config = data.config;
-                document.getElementById('smtpHost').value = config.smtp_host || '';
-                document.getElementById('smtpPort').value = config.smtp_port || '587';
-                document.getElementById('smtpUsuario').value = config.smtp_usuario || '';
-                document.getElementById('remitenteNombre').value = config.remitente_nombre || '';
-                document.getElementById('remitenteEmail').value = config.remitente_email || '';
                 document.getElementById('asuntoFactura').value = config.asunto_factura || 'Factura Electrónica - Folio {FOLIO}';
                 document.getElementById('plantillaCorreo').value = config.plantilla_correo || '';
             }
         })
         .catch(error => console.error('Error cargando configuración:', error));
-}
-
-function cargarEstadisticasEnvio() {
-    fetch('./core/estadisticas-envio.php')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('enviadosHoy').textContent = data.enviados_hoy || '0';
-                document.getElementById('pendientesEnvio').textContent = data.pendientes || '0';
-                document.getElementById('fallosEnvio').textContent = data.fallos || '0';
-            }
-        })
-        .catch(error => console.error('Error cargando estadísticas:', error));
-}
-
-function togglePassword(inputId) {
-    const input = document.getElementById(inputId);
-    const icon = document.getElementById(inputId + '-icon');
-    
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('bi-eye');
-        icon.classList.add('bi-eye-slash');
-    } else {
-        input.type = 'password';
-        icon.classList.remove('bi-eye-slash');
-        icon.classList.add('bi-eye');
-    }
 }
 
 function enviarPrueba() {
@@ -215,8 +106,11 @@ function enviarPrueba() {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            const datos = recopilarDatos();
-            datos.email_prueba = result.value;
+            const datos = {
+                asunto_factura: document.getElementById('asuntoFactura').value,
+                plantilla_correo: document.getElementById('plantillaCorreo').value,
+                email_prueba: result.value
+            };
             
             Swal.fire({
                 title: 'Enviando correo de prueba...',
@@ -263,24 +157,14 @@ function enviarPrueba() {
     });
 }
 
-function recopilarDatos() {
-    return {
-        smtp_host: document.getElementById('smtpHost').value,
-        smtp_port: document.getElementById('smtpPort').value,
-        smtp_usuario: document.getElementById('smtpUsuario').value,
-        smtp_password: document.getElementById('smtpPassword').value,
-        remitente_nombre: document.getElementById('remitenteNombre').value,
-        remitente_email: document.getElementById('remitenteEmail').value,
+function guardarConfigCorreo() {
+    const datos = {
         asunto_factura: document.getElementById('asuntoFactura').value,
         plantilla_correo: document.getElementById('plantillaCorreo').value
     };
-}
-
-function guardarConfigCorreo() {
-    const datos = recopilarDatos();
     
     // Validar campos requeridos
-    if (!datos.smtp_host || !datos.smtp_usuario || !datos.smtp_password || !datos.remitente_email) {
+    if (!datos.asunto_factura || !datos.plantilla_correo) {
         Swal.fire({
             icon: 'warning',
             title: 'Campos Requeridos',

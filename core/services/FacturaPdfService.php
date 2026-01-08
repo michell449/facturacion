@@ -205,7 +205,7 @@ function facturaGenerarHtmlBasico(array $factura, array $config, array $concepto
     <div class="header">
         <div class="logo">
             <?php if ($logoPath): ?>
-                <img src="<?php echo $logoPath; ?>" alt="Logo">
+                <img src="<?php echo $logoPath; ?>" alt="Logo" width="80" height="80">
             <?php endif; ?>
         </div>
         <div class="emisor">
@@ -296,7 +296,7 @@ function facturaGenerarHtmlBasico(array $factura, array $config, array $concepto
 
     <?php if ($qrBase64): ?>
     <div class="qr">
-        <img src="data:image/svg+xml;base64,<?php echo $qrBase64; ?>" alt="QR SAT">
+        <img src="data:image/svg+xml;base64,<?php echo $qrBase64; ?>" alt="QR SAT" width="120" height="120">
     </div>
     <?php endif; ?>
 

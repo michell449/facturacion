@@ -335,15 +335,11 @@
             </button>
         ` : `
             ${(factura.pdf_path && factura.pdf_path !== '') ? `
-                <button type="button" class="btn btn-outline-success" onclick="descargarPDF('${factura.pdf_path.replace(/'/g, "\\'")}')"
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="descargarPDF('${factura.pdf_path.replace(/'/g, "\\'")}')"
                         title="Descargar PDF">
-                    <i class="bi bi-file-pdf me-1"></i>PDF
+                    <i class="bi bi-file-pdf">PDF</i>
                 </button>
-            ` : factura.estatus === 'timbrada' ? `
-                <button type="button" class="btn btn-outline-success" onclick="generarPDF(${factura.id_factura})"
-                        title="Generar y descargar PDF">
-                    <i class="bi bi-file-pdf me-1"></i>Generar PDF
-                </button>
+
             ` : ''}
             ${(factura.xml_path && factura.xml_path !== '') ? `
                 <button type="button" class="btn btn-outline-info" onclick="descargarXML('${factura.xml_path.replace(/'/g, "\\'")}')"
@@ -705,35 +701,6 @@
         ['estadoVigente', 'estadoPagada', 'estadoPendiente', 'sucursalCentro', 'sucursalNorte', 'sucursalSur', 'sucursalOriente'].forEach(id => {
             document.getElementById(id).checked = true;
         });
-    }
-
-    /**
-     * Generar PDF de una factura
-     */
-    function generarPDF(idFactura) {
-        Swal.fire({
-            title: 'Generando PDF...',
-            text: 'Por favor espera mientras se genera el PDF de la factura',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        // Abrir el PDF en una nueva ventana/pestaña
-        const url = `core/generar-pdf-factura.php?id_factura=${idFactura}&guardar=1`;
-        const ventana = window.open(url, '_blank');
-        
-        // Cerrar el loading después de un momento
-        setTimeout(() => {
-            Swal.close();
-            if (!ventana) {
-                Swal.fire('Advertencia', 'El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes para este sitio.', 'warning');
-            } else {
-                // Recargar las facturas para actualizar el botón
-                cargarFacturas();
-            }
-        }, 1500);
     }
 
     /**

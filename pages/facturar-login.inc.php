@@ -117,11 +117,6 @@
                         </form>
 
                         <!-- Enlace de recuperación de contraseña -->
-                        <div class="text-center mt-4">
-                            <a href="#" class="text-decoration-none text-primary">
-                                <i class="bi bi-question-circle me-1"></i> ¿Olvidaste tu contraseña?
-                            </a>
-                        </div>
                     </div>
                 </div>
 

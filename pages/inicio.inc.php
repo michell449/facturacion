@@ -1,12 +1,3 @@
-<?php
-// pages/inicio.inc.php
-
-$facturas_exitosas = 0;
-$facturas_pendientes = 0;
-$total_facturado_mes = 0.0;
-$fecha_actual = date('d \d\e F \d\e Y');
-$hora_actual = date('H:i');
-?>
 
 <!-- Hero Dashboard Section -->
 <div class="bg-primary text-white py-5">
@@ -18,11 +9,11 @@ $hora_actual = date('H:i');
                         <i class="bi bi-speedometer2 display-6"></i>
                     </div>
                     <div>
-                        <h1 class="display-5 fw-bold mb-2">¡Bienvenido!</h1>
-                        <p class="lead mb-0 opacity-90">sistema de facturación electrónica</p>
+                        <h1 class="display-5 fw-bold mb-2">¡Bienvenido, <span id="nombreUsuario">Usuario</span>!</h1>
+                        <p class="lead mb-0 opacity-90">Sistema de facturación electrónica</p>
                         <small class="opacity-75">
-                            <i class="bi bi-calendar3 me-2"></i><?php echo $fecha_actual; ?>
-                            <i class="bi bi-clock ms-3 me-2"></i><?php echo $hora_actual; ?>
+                            <i class="bi bi-calendar3 me-2"></i><?php echo date('d \d\e F \d\e Y'); ?>
+                            <i class="bi bi-clock ms-3 me-2"></i><?php echo date('H:i'); ?>
                         </small>
                     </div>
                 </div>
@@ -43,7 +34,7 @@ $hora_actual = date('H:i');
                             <div class="bg-primary bg-opacity-10 rounded-circle p-3 mb-3">
                                 <i class="bi bi-file-earmark-check text-primary fs-4"></i>
                             </div>
-                            <h3 class="fw-bold text-primary mb-1"><?php echo $facturas_exitosas; ?></h3>
+                            <h3 id="facturasGeneradas" class="fw-bold text-primary mb-1">0</h3>
                             <p class="text-muted mb-0">Facturas Generadas</p>
                         </div>
                         <div class="text-end">
@@ -64,7 +55,7 @@ $hora_actual = date('H:i');
                             <div class="bg-success bg-opacity-10 rounded-circle p-3 mb-3">
                                 <i class="bi bi-currency-dollar text-success fs-4"></i>
                             </div>
-                            <h3 class="fw-bold text-success mb-1">$<?php echo number_format($total_facturado_mes, 2); ?></h3>
+                            <h3 id="montoMes" class="fw-bold text-success mb-1">$0.00</h3>
                             <p class="text-muted mb-0">Facturado este Mes</p>
                         </div>
                         <div class="text-end">
@@ -85,7 +76,7 @@ $hora_actual = date('H:i');
                             <div class="bg-warning bg-opacity-10 rounded-circle p-3 mb-3">
                                 <i class="bi bi-clock-history text-warning fs-4"></i>
                             </div>
-                            <h3 class="fw-bold text-warning mb-1"><?php echo $facturas_pendientes; ?></h3>
+                            <h3 id="pendientesCount" class="fw-bold text-warning mb-1">0</h3>
                             <p class="text-muted mb-0">Pendientes</p>
                         </div>
                         <div class="text-end">
@@ -162,32 +153,7 @@ $hora_actual = date('H:i');
                     </h5>
                 </div>
                 <div class="card-body pt-0">
-                    <div>
-                        <div class="timeline-item">
-                            <div class="timeline-marker bg-success"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Factura generada</h6>
-                                <p class="text-muted mb-1">Ticket #123456789 - $1,250.00</p>
-                                <small class="text-muted">Hace 2 horas</small>
-                            </div>
-                        </div>
-                        <div class="timeline-item ">
-                            <div class="timeline-marker bg-info"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Perfil actualizado</h6>
-                                <p class="text-muted mb-1">Datos fiscales modificados</p>
-                                <small class="text-muted">Ayer</small>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-marker bg-primary"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Factura generada</h6>
-                                <p class="text-muted mb-1">Ticket #987654321 - $850.00</p>
-                                <small class="text-muted">Hace 3 días</small>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="listaActividadReciente"></div>
                     <div class="text-center mt-4">
                         <a href="historial" class="btn btn-outline-primary">
                             Ver todo el historial
@@ -211,22 +177,25 @@ $hora_actual = date('H:i');
                     <div class="bg-primary bg-opacity-10 rounded-circle mx-auto mb-3 d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                         <i class="bi bi-person-fill text-primary fs-1"></i>
                     </div>
-                    <h5 class="fw-bold mb-1"></h5>
-                    <p class="text-muted mb-3">Usuario Registrado</p>
+                    <h5 id="perfilRazon" class="fw-bold mb-1"></h5>
+                    <p id="perfilRFC" class="text-muted mb-3"></p>
                     
                     <div class="row text-center mb-4">
                         <div class="col-6">
                             <div class="border-end">
-                                <h6 class="fw-bold text-primary mb-0"><?php echo $facturas_exitosas; ?></h6>
+                                <h6 id="perfilTotalFacturas" class="fw-bold text-primary mb-0">0</h6>
                                 <small class="text-muted">Facturas</small>
                             </div>
                         </div>
                         <div class="col-6">
-                            <h6 class="fw-bold text-success mb-0">98.5%</h6>
-                            <small class="text-muted">Éxito</small>
+                            <h6 id="perfilCanceladas" class="fw-bold text-danger mb-0">0</h6>
+                            <small class="text-muted">Canceladas</small>
                         </div>
                     </div>
-
+                    <div class="text-start mb-3">
+                        <div><small class="text-muted">Régimen Fiscal:</small> <span id="perfilRegimen" class="fw-semibold"></span></div>
+                        <div><small class="text-muted">CP:</small> <span id="perfilCP" class="fw-semibold"></span></div>
+                    </div>
                     <a href="perfil" class="btn btn-outline-primary w-100">
                         <i class="bi bi-gear me-2"></i>
                         Administrar Perfil
@@ -268,3 +237,84 @@ $hora_actual = date('H:i');
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const res = await fetch('core/obtener-dashboard-cliente.php', { cache: 'no-store' });
+        const data = await res.json();
+        if (!data.success) return;
+
+        // Header
+        if (data.user && data.user.nombre) {
+            const nombreEl = document.getElementById('nombreUsuario');
+            if (nombreEl) nombreEl.textContent = data.user.nombre;
+        }
+
+        // Stats
+        const stats = data.stats || {};
+        const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+        setText('facturasGeneradas', stats.total_facturas ?? 0);
+        setText('montoMes', stats.monto_mes ?? '$0.00');
+        setText('pendientesCount', stats.pendientes ?? 0);
+
+        // Perfil
+        if (data.fiscal) {
+            setText('perfilRazon', data.fiscal.razon_social || '');
+            setText('perfilRFC', data.fiscal.rfc ? ('RFC: ' + data.fiscal.rfc) : '');
+            setText('perfilRegimen', data.fiscal.reg_fiscal || '');
+            setText('perfilCP', data.fiscal.cp || '');
+        }
+        setText('perfilTotalFacturas', stats.total_facturas ?? 0);
+        setText('perfilCanceladas', stats.canceladas ?? 0);
+
+        // Actividad reciente (facturas + respuestas cancelación)
+        const cont = document.getElementById('listaActividadReciente');
+        const facturas = Array.isArray(data.recientes) ? data.recientes : [];
+        const respuestas = Array.isArray(data.respuestas) ? data.respuestas : [];
+
+        // Construir items (máximo 6)
+        const items = [];
+        facturas.forEach(f => {
+            items.push({
+                tipo: 'factura',
+                titulo: 'Factura generada',
+                detalle: `${f.folio} - ${f.total_formatted}`,
+                fecha: f.fecha,
+                color: 'primary'
+            });
+        });
+        respuestas.forEach(r => {
+            const aprob = r.estado === 'aprobada';
+            items.push({
+                tipo: 'respuesta',
+                titulo: aprob ? 'Cancelación aprobada' : 'Cancelación rechazada',
+                detalle: `${r.folio} - ${r.respuesta_admin || ''}`,
+                fecha: r.fecha,
+                color: aprob ? 'success' : 'danger'
+            });
+        });
+        items.sort((a,b) => new Date(b.fecha.split('/').reverse().join(' ')) - new Date(a.fecha.split('/').reverse().join(' ')));
+        const top = items.slice(0,6);
+
+        if (cont) {
+            if (top.length === 0) {
+                cont.innerHTML = '<div class="text-muted">Sin actividad reciente</div>';
+            } else {
+                cont.innerHTML = top.map(it => `
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-${it.color}"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">${it.titulo}</h6>
+                            <p class="text-muted mb-1">${it.detalle}</p>
+                            <small class="text-muted">${it.fecha}</small>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (e) {
+        console.error('Error cargando dashboard:', e);
+    }
+});
+</script>

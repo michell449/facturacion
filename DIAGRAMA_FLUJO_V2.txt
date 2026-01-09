@@ -1,0 +1,586 @@
+# Diagrama de Flujo - Facturación para Invitados v2.0
+
+## 🔄 Flujo Principal Completo
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        SISTEMA DE FACTURACIÓN INVITADOS                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                              ┌──────────────────┐
+                              │  CLIENTE INVITADO │
+                              │   (Sin Cuenta)    │
+                              └────────┬──────────┘
+                                       │
+                ┌──────────────────────┴──────────────────────┐
+                │                                              │
+                ▼                                              ▼
+        ┌─────────────────┐                          ┌──────────────────┐
+        │ FRONTEND PASO 1 │                          │ FRONTEND PASO 2  │
+        │  Buscar Ticket  │◄──────────────────────►  │  Datos Fiscales  │
+        └────────┬────────┘                          └────────┬─────────┘
+                 │                                            │
+                 ▼                                            ▼
+        ┌─────────────────┐                          ┌──────────────────┐
+        │ POST             │                          │ POST              │
+        │ buscar-ticket-   │                          │ facturar-invitado │
+        │ cliente.php      │                          │ .php              │
+        └────────┬────────┘                          └────────┬─────────┘
+                 │                                            │
+                 ▼                                            ▼
+        ┌─────────────────┐                          ┌──────────────────┐
+        │ BD QUERY        │                          │ 1. VALIDAR DATOS │
+        │ SELECT          │                          │    • Email válido │
+        │ FROM tickets    │                          │    • RFC 12-13 ch │
+        │ WHERE           │                          │    • CP 5 dígitos │
+        │ folio & monto   │                          │    • Tipo persona │
+        └────────┬────────┘                          └────────┬─────────┘
+                 │                                            │
+      ┌──────────┴──────────┐                                 │
+      │                     │                                 │
+      ▼                     ▼                                 ▼
+   ENCONTRADO         NO ENCONTRADO              ┌──────────────────────┐
+      │                     │                     │ 2. VERIFICAR TICKET  │
+      │                 ERROR ←──────────────────┤    • Existe en BD    │
+      │                     │                     │    • Status pendiente│
+      │                     └─────────────────────┤    • Get datos      │
+      │                                           └──────────┬──────────┘
+      │                                                       │
+      │                                           ┌───────────┴──────────┐
+      │                                           │                      │
+      │                                           ▼                      ▼
+      │                                      ENCONTRADO            NO ENCONTRADO
+      │                                           │                      │
+      └───────────────────────────────────────────┤                  ERROR
+                                                  │
+                                                  ▼
+                                        ┌──────────────────────┐
+                                        │ 3. CREAR/REUTILIZAR  │
+                                        │    USUARIO INVITADO  │
+                                        │                      │
+                                        │ INSERT INTO usuarios │
+                                        │ (tipo_cliente='inv') │
+                                        │ OR SELECT existente  │
+                                        └──────────┬───────────┘
+                                                   │
+                                                   ▼
+                                        ┌──────────────────────┐
+                                        │ 4. GUARDAR/UPDATE    │
+                                        │    DATOS FISCALES    │
+                                        │                      │
+                                        │ INSERT/UPDATE        │
+                                        │ datos_fiscales_      │
+                                        │ usuario              │
+                                        └──────────┬───────────┘
+                                                   │
+                                                   ▼
+                                        ┌──────────────────────┐
+                                        │ 5. GENERAR FOLIO     │
+                                        │                      │
+                                        │ SELECT MAX(folio)    │
+                                        │ + 1                  │
+                                        │ Ej: Folio = A000001  │
+                                        └──────────┬───────────┘
+                                                   │
+                                                   ▼
+                                        ┌──────────────────────┐
+                                        │ 6. CREAR FACTURA     │
+                                        │                      │
+                                        │ INSERT INTO facturas │
+                                        │ (folio_interno,      │
+                                        │  rfc_receptor,       │
+                                        │  total,              │
+                                        │  status='pendiente') │
+                                        └──────────┬───────────┘
+                                                   │
+                                                   ▼
+                                        ┌──────────────────────┐
+                                        │ 7. COPIAR DETALLES   │
+                                        │                      │
+                                        │ SELECT FROM          │
+                                        │ ticket_detalle       │
+                                        │ INSERT INTO          │
+                                        │ facturas_detalles    │
+                                        └──────────┬───────────┘
+                                                   │
+                                                   ▼
+                                        ┌──────────────────────┐
+                                        │ 8. MARCAR TICKET     │
+                                        │                      │
+                                        │ UPDATE tickets       │
+                                        │ SET estatus=         │
+                                        │ 'facturado'          │
+                                        └──────────┬───────────┘
+                                                   │
+                                                   ▼
+            ┌──────────────────────────────────────────────────┐
+            │   INICIAR PROCESOS DE GENERACIÓN / TIMBRADO       │
+            └──────────┬───────────────────────────────────────┘
+                       │
+        ┌──────────────┴──────────────┬──────────────────┐
+        │                             │                  │
+        ▼                             ▼                  ▼
+   ┌─────────────┐            ┌──────────────┐    ┌──────────────┐
+   │ 9. GENERAR  │            │ 10. TIMBRAR  │    │ 11. PDF      │
+   │    XML      │            │   CON SAT    │    │  GENERATION  │
+   └─────────────┘            └──────────────┘    └──────────────┘
+        │                             │                  │
+        ▼                             ▼                  ▼
+   ┌─────────────┐            ┌──────────────┐    ┌──────────────┐
+   │ cURL POST   │            │ cURL POST    │    │ mPDF Service │
+   │ generar-    │            │ timbrar-xml  │    │ Generate PDF │
+   │ xml.php     │            │ .php         │    │ File         │
+   └─────┬───────┘            └──────┬───────┘    └──────┬───────┘
+         │                           │                   │
+         ▼                           ▼                   ▼
+   ┌─────────────┐            ┌──────────────┐    ┌──────────────┐
+   │ GET XML     │            │ GET UUID     │    │ SAVE PDF     │
+   │ PATH        │            │ FROM FINKOK  │    │ TO FILE      │
+   │             │            │ UPDATE BD    │    │ UPDATE BD    │
+   └─────┬───────┘            └──────┬───────┘    └──────┬───────┘
+         │                           │                   │
+         └───────────────┬───────────┴───────────────────┘
+                         │
+                         ▼
+            ┌───────────────────────────┐
+            │ 12. ENVIAR EMAIL CON      │
+            │     XML + PDF             │
+            └───────────┬───────────────┘
+                        │
+                        ▼
+            ┌───────────────────────────┐
+            │ GET SMTP CONFIG           │
+            │ (BD o config.php)         │
+            └───────────┬───────────────┘
+                        │
+                        ▼
+            ┌───────────────────────────┐
+            │ PREPARE EMAIL:            │
+            │ • Subject: Folio          │
+            │ • HTML Body               │
+            │ • Attach PDF + XML        │
+            │ • FROM: noreply@...       │
+            │ • TO: cliente@...         │
+            └───────────┬───────────────┘
+                        │
+                        ▼
+            ┌───────────────────────────┐
+            │ SEND via PHPMailer        │
+            │ facturaEnviarCorreo()     │
+            └───────────┬───────────────┘
+                        │
+                        ▼
+            ┌───────────────────────────┐
+            │ RESPUESTA JSON AL CLIENTE │
+            │ {                         │
+            │  "success": true,         │
+            │  "id_factura": 123,       │
+            │  "folio": 1,              │
+            │  "uuid": "ABC-123...",    │
+            │  "correo": "user@..."     │
+            │ }                         │
+            └───────────┬───────────────┘
+                        │
+                        ▼
+            ┌───────────────────────────┐
+            │ ACTUALIZAR FRONTEND       │
+            │ • Step 3: COMPLETO ✓      │
+            │ • Mostrar confirmación    │
+            │ • Ofercer descarga        │
+            └───────────────────────────┘
+```
+
+---
+
+## 📊 Estado de la Factura en Cada Paso
+
+```
+┌─────────┬────────────────────┬─────────────────────────────────────┐
+│  PASO   │    TABLA/ENTIDAD   │           ESTADO                    │
+├─────────┼────────────────────┼─────────────────────────────────────┤
+│    1    │ Ticket             │ pendiente → (sin cambios)           │
+│    2    │ Usuario            │ (nuevo o existente)                 │
+│    3    │ Datos Fiscales     │ (guardado/actualizado)              │
+│    4    │ Folio              │ A000001                             │
+│    5    │ Factura            │ pendiente                           │
+│    6    │ Facturas Detalles  │ (líneas copiadas)                   │
+│    7    │ Ticket             │ facturado + id_factura link         │
+│    8    │ Factura XML        │ xml_path (generado)                 │
+│    9    │ Factura Timbrado   │ uuid (asignado por SAT)             │
+│   10    │ Factura PDF        │ pdf_path (generado)                 │
+│   11    │ Email              │ (enviado)                           │
+│   12    │ Factura Final      │ timbrado (status final)             │
+└─────────┴────────────────────┴─────────────────────────────────────┘
+```
+
+---
+
+## 🔀 Decisiones y Rutas Alternas
+
+```
+┌──────────────────────┐
+│ VALIDAR DATOS        │
+└──────────┬───────────┘
+           │
+      ┌────┴────┐
+      │          │
+      ▼          ▼
+   VÁLIDO      INVÁLIDO
+      │          │
+      │          └─► ERROR 400
+      │              (Mensaje específico)
+      │
+      ▼
+┌──────────────────────┐
+│ VERIFICAR TICKET     │
+└──────────┬───────────┘
+           │
+      ┌────┴────┐
+      │          │
+      ▼          ▼
+   EXISTE    NO EXISTE
+    PEND.      O
+      │      FACTURADO
+      │          │
+      │          └─► ERROR 400
+      │              "Ticket no encontrado"
+      │
+      ▼
+┌──────────────────────┐
+│ CREAR/REUTILIZAR USU │
+└──────────┬───────────┘
+           │
+      ┌────┴────┐
+      │          │
+      ▼          ▼
+   NUEVO    EXISTENTE
+      │          │
+      │    SELECT
+      │       │
+      └───┬──┘
+          │
+          ▼
+┌──────────────────────┐
+│ PROCESOS FINALES     │
+│ XML → TIMBRAR → PDF  │
+└──────────┬───────────┘
+           │
+      ┌────┴────┬────┐
+      │          │    │
+      ▼          ▼    ▼
+   XML OK   XML ERR  │
+      │      │       │
+      │      ▼       │
+      │    ERROR     │
+      │    400       │
+      │              │
+      ▼              ▼
+  TIMBRAR       (STOP)
+      │
+   ┌──┴──┐
+   │     │
+   ▼     ▼
+ÉXITO  ERROR
+   │     │
+   │     └─► ERROR 400
+   │         "No se pudo timbrar"
+   │
+   ▼
+PDF (no bloquea)
+   │
+   ├─► ✓ OK: PDF guardado
+   │
+   └─► ⚠ Error: Log pero continúa
+   
+   ▼
+ENVIAR EMAIL
+   │
+   ├─► ✓ OK: Email enviado
+   │
+   └─► ⚠ Error: Log pero continúa
+   
+   ▼
+RESPUESTA SUCCESS
+```
+
+---
+
+## 📋 Cambios en Base de Datos
+
+```
+OPERACIÓN SECUENCIAL:
+
+1. SELECT (tickets) - Leer ticket existente
+   ↓
+2. SELECT (usuarios) - Buscar usuario invitado
+   ├─→ EXISTS → SELECT existente
+   └─→ NO EXISTS → INSERT nuevo
+   ↓
+3. SELECT/UPDATE (datos_fiscales_usuario)
+   ├─→ EXISTS → UPDATE con nuevos datos
+   └─→ NO EXISTS → INSERT nuevos datos
+   ↓
+4. SELECT (ticket_detalle) - Leer detalles
+   ↓
+5. SELECT (ticket_metodo_pago) - Leer métodos de pago
+   ↓
+6. SELECT (facturas) - Get MAX folio
+   ↓
+7. INSERT (facturas) - Crear factura nueva
+   ↓
+8. INSERT (facturas_detalles) - Copiar líneas x N
+   ↓
+9. UPDATE (tickets) - Marcar como facturado
+   ↓
+10. UPDATE (facturas) - Set xml_path
+    ↓
+11. UPDATE (facturas) - Set uuid
+    ↓
+12. UPDATE (facturas) - Set pdf_path
+    ↓
+13. COMMIT (o ROLLBACK si hay error)
+```
+
+---
+
+## 🎯 Transacciones y Puntos de No Retorno
+
+```
+PUNTO DE NO RETORNO:
+
+┌─ Validaciones (Sin cambios en BD)
+│
+├─ Lectura de Ticket (Sin cambios)
+│
+├─ Verificación de Usuario (Sin cambios)
+│
+├─ INSERT Usuario [CAMBIO 1]
+│
+├─ INSERT/UPDATE Datos Fiscales [CAMBIO 2]
+│
+├─ INSERT Factura [CAMBIO 3] ◄─── PUNTO CRÍTICO
+│      Una vez insertada, ya existe registro
+│
+├─ INSERT Detalles [CAMBIO 4]
+│
+├─ UPDATE Ticket [CAMBIO 5]
+│      Marca como "facturado"
+│
+├─ UPDATE xml_path [CAMBIO 6]
+│
+├─ UPDATE uuid [CAMBIO 7]
+│
+└─ UPDATE pdf_path [CAMBIO 8]
+
+
+CONSIDERACIÓN:
+• El sistema NO usa transacciones explícitas (BEGIN/COMMIT)
+• Se recomienda agregar si hay procesamiento concurrente
+• Cada INSERT/UPDATE es inmediato
+
+RIESGO:
+Si falla después de "INSERT facturas" pero antes
+de "UPDATE tickets", quedaría factura huérfana
+
+SOLUCIÓN:
+Implementar rollback en error o usar transactions
+```
+
+---
+
+## 🔄 Flujo de Errores
+
+```
+Error en cualquier paso:
+
+┌─────────────────────────────────┐
+│  TRY BLOCK                       │
+│  • Validaciones                  │
+│  • Operaciones BD                │
+│  • Llamadas cURL                 │
+│  • Envío email                   │
+└─────────────────┬───────────────┘
+                  │
+         ┌────────┴────────┐
+         │                 │
+         ▼                 ▼
+      ÉXITO              ERROR
+         │                 │
+         │                 ▼
+         │          ┌──────────────┐
+         │          │ CATCH        │
+         │          │ (Throwable)  │
+         │          └──────┬───────┘
+         │                 │
+         │                 ▼
+         │          ┌──────────────────┐
+         │          │ LOG ERROR:       │
+         │          │ • Mensaje        │
+         │          │ • Archivo        │
+         │          │ • Línea          │
+         │          └──────┬───────────┘
+         │                 │
+         │                 ▼
+         │          ┌──────────────────┐
+         │          │ HTTP 400        │
+         │          │ (Bad Request)    │
+         │          └──────┬───────────┘
+         │                 │
+         │                 ▼
+         │          ┌──────────────────┐
+         │          │ RESPUESTA JSON:  │
+         │          │ {                │
+         │          │  "success": false│
+         │          │  "message": "..." │
+         │          │ }                │
+         │          └──────────────────┘
+         │
+         ▼
+   ┌──────────────────┐
+   │ RESPUESTA JSON:  │
+   │ {                │
+   │ "success": true, │
+   │ "id_factura": 1, │
+   │ "folio": 1,      │
+   │ "uuid": "...",   │
+   │ "correo": "..."  │
+   │ }                │
+   └──────────────────┘
+```
+
+---
+
+## 📧 Email Attachment Flow
+
+```
+┌─────────────────────────────────────┐
+│ FACTURA GENERADA Y TIMBRADA         │
+└──────────────┬──────────────────────┘
+               │
+      ┌────────┴────────┐
+      │                 │
+      ▼                 ▼
+   XML PATH          PDF PATH
+   (BD column)      (BD column)
+      │                 │
+      ▼                 ▼
+ /uploads/        /uploads/
+ facturas/xml/    facturas/pdf/
+ A000001.xml      A000001.pdf
+      │                 │
+      │         ┌───────┘
+      │         │
+      ▼         ▼
+    ┌───────────────────┐
+    │ PREPARE ATTACHS   │
+    │ array[            │
+    │  'path' => ...,   │
+    │  'name' => ...    │
+    │ ]                 │
+    └──────────┬────────┘
+               │
+               ▼
+    ┌──────────────────┐
+    │ CALL             │
+    │ facturaEnviarCor │
+    │ reo()            │
+    └──────────┬───────┘
+               │
+               ▼
+    ┌──────────────────┐
+    │ PHPMailer        │
+    │ • From           │
+    │ • To             │
+    │ • Subject        │
+    │ • Body (HTML)    │
+    │ • addAttachment  │
+    │ • send()         │
+    └──────────┬───────┘
+               │
+               ▼
+    ┌──────────────────┐
+    │ SMTP SERVER      │
+    │ envío a dominio  │
+    └──────────┬───────┘
+               │
+               ▼
+    ┌──────────────────┐
+    │ BANDEJA ENTRADA  │
+    │ cliente@...      │
+    │                  │
+    │ ✓ A000001.pdf    │
+    │ ✓ UUID.xml       │
+    └──────────────────┘
+```
+
+---
+
+## 🔐 Validación de Datos - Árbol de Decisión
+
+```
+INPUT DATA
+    │
+    ├─► Email Validation
+    │   ├─► filter_var(FILTER_VALIDATE_EMAIL)
+    │   ├─► VÁLIDO → NEXT
+    │   └─► INVÁLIDO → ERROR "Email no válido"
+    │
+    ├─► RFC Validation
+    │   ├─► length 12 o 13
+    │   ├─► uppercase conversion
+    │   ├─► VÁLIDO → NEXT
+    │   └─► INVÁLIDO → ERROR "RFC no válido"
+    │
+    ├─► Código Postal
+    │   ├─► Integer parsing
+    │   ├─► Range 1000-99999
+    │   ├─► VÁLIDO → NEXT
+    │   └─► INVÁLIDO → ERROR "CP debe tener 5 dígitos"
+    │
+    ├─► Tipo Persona
+    │   ├─► in ['Fisica', 'Moral']
+    │   ├─► VÁLIDO → NEXT
+    │   └─► INVÁLIDO → ERROR "Tipo persona inválido"
+    │
+    ├─► Required Fields Check
+    │   ├─► id_ticket
+    │   ├─► correo
+    │   ├─► rfc
+    │   ├─► razon_social
+    │   ├─► reg_fiscal
+    │   ├─► cp
+    │   ├─► tipo_persona
+    │   ├─► ALL PRESENT → NEXT
+    │   └─► MISSING → ERROR "Faltan datos"
+    │
+    └─► ALL VALIDATIONS PASS → PROCEED TO DB OPERATIONS
+```
+
+---
+
+## 📈 Comparativa: Antes vs Después
+
+```
+┌──────────────────────┬──────────────────┬─────────────────┐
+│ CARACTERÍSTICA       │ ANTES (v1.0)     │ DESPUÉS (v2.0)  │
+├──────────────────────┼──────────────────┼─────────────────┤
+│ Generación XML       │ Básica            │ ✓ Completa      │
+│ Timbrado SAT         │ Parcial           │ ✓ Integrado     │
+│ PDF Generation       │ No                │ ✓ Sí            │
+│ Email con adjuntos   │ No                │ ✓ Sí            │
+│ Manejo de errores    │ Básico            │ ✓ Robusto       │
+│ Logging              │ Mínimo            │ ✓ Detallado     │
+│ Validación datos     │ Parcial           │ ✓ Exhaustiva    │
+│ Reutilizar usuario   │ No                │ ✓ Sí            │
+│ Transacciones        │ No                │ Consideración   │
+│ Buffer management    │ Simple            │ ✓ Avanzado      │
+│ HTTP response codes  │ No                │ ✓ Sí            │
+│ JSON output          │ Básico            │ ✓ Estructura    │
+└──────────────────────┴──────────────────┴─────────────────┘
+```
+
+---
+
+**Documentación generada:** 2024
+**Versión:** 2.0
+**Confidencialidad:** Pública

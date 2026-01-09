@@ -34,6 +34,38 @@ require_once __DIR__ . '/../api/FinkokApi.php';
 
 $respuesta = ['success' => false, 'message' => 'Error desconocido'];
 
+/**
+ * Clasifica errores de timbrado para responder al usuario con acciones claras.
+ */
+function clasificarErrorTimbrado($mensaje, $detalle = '') {
+    $texto = strtolower($mensaje . ' ' . $detalle);
+
+    // Régimen/uso CFDI inválido
+    if (strpos($texto, 'cfdi40161') !== false || strpos($texto, 'usocfdi') !== false || strpos($texto, 'uso cfdi') !== false) {
+        return [
+            'codigo' => 'CFDI40161',
+            'alcance' => 'usuario',
+            'mensaje_usuario' => 'No se puede facturar este ticket con el régimen fiscal/uso CFDI registrados. Actualiza tus datos fiscales para que correspondan con tu tipo de persona.'
+        ];
+    }
+
+    // Timbres agotados o cuenta suspendida => administrador
+    if (strpos($texto, '718') !== false || strpos($texto, 'timbres') !== false || strpos($texto, 'suspendid') !== false || strpos($texto, 'credit') !== false) {
+        return [
+            'codigo' => 'ADMIN_CUPO_TIMBRES',
+            'alcance' => 'admin',
+            'mensaje_usuario' => 'No se puede timbrar porque tu cuenta de timbrado no está disponible (timbres agotados, crédito o RFC suspendido). Contacta al administrador.'
+        ];
+    }
+
+    // Por defecto, error general de timbrado
+    return [
+        'codigo' => 'TIMBRADO_DESCONOCIDO',
+        'alcance' => 'general',
+        'mensaje_usuario' => 'No se pudo timbrar la factura. Inténtalo más tarde o contacta al administrador si persiste.'
+    ];
+}
+
 try {
     error_log("=== INICIO FACTURAR DESDE TICKET ===");
     
@@ -453,7 +485,25 @@ try {
         $mensajeError = $resultadoTimbrado['message'] ?? 'Error desconocido al timbrar';
         $detalle = $resultadoTimbrado['detail'] ?? '';
         error_log("[TIMBRADO] ✗ Error: {$mensajeError}" . ($detalle ? " | {$detalle}" : ''));
-        throw new Exception('Error al timbrar factura: ' . $mensajeError . ($detalle ? ' | ' . $detalle : ''));
+
+        // Clasificar error para mensaje al usuario
+        $clasificacion = clasificarErrorTimbrado($mensajeError, $detalle);
+
+        // Respuesta clara al usuario sin lanzar excepción genérica
+        http_response_code(400);
+        $respuesta = [
+            'success' => false,
+            'message' => $clasificacion['mensaje_usuario'],
+            'codigo_error' => $clasificacion['codigo'],
+            'alcance' => $clasificacion['alcance'],
+            'debug' => [
+                'file' => __FILE__,
+                'line' => __LINE__
+            ]
+        ];
+
+        echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
+        exit;
     }
     
     $uuid = $resultadoTimbrado['uuid'] ?? ($resultadoTimbrado['data']['uuid'] ?? 'N/A');

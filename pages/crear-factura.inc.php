@@ -133,10 +133,18 @@
                                     <input type="text" class="form-control" id="receptorNombre"
                                         placeholder="Nombre completo" required>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label fw-semibold">RFC</label>
                                     <input type="text" class="form-control text-uppercase" id="receptorRFC"
                                         placeholder="XAXX010101000" maxlength="13" required>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <label class="form-label fw-semibold">Código Postal</label>
+                                    <input type="text" class="form-control" id="receptorCP" list="cpSuggestions"
+                                        placeholder="12345" maxlength="5" required>
+                                    <!-- onblur="validarCodigoPostal()" COMENTADO TEMPORALMENTE -->
+                                    <small id="cpValidationMsg" class="form-text"></small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Uso CFDI</label>
@@ -149,18 +157,6 @@
                                     <select class="form-select" id="regimenFiscal" required>
                                         <option value="">Seleccione...</option>
                                     </select>
-                                </div>
-                                <div class="col-md-8">
-                                    <label class="form-label fw-semibold">Correo Electrónico</label>
-                                    <input type="email" class="form-control" id="receptorCorreo"
-                                        placeholder="correo@ejemplo.com" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Código Postal</label>
-                                    <input type="text" class="form-control" id="receptorCP" list="cpSuggestions"
-                                        placeholder="12345" maxlength="5" required>
-                                    <!-- onblur="validarCodigoPostal()" COMENTADO TEMPORALMENTE -->
-                                    <small id="cpValidationMsg" class="form-text"></small>
                                 </div>
                             </div>
                         </div>
@@ -889,7 +885,6 @@
                 rfc: receptorRFC,
                 nombre: receptorNombre,
                 cp: receptorCP,
-                correo: document.getElementById('receptorCorreo').value,
                 regimen: document.getElementById('regimenFiscal').value,
                 uso_cfdi: usoCFDI
             },
@@ -980,6 +975,20 @@
 
                         if (resultTimbre.success) {
                             // ÉXITO TOTAL (BD + XML + TIMBRE)
+                            // Preparar mensaje de estado del correo
+                            let emailStatusHTML = '';
+                            if (resultTimbre.email) {
+                                if (resultTimbre.email.attempted) {
+                                    if (resultTimbre.email.sent) {
+                                        emailStatusHTML = `<p class="text-success mb-0"><i class="bi bi-envelope-check me-2"></i>Factura enviada por correo electrónico</p>`;
+                                    } else {
+                                        emailStatusHTML = `<p class="text-warning mb-0"><i class="bi bi-envelope-exclamation me-2"></i>No se pudo enviar el correo: ${resultTimbre.email.message || 'Error desconocido'}</p>`;
+                                    }
+                                } else {
+                                    emailStatusHTML = `<p class="text-muted mb-0"><i class="bi bi-envelope me-2"></i>No se envió correo (sin dirección registrada)</p>`;
+                                }
+                            }
+
                             Swal.fire({
                                 icon: 'success',
                                 title: '¡Factura Timbrada! ',
@@ -987,18 +996,32 @@
                                     <div class="text-start">
                                         <p><strong>Folio:</strong> ${resultBD.folio}</p>
                                         <p><strong>UUID:</strong> ${resultTimbre.uuid}</p>
+                                        ${emailStatusHTML}
                                         <div class="d-grid gap-2 mt-3">
                                             <a href="${resultTimbre.xml_url || resultXML.xml_url}" target="_blank" class="btn btn-outline-primary">
                                                 <i class="bi bi-filetype-xml me-2"></i>Descargar XML
                                             </a>
+                                            <button type="button" class="btn btn-outline-info" onclick="enviarFacturaPorCorreo(${idFacturaNueva}, '${resultBD.folio}', '${resultTimbre.uuid}')">
+                                                <i class="bi bi-envelope-paper me-2"></i>Enviar por Correo Electrónico
+                                            </button>
                                         </div>
                                     </div>
                                 `,
                                 showConfirmButton: true,
-                                confirmButtonText: 'Nueva Factura'
-                            }).then(() => {
-                                limpiarFormulario();
+                                confirmButtonText: '<i class="bi bi-plus-circle me-2"></i>Crear otra factura',
+                                showDenyButton: true,
+                                denyButtonText: '<i class="bi bi-list-ul me-2"></i>Ver facturas generadas',
+                                allowOutsideClick: false
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Usuario eligió crear otra factura
+                                    limpiarFormulario();
+                                } else if (result.isDenied) {
+                                    // Usuario eligió ver facturas generadas
+                                    window.location.href = '?pg=facturas-generadas-admin';
+                                }
                             });
+
                         } else {
                             // Error en timbrado (pero el XML pre-sellado sí se creó)
                             Swal.fire('Error al Timbrar', resultTimbre.message || 'Ocurrió un error al timbrar la factura', 'error');
@@ -1283,6 +1306,85 @@
             }
         });
     });
+
+    // ============================================
+    // ENVIAR FACTURA POR CORREO
+    // ============================================
+    async function enviarFacturaPorCorreo(idFactura, folio, uuid) {
+        const { value: correo } = await Swal.fire({
+            title: 'Enviar Factura por Correo',
+            html: `
+                <p class="text-start mb-3">Enviar factura <strong>${folio}</strong> por correo electrónico</p>
+                <input type="email" id="correoReceptor" class="form-control" placeholder="correo@ejemplo.com" required>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-send me-2"></i>Enviar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const correo = document.getElementById('correoReceptor').value;
+                if (!correo) {
+                    Swal.showValidationMessage('Por favor ingrese un correo electrónico');
+                    return false;
+                }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+                    Swal.showValidationMessage('Por favor ingrese un correo válido');
+                    return false;
+                }
+                return correo;
+            }
+        });
+
+        if (correo) {
+            Swal.fire({
+                title: 'Enviando factura...',
+                text: 'Por favor espere',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const response = await fetch('core/enviar-factura-correo.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_factura: idFactura,
+                        correo_destino: correo
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Factura Enviada',
+                        text: `La factura ${folio} ha sido enviada a ${correo}`,
+                        confirmButtonText: 'Aceptar'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al enviar',
+                        text: result.message || 'No se pudo enviar la factura por correo',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            } catch (error) {
+                console.error('Error enviando factura:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        }
+    }
 
     // al dar generar factura, tambien se generara el archivo xml
     async function generarXMLFactura(id_factura) {

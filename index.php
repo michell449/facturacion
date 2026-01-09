@@ -84,6 +84,7 @@ $accessMap = [
     'config-facturas' => ['admin'],
     'plantilla-factura' => ['admin', 'cliente'],
     'crear-factura' => ['admin', 'cliente'],
+    'solicitudes-cancelacion' => ['admin'],
 
 ];
 

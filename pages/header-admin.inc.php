@@ -44,7 +44,7 @@
                                     </ul>
                                 </li>
                                 <li class="nav-item dropdown mx-1">
-                                    <a class="nav-link dropdown-toggle d-flex align-items-center rounded-pill px-3 py-2 <?php echo (strpos($pagePath, 'ticket') !== false || strpos($pagePath, 'factura') !== false || strpos($pagePath, 'dashboard-tickets') !== false) ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="#" id="facturacionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <a class="nav-link dropdown-toggle d-flex align-items-center rounded-pill px-3 py-2 <?php echo (strpos($pagePath, 'ticket') !== false || strpos($pagePath, 'factura') !== false || strpos($pagePath, 'dashboard-tickets') !== false || strpos($pagePath, 'solicitud') !== false) ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="#" id="facturacionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-receipt-cutoff me-2"></i> Facturación
                                     </a>
                                     <ul class="dropdown-menu shadow border-0 rounded-3" aria-labelledby="facturacionDropdown">
@@ -54,18 +54,8 @@
                                         <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=facturas-generadas-admin">
                                                 <i class="bi bi-file-check me-2 text-success"></i> Facturas Generadas
                                             </a></li>
-                                    </ul>
-                                </li>
-                                <li class="nav-item dropdown mx-1">
-                                    <a class="nav-link dropdown-toggle d-flex align-items-center rounded-pill px-3 py-2 <?php echo (strpos($pagePath, 'constancia') !== false || strpos($pagePath, 'sello') !== false) ? 'bg-primary text-white fw-bold' : 'text-dark'; ?>" href="#" id="documentosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-file-earmark-lock me-2"></i> Documentos
-                                    </a>
-                                    <ul class="dropdown-menu shadow border-0 rounded-3" aria-labelledby="documentosDropdown">
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=constancias-admin">
-                                                <i class="bi bi-file-text me-2 text-info"></i> Constancias Fiscales
-                                            </a></li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=sellos-admin">
-                                                <i class="bi bi-shield-check me-2 text-primary"></i> Sellos Digitales
+                                        <li><a class="dropdown-item rounded-2 mx-2" href="panel?pg=solicitudes-cancelacion">
+                                                <i class="bi bi-x-circle me-2 text-danger"></i> Solicitudes de Cancelación
                                             </a></li>
                                     </ul>
                                 </li>
@@ -99,54 +89,29 @@
                                     <a class="nav-link position-relative rounded-circle p-2" href="#" id="adminNotificationDropdown" role="button"
                                         data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-bell fs-5 text-primary"></i>
-                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                            5
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="badgeNotificaciones">
+                                            0
                                             <span class="visually-hidden">alertas administrativas</span>
                                         </span>
                                     </a>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="adminNotificationDropdown">
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="adminNotificationDropdown" style="min-width: 350px;">
                                         <li>
                                             <h6 class="dropdown-header text-primary fw-bold">
-                                                <i class="bi bi-shield-exclamation me-2"></i>Alertas Administrativas
+                                                <i class="bi bi-shield-exclamation me-2"></i>Solicitudes de Cancelación
                                             </h6>
                                         </li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#">
-                                                <div class="d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <i class="bi bi-exclamation-triangle text-warning"></i>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-2">
-                                                        <small class="fw-semibold">23 tickets sin procesar</small>
-                                                        <small class="d-block text-muted">Requieren atención urgente</small>
-                                                    </div>
-                                                </div>
-                                            </a></li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#">
-                                                <div class="d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <i class="bi bi-file-earmark-x text-danger"></i>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-2">
-                                                        <small class="fw-semibold">Certificado próximo a vencer</small>
-                                                        <small class="d-block text-muted">Sucursal Norte - 5 días</small>
-                                                    </div>
-                                                </div>
-                                            </a></li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#">
-                                                <div class="d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <i class="bi bi-info-circle text-info"></i>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-2">
-                                                        <small class="fw-semibold">Backup completado</small>
-                                                        <small class="d-block text-muted">Base de datos - 02:00 AM</small>
-                                                    </div>
-                                                </div>
-                                            </a></li>
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li><a class="dropdown-item text-center text-primary fw-semibold" href="#">Ver todas las alertas</a></li>
+                                        <div id="listaNotificaciones" style="max-height: 300px; overflow-y: auto;">
+                                            <!-- Notificaciones cargadas dinámicamente -->
+                                        </div>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li><a class="dropdown-item text-center text-primary fw-semibold" href="panel?pg=solicitudes-cancelacion">
+                                            <i class="bi bi-arrow-right-circle me-2"></i>Ver todas las solicitudes
+                                        </a></li>
                                     </ul>
                                 </li>
 
@@ -172,32 +137,6 @@
                                         </div>
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="adminUserDropdown">
-                                        <li>
-                                            <h6 class="dropdown-header text-primary fw-bold">
-                                                <i class="bi bi-gear me-2"></i>Panel de Control
-                                            </h6>
-                                        </li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarPerfilAdmin()">
-                                                <i class="bi bi-person-gear me-2 text-primary"></i> Mi Perfil Admin
-                                            </a></li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarConfiguracionSistema()">
-                                                <i class="bi bi-sliders me-2 text-secondary"></i> Configuración Sistema
-                                            </a></li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarUsuariosSistema()">
-                                                <i class="bi bi-people me-2 text-info"></i> Gestión de Usuarios
-                                            </a></li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarSoporteTecnico()">
-                                                <i class="bi bi-tools me-2 text-warning"></i> Soporte Técnico
-                                            </a></li>
-                                        <li><a class="dropdown-item rounded-2 mx-2" href="#" onclick="mostrarLogs()">
-                                                <i class="bi bi-journal-text me-2 text-info"></i> Ver Logs del Sistema
-                                            </a></li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
                                         <li><a class="dropdown-item rounded-2 mx-2 text-danger" href="#" onclick="cerrarSesion()">
                                                 <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
                                             </a></li>
@@ -250,6 +189,78 @@
 </nav>
 
 <script>
+    // Cargar notificaciones al abrir el dropdown
+    document.getElementById('adminNotificationDropdown')?.addEventListener('click', cargarNotificacionesAdmin);
+    
+    // Actualizar notificaciones cada 5 minutos
+    setInterval(actualizarContadorNotificaciones, 300000);
+    
+    // Cargar notificaciones al iniciar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        actualizarContadorNotificaciones();
+    });
+    
+    function actualizarContadorNotificaciones() {
+        fetch('core/obtener-notificaciones-admin.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const badge = document.getElementById('badgeNotificaciones');
+                    if (badge) {
+                        badge.textContent = data.total_pendientes;
+                    }
+                }
+            })
+            .catch(error => console.error('Error al actualizar notificaciones:', error));
+    }
+    
+    function cargarNotificacionesAdmin() {
+        fetch('core/obtener-notificaciones-admin.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.getElementById('listaNotificaciones');
+                    container.innerHTML = '';
+                    
+                    if (data.notificaciones.length === 0) {
+                        container.innerHTML = `
+                            <div class="p-3 text-center text-muted">
+                                <i class="bi bi-check-circle"></i> No hay solicitudes pendientes
+                            </div>
+                        `;
+                    } else {
+                        data.notificaciones.forEach(notif => {
+                            const item = document.createElement('a');
+                            item.className = 'dropdown-item p-3 border-bottom';
+                            item.href = '#';
+                            item.innerHTML = `
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1 text-dark fw-bold">${notif.folio_completo}</h6>
+                                        <p class="mb-1 small text-muted">${notif.razon_social_receptor}</p>
+                                        <small class="text-muted"><i class="bi bi-clock me-1"></i>${notif.fecha_solicitud_formatted}</small>
+                                    </div>
+                                    <span class="badge bg-warning text-dark">${notif.total_formatted}</span>
+                                </div>
+                            `;
+                            item.onclick = (e) => {
+                                e.preventDefault();
+                                window.location.href = 'panel?pg=solicitudes-cancelacion';
+                            };
+                            container.appendChild(item);
+                        });
+                    }
+                    
+                    // Actualizar badge
+                    const badge = document.getElementById('badgeNotificaciones');
+                    if (badge) {
+                        badge.textContent = data.total_pendientes;
+                    }
+                }
+            })
+            .catch(error => console.error('Error al cargar notificaciones:', error));
+    }
+
     function actualizarRelojAdmin() {
         const ahora = new Date();
         const horas = String(ahora.getHours()).padStart(2, '0');

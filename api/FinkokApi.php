@@ -38,6 +38,7 @@ class FinkokApi
         $this->finkok = new QuickFinkok($settings, $env);
     }
 
+
     public function timbrar($xmlContent)
     {
         try {
@@ -137,7 +138,7 @@ class FinkokApi
             $uuid = strtoupper(trim($uuid));
             if (!preg_match('/^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}$/i', $uuid)) {
                 return [
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'El UUID no tiene el formato válido (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)'
                 ];
             }
@@ -154,51 +155,51 @@ class FinkokApi
                     ]
                 ])
             ]);
-            
+
             $uuids = [
                 "UUID" => $uuid,
                 "Motivo" => $motivoCancelacion,
                 "FolioSustitucion" => $uuidSustitucion ? strtoupper(trim($uuidSustitucion)) : ""
             ];
-            
+
             $uuid_ar = ['UUID' => $uuids];
-            
+
             // 3. Validar rutas de certificados
             if (!$cerPath || !file_exists($cerPath)) {
                 throw new \Exception("Ruta de certificado inválida o archivo no existe");
             }
-            
+
             if (!$keyPath || !file_exists($keyPath)) {
                 throw new \Exception("Ruta de llave privada inválida o archivo no existe");
             }
-            
+
             if (!$keyPassword) {
                 throw new \Exception("Contraseña de llave privada no proporcionada");
             }
-            
+
             // 4. Procesar certificados EXACTAMENTE como generar-xml.php
             require_once __DIR__ . '/../core/sello-utils.php';
-            
+
             // 4.1 Convertir KEY a PEM (mismo método que generar-xml.php)
             $keyPem = SelloUtils::convertirKeyAPEM($keyPath, $keyPassword);
             if (!$keyPem) {
                 $keyPem = file_get_contents($keyPath);
             }
-            
+
             if (!$keyPem) {
                 throw new \Exception("No se pudo procesar la llave privada");
             }
-            
+
             // 4.2 Cargar certificado usando Certificado (mismo que generar-xml.php)
             $certificado = new \CfdiUtils\Certificado\Certificado($cerPath);
             $cerPem = $certificado->getPemContents();
-            
+
             if (!$cerPem) {
                 throw new \Exception("No se pudo procesar el certificado");
             }
-            
+
             error_log("Certificados procesados - CER: " . strlen($cerPem) . " bytes, KEY: " . strlen($keyPem) . " bytes");
-            
+
             // 5. Construir parámetros según documentación Finkok
             $params = [
                 'UUIDS' => $uuid_ar,
@@ -220,7 +221,7 @@ class FinkokApi
                 error_log("SOAP Fault en cancelación: " . $soapFault->getMessage());
                 error_log("XML Request: " . $soapClient->__getLastRequest());
                 error_log("XML Response: " . $soapClient->__getLastResponse());
-                
+
                 throw $soapFault;
             }
 
@@ -234,7 +235,7 @@ class FinkokApi
 
             if (!$result) {
                 return [
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Sin respuesta del servicio SOAP',
                     'raw_response' => $soapClient->__getLastResponse()
                 ];
@@ -303,7 +304,7 @@ class FinkokApi
             '205' => 'UUID no existe',
             '207' => 'Motivo de cancelación inválido',
             '208' => 'La fecha de solicitud de cancelación es mayor a la fecha de declaración',
-            
+
             // Validación en las peticiones
             '300' => 'Usuario no válido',
             '301' => 'XML mal formado',

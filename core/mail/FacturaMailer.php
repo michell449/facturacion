@@ -21,12 +21,19 @@ function facturaRenderTemplate(string $template, array $vars): string
 {
     $replacements = [
         '{FOLIO}' => $vars['folio'] ?? '',
+        '{folio}' => $vars['folio'] ?? '',
         '{EMPRESA}' => $vars['empresa'] ?? '',
+        '{empresa}' => $vars['empresa'] ?? '',
         '{CLIENTE}' => $vars['cliente'] ?? '',
+        '{cliente}' => $vars['cliente'] ?? '',
         '{FECHA}' => $vars['fecha'] ?? '',
+        '{fecha}' => $vars['fecha'] ?? '',
         '{TOTAL}' => $vars['total'] ?? '',
+        '{total}' => $vars['total'] ?? '',
         '{RFC_CLIENTE}' => $vars['rfc_cliente'] ?? '',
-        '{RFC_EMPRESA}' => $vars['rfc_empresa'] ?? ''
+        '{rfc_cliente}' => $vars['rfc_cliente'] ?? '',
+        '{RFC_EMPRESA}' => $vars['rfc_empresa'] ?? '',
+        '{rfc_empresa}' => $vars['rfc_empresa'] ?? ''
     ];
 
     return str_replace(array_keys($replacements), array_values($replacements), $template);

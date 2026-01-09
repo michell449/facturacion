@@ -1,4 +1,8 @@
 <!-- Página de detalle del ticket -->
+<!-- SweetAlert2 CSS & JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
 <div class="content-wrapper">
     <div class="content-header">
         <div class="container-fluid">
@@ -254,23 +258,330 @@ function irABusqueda() {
     window.location.href = 'panel?pg=facturar';
 }
 
+// =========================
+// FUNCIONES DE VALIDACIÓN
+// =========================
+
+// Validar datos del ticket antes de facturar
+function validarDatosTicket(ticket) {
+    if (!ticket) {
+        return { valido: false, mensaje: 'No hay datos de ticket para validar' };
+    }
+
+    // Validar que tenga folio
+    if (!ticket.folio) {
+        return { valido: false, mensaje: 'El ticket debe tener un folio' };
+    }
+
+    // Validar que tenga detalles
+    if (!ticket.detalles || ticket.detalles.length === 0) {
+        return { valido: false, mensaje: 'El ticket debe tener al menos un producto' };
+    }
+
+    // Validar que tenga total
+    if (!ticket.total || parseFloat(ticket.total) <= 0) {
+        return { valido: false, mensaje: 'El total del ticket debe ser mayor a 0' };
+    }
+
+    // Validar que tenga forma de pago
+    if (!ticket.pagos || ticket.pagos.length === 0) {
+        return { valido: false, mensaje: 'El ticket debe tener forma de pago registrada' };
+    }
+
+    return { valido: true, mensaje: '' };
+}
+
+// Procesar error de respuesta de Finkok
+function procesarErrorFinkok(data) {
+    if (!data.message) {
+        return {
+            tipo: 'general',
+            titulo: 'Error desconocido',
+            mensaje: 'Ocurrió un error al generar la factura'
+        };
+    }
+
+    const mensaje = data.message.toLowerCase();
+    const incidencias = data.debug?.incidencias || '';
+
+    // Errores del cliente - contactar soporte
+    const erroresCliente = [
+        { 
+            pattern: /suspended|suspendido/i, 
+            mensaje: 'Tu RFC está suspendido en Finkok. No es posible generar facturas en este momento.'
+        },
+        { 
+            pattern: /718|timbres agotados|timbre/i, 
+            mensaje: 'Se han agotado los timbres disponibles. No es posible generar más facturas.'
+        },
+        { 
+            pattern: /credito|credit/i, 
+            mensaje: 'Problema con los créditos en tu cuenta de Finkok. Verifica tu cuenta.'
+        }
+    ];
+
+    for (let error of erroresCliente) {
+        if (error.pattern.test(mensaje) || error.pattern.test(incidencias)) {
+            return {
+                tipo: 'cliente',
+                titulo: 'Problema con tu cuenta de Finkok',
+                mensaje: error.mensaje
+            };
+        }
+    }
+
+    // Errores de validación de datos
+    const erroresValidacion = [
+        {
+            pattern: /cfdi40161|usocfdi|regimen|régimen/i,
+            mensaje: 'El régimen fiscal o uso CFDI seleccionado no es válido para este tipo de comprobante. Verifica los datos fiscales del cliente.'
+        },
+        {
+            pattern: /xml|estructura|sintaxis|schema/i,
+            mensaje: 'Hay un problema con la estructura del XML. Revisa los datos del ticket.'
+        },
+        {
+            pattern: /rfc|registro/i,
+            mensaje: 'El RFC del cliente no es válido o está incompleto.'
+        },
+        {
+            pattern: /cantidad|importe|precio/i,
+            mensaje: 'Hay un problema con los precios o cantidades de los productos.'
+        }
+    ];
+
+    for (let error of erroresValidacion) {
+        if (error.pattern.test(mensaje) || error.pattern.test(incidencias)) {
+            return {
+                tipo: 'validacion',
+                titulo: 'Error de validación',
+                mensaje: error.mensaje
+            };
+        }
+    }
+
+    // Error genérico
+    return {
+        tipo: 'general',
+        titulo: 'Error al generar factura',
+        mensaje: data.message || 'Ocurrió un error desconocido'
+    };
+}
+
+// =========================
+// FUNCIONES SWEETALERT
+// =========================
+
+// Mostrar error simple
+async function mostrarErrorSweetAlert(mensaje) {
+    await Swal.fire({
+        title: 'Error',
+        text: mensaje,
+        icon: 'error',
+        confirmButtonColor: '#dc3545',
+        confirmButtonText: 'Entendido'
+    });
+}
+
+// Mostrar error del cliente (contactar soporte)
+async function mostrarErrorClienteSweetAlert(errorInfo) {
+    await Swal.fire({
+        title: 'No se puede generar la factura',
+        html: `
+            <div class="text-start">
+                <p><strong>Motivo:</strong></p>
+                <p class="text-danger">${errorInfo.mensaje}</p>
+                <hr>
+                <p class="small text-muted mb-3">Por favor, contacta a nuestro equipo de soporte para resolver este problema:</p>
+                <div class="alert alert-info mb-3">
+                    <p class="mb-1"><i class="fas fa-envelope me-2"></i><strong>Email:</strong> <a href="mailto:soporte@tuempresa.com">soporte@tuempresa.com</a></p>
+                    <p class="mb-0"><i class="fas fa-phone me-2"></i><strong>Teléfono:</strong> +1-234-567-8900</p>
+                </div>
+            </div>
+        `,
+        icon: 'warning',
+        confirmButtonColor: '#ffc107',
+        confirmButtonText: 'Entendido'
+    });
+}
+
+// Mostrar error de validación
+async function mostrarErrorValidacionSweetAlert(errorInfo) {
+    await Swal.fire({
+        title: 'Error de Validación',
+        html: `
+            <div class="text-start">
+                <p><strong>El siguiente problema impide generar la factura:</strong></p>
+                <p class="text-danger">${errorInfo.mensaje}</p>
+                <p class="small text-muted mt-3">Revisa los datos del ticket y asegúrate de que sean correctos.</p>
+            </div>
+        `,
+        icon: 'error',
+        confirmButtonColor: '#dc3545',
+        confirmButtonText: 'Entendido'
+    });
+}
+
+// Mostrar error general
+async function mostrarErrorGeneralSweetAlert(errorInfo) {
+    await Swal.fire({
+        title: errorInfo.titulo || 'Error al generar factura',
+        html: `
+            <div class="text-start">
+                <p>${errorInfo.mensaje}</p>
+                <p class="small text-muted mt-3">Si el problema persiste, contacta a soporte.</p>
+            </div>
+        `,
+        icon: 'error',
+        confirmButtonColor: '#dc3545',
+        confirmButtonText: 'Entendido'
+    });
+}
+
+// Mapear error devuelto por generar-factura-ticket.php
+function mapearErrorFacturaBackend(data) {
+    // Si viene código específico del backend
+    if (data && data.codigo_error) {
+        // Régimen/uso CFDI
+        if (data.codigo_error === 'CFDI40161') {
+            return {
+                tipo: 'validacion',
+                titulo: 'Régimen Fiscal Inválido',
+                mensaje: data.message || 'No se pueden facturar este ticket para su régimen fiscal',
+                detalles: {
+                    detalle: 'El régimen fiscal o uso CFDI no corresponde con el tipo de persona o régimen.',
+                    solucion: 'Actualiza los datos fiscales (régimen fiscal y uso CFDI) y vuelve a intentar.',
+                    codigoError: 'CFDI40161'
+                },
+                controlableUsuario: true
+            };
+        }
+
+        // Problemas de timbres / suspensión => administrador
+        if (data.alcance === 'admin' || data.codigo_error === 'ADMIN_CUPO_TIMBRES') {
+            return {
+                tipo: 'cliente',
+                titulo: 'Cuenta de timbrado no disponible',
+                mensaje: data.message || 'No se puede timbrar por disponibilidad de timbres o suspensión.',
+                controlableUsuario: false
+            };
+        }
+    }
+
+    // Si el mensaje indica factura previa activa
+    if (data && data.message && data.message.toLowerCase().includes('factura activa')) {
+        return {
+            tipo: 'validacion',
+            titulo: 'Ticket ya facturado',
+            mensaje: 'Este ticket ya tiene una factura activa. Primero cancela la factura anterior para refacturar.',
+            controlableUsuario: true
+        };
+    }
+
+    // Fallback al analizador previo
+    return procesarErrorFinkok(data || {});
+}
+
+// Mostrar modal de éxito con SweetAlert
+async function mostrarModalExitoSweetAlert(data) {
+    await Swal.fire({
+        title: '¡Factura Generada Exitosamente!',
+        html: `
+            <div class="text-center">
+                <i class="fas fa-check-circle text-success" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h5>Folio: <strong>${data.folio}</strong></h5>
+                ${data.uuid ? `<p class="text-muted small">UUID: ${data.uuid}</p>` : ''}
+                <div class="alert alert-success mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Tu factura ha sido timbrada correctamente y está lista para descargar.
+                </div>
+                <div class="row g-2 mt-3">
+                    ${data.xml_url ? `
+                    <div class="col-6">
+                        <a href="${data.xml_url}" download class="btn btn-sm btn-outline-primary w-100">
+                            <i class="fas fa-file-code me-2"></i>XML
+                        </a>
+                    </div>
+                    ` : ''}
+                    ${data.pdf_url ? `
+                    <div class="col-6">
+                        <a href="${data.pdf_url}&guardar=1" class="btn btn-sm btn-outline-danger w-100" target="_blank">
+                            <i class="fas fa-file-pdf me-2"></i>PDF
+                        </a>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        `,
+        icon: 'success',
+        confirmButtonColor: '#198754',
+        confirmButtonText: 'Ver mis facturas',
+        didClose: () => {
+            window.location.href = 'panel?pg=historial';
+        }
+    });
+}
+
+// Función auxiliar para mostrar alertas (legacy, usa SweetAlert)
+function mostrarAlerta(mensaje, tipo = 'info') {
+    const iconMap = {
+        'info': 'info',
+        'success': 'success',
+        'warning': 'warning',
+        'danger': 'error',
+        'error': 'error'
+    };
+    
+    Swal.fire({
+        icon: iconMap[tipo] || 'info',
+        title: tipo === 'danger' || tipo === 'error' ? 'Error' : 'Información',
+        text: mensaje,
+        timer: 3000,
+        timerProgressBar: true
+    });
+}
+
 // Facturar ticket
 async function facturarTicket() {
     if (!ticketActual) {
-        mostrarAlerta('No hay ticket seleccionado', 'danger');
+        mostrarErrorSweetAlert('No hay ticket seleccionado');
         return;
     }
 
-    // Mostrar confirmación
-    if (!confirm('¿Estás seguro de que deseas generar la factura para este ticket?\n\nSe generará el XML, se timbrará con Finkok y se creará el PDF.')) {
+    // Validar datos requeridos del ticket
+    const validacionTicket = validarDatosTicket(ticketActual);
+    if (!validacionTicket.valido) {
+        mostrarErrorSweetAlert(validacionTicket.mensaje);
         return;
     }
 
-    // Desabilitar botón
-    const btn = document.getElementById('btnFacturar');
-    const textOriginal = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando factura...';
+    // Mostrar confirmación con SweetAlert
+    const result = await Swal.fire({
+        title: '¿Generar Factura?',
+        html: `<p>Se generará la factura para el siguiente ticket:</p>
+               <p><strong>Folio:</strong> ${ticketActual.folio}</p>
+               <p><strong>Total:</strong> $${parseFloat(ticketActual.total || 0).toFixed(2)}</p>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-check me-2"></i>Generar Factura',
+        cancelButtonText: '<i class="fas fa-times me-2"></i>Cancelar'
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    // Mostrar progreso
+    await Swal.fire({
+        title: 'Procesando Factura',
+        html: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div><p class="mt-3">Por favor espera mientras procesamos tu factura...</p>',
+        icon: 'info',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+       
+    });
 
     try {
         // Preparar datos para enviar
@@ -288,107 +599,44 @@ async function facturarTicket() {
             body: JSON.stringify(datosFactura)
         });
 
-        if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor: ' + response.status);
+        // Intentar parsear siempre la respuesta JSON
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (e) {
+            throw new Error('No se pudo interpretar la respuesta del servidor');
         }
 
-        const data = await response.json();
+        // Si el backend devolvió éxito
+        if (response.ok && data.success) {
+            Swal.close();
+            mostrarModalExitoSweetAlert(data);
+            return;
+        }
 
-        if (data.success) {
-            // Mostrar mensaje de éxito con detalles
-            let mensaje = `¡Factura generada exitosamente!<br>`;
-            mensaje += `<strong>Folio:</strong> ${data.folio}<br>`;
-            if (data.uuid) {
-                mensaje += `<strong>UUID:</strong> ${data.uuid.substring(0, 20)}...<br>`;
-            }
-            
-            // Crear modal con opciones de descarga
-            mostrarModalExito(data);
+        // Manejar errores devueltos por el backend (aunque status sea 400)
+        Swal.close();
+        const errorInfo = mapearErrorFacturaBackend(data);
+
+        if (errorInfo.tipo === 'cliente') {
+            mostrarErrorClienteSweetAlert(errorInfo);
+        } else if (errorInfo.tipo === 'validacion') {
+            mostrarErrorValidacionSweetAlert(errorInfo);
         } else {
-            throw new Error(data.message || 'Error desconocido al generar la factura');
+            mostrarErrorGeneralSweetAlert(errorInfo);
         }
 
     } catch (error) {
         console.error('Error al facturar:', error);
-        mostrarAlerta('Error: ' + error.message, 'danger');
-        btn.disabled = false;
-        btn.innerHTML = textOriginal;
+        mostrarErrorGeneralSweetAlert({
+            titulo: 'Error',
+            mensaje: error.message || 'Error desconocido al generar la factura'
+        });
     }
-}
-
-// Modal de éxito con opciones de descarga
-function mostrarModalExito(data) {
-    const modalHTML = `
-        <div class="modal fade" id="modalFacturaExitosa" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-check-circle me-2"></i>Factura Generada Exitosamente
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="text-center mb-3">
-                            <i class="fas fa-file-invoice fa-4x text-success mb-3"></i>
-                            <h4>Folio: ${data.folio}</h4>
-                            ${data.uuid ? `<p class="small text-muted">UUID: ${data.uuid}</p>` : ''}
-                        </div>
-                        
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Tu factura ha sido timbrada correctamente y está lista para descargar.
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            ${data.xml_url ? `
-                            <a href="${data.xml_url}" download class="btn btn-outline-primary" target="_blank">
-                                <i class="fas fa-file-code me-2"></i>Descargar XML
-                            </a>
-                            ` : ''}
-                            
-                            ${data.pdf_url ? `
-                            <a href="${data.pdf_url}&guardar=1" class="btn btn-outline-danger" target="_blank">
-                                <i class="fas fa-file-pdf me-2"></i>Descargar PDF
-                            </a>
-                            ` : ''}
-                            
-                            <a href="?pagina=facturas" class="btn btn-primary">
-                                <i class="fas fa-list me-2"></i>Ver Mis Facturas
-                            </a>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="volverABusqueda()">
-                            <i class="fas fa-arrow-left me-2"></i>Nueva Búsqueda
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Agregar modal al DOM
-    const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = modalHTML;
-    document.body.appendChild(modalContainer);
-
-    // Mostrar modal usando Bootstrap
-    const modal = new bootstrap.Modal(document.getElementById('modalFacturaExitosa'));
-    modal.show();
-
-    // Limpiar al cerrar
-    document.getElementById('modalFacturaExitosa').addEventListener('hidden.bs.modal', function () {
-        modalContainer.remove();
-    });
 }
 
 // Función para volver a búsqueda desde el modal
 function volverABusqueda() {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('modalFacturaExitosa'));
-    if (modal) {
-        modal.hide();
-    }
     irABusqueda();
 }
 
@@ -397,30 +645,6 @@ function formatearFecha(fecha) {
     if (!fecha) return '-';
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(fecha + 'T00:00:00').toLocaleDateString('es-MX', options);
-}
-
-// Función auxiliar para mostrar alertas
-function mostrarAlerta(mensaje, tipo = 'info') {
-    // Crear alerta Bootstrap
-    const alertaHTML = `
-        <div class="alert alert-${tipo} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <i class="bi bi-info-circle me-2"></i>
-            ${mensaje}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    
-    const container = document.createElement('div');
-    container.innerHTML = alertaHTML;
-    document.body.appendChild(container.firstElementChild);
-    
-    // Auto-cerrar después de 4 segundos
-    setTimeout(() => {
-        const alerta = document.querySelector('.alert:last-of-type');
-        if (alerta) {
-            alerta.remove();
-        }
-    }, 4000);
 }
 </script>
 

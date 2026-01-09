@@ -11,7 +11,7 @@ while (ob_get_level() > 0) {
 ob_start();
 
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // No mostrar errores en pantalla, solo log
+ini_set('display_errors', 1); // No mostrar errores en pantalla, solo log
 ini_set('log_errors', 1);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -113,7 +113,7 @@ try {
     // AJUSTAR AQUÍ TUS CREDENCIALES REALES O DE PRUEBA
     $finkokUser = defined('FINKOK_USER') ? FINKOK_USER : 'michellflores822@gmail.com'; 
     $finkokPass = defined('FINKOK_PASSWORD') ? FINKOK_PASSWORD : 'PankyContra1997.'; 
-    $enProduccion = defined('FINKOK_PRODUCCION') ? FINKOK_PRODUCCION : false; // Cambiar a true cuando estés listo
+    $enProduccion = defined('FINKOK_PRODUCCION') ? FINKOK_PRODUCCION : false;
 
     $finkok = new FinkokApi($finkokUser, $finkokPass, $enProduccion);
 

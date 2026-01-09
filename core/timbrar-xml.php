@@ -28,7 +28,7 @@ header('Cache-Control: no-cache, must-revalidate');
 require_once __DIR__ . '/../core/autoload-vendor.php';
 require_once __DIR__ . '/../api/FinkokApi.php';
 require_once __DIR__ . '/class/db.php';
-require_once __DIR__ . '/services/FacturaPdfService.php';
+require_once __DIR__ . '/FacturaPdfService.php';
 require_once __DIR__ . '/mail/CorreoConfigService.php';
 require_once __DIR__ . '/mail/FacturaMailer.php';
 
@@ -54,9 +54,6 @@ try {
     if ($id_factura) {
         $db = new Database();
         $conn = $db->getConnection();
-        if (!($conn instanceof PDO)) {
-            throw new Exception('No se pudo conectar a la base de datos.');
-        }
         
         $stmt = $conn->prepare("SELECT xml_path FROM facturas WHERE id_factura = ?");
         $stmt->execute([$id_factura]);
@@ -115,9 +112,9 @@ try {
     // 2. CONFIGURACIÓN FINKOK
     // =========================================================================
     
-    $finkokUser   = defined('FINKOK_USER') ? FINKOK_USER : 'michellflores822@gmail.com'; 
-    $finkokPass   = defined('FINKOK_PASSWORD') ? FINKOK_PASSWORD : 'PankyContra1997.';        
-    $enProduccion = defined('FINKOK_PRODUCCION') ? FINKOK_PRODUCCION : false;                 
+    $finkokUser   = 'michellflores822@gmail.com'; 
+    $finkokPass   = 'PankyContra1997.';        
+    $enProduccion = false;                 
 
     $timbrador = new FinkokApi($finkokUser, $finkokPass, $enProduccion);
 
@@ -189,75 +186,189 @@ try {
                 $id_factura
             ]);
         }
-
-        // Intentar generar PDF y enviar correo
-        $emailInfo = [
-            'attempted' => false,
-            'sent' => false,
-            'message' => ''
-        ];
-
-        try {
-            $stmtFactura = $conn->prepare("SELECT f.*, e.nombre AS nombre_emisor, e.razon_social AS razon_social_emisor, e.rfc AS rfc_emisor FROM facturas f INNER JOIN empresas e ON f.id_empresa = e.id_empresa WHERE f.id_factura = ? LIMIT 1");
-            $stmtFactura->execute([$id_factura]);
-            $facturaDatos = $stmtFactura->fetch(PDO::FETCH_ASSOC);
-
-            if ($facturaDatos && !empty($facturaDatos['correo_receptor'])) {
-                $emailInfo['attempted'] = true;
-
-                // Generar PDF si no existe
+        
+        // =====================================================================
+        // 5. GENERAR PDF Y ENVIAR CORREO (SI APLICA)
+        // =====================================================================
+        error_log("=== INICIO GENERACIÓN PDF Y ENVÍO CORREO ===");
+        
+        $pdfGenerado = false;
+        $correoEnviado = false;
+        $mensajeCorreo = '';
+        
+        // 5.1 Generar PDF automáticamente
+        if (isset($id_factura) && function_exists('facturaGenerarPdfArchivo')) {
+            try {
+                error_log("Generando PDF para factura ID: $id_factura");
                 $pdfInfo = facturaGenerarPdfArchivo($conn, $id_factura);
-
-                $configCorreo = correoConfigGet($conn, (int)$facturaDatos['id_usuario'], true);
-                if (!$configCorreo || empty($configCorreo['smtp_password'])) {
-                    throw new Exception('No hay configuración SMTP válida.');
+                
+                if ($pdfInfo && isset($pdfInfo['absolute']) && file_exists($pdfInfo['absolute'])) {
+                    $pdfGenerado = true;
+                    error_log("PDF generado exitosamente: " . $pdfInfo['absolute']);
+                    $respuesta['pdf_path'] = $pdfInfo['relative'];
+                } else {
+                    error_log("ERROR: PDF no se pudo generar o no existe");
                 }
-
-                $varsCorreo = [
-                    'folio' => ($facturaDatos['serie_interno'] ?? 'A') . str_pad((string)($facturaDatos['folio_interno'] ?? 0), 6, '0', STR_PAD_LEFT),
-                    'empresa' => $facturaDatos['razon_social_emisor'] ?? $facturaDatos['nombre_emisor'] ?? '',
-                    'cliente' => $facturaDatos['razon_social_receptor'] ?? '',
-                    'fecha' => isset($facturaDatos['fecha_emision']) ? date('d/m/Y H:i', strtotime($facturaDatos['fecha_emision'])) : '',
-                    'total' => '$' . number_format((float)($facturaDatos['total'] ?? 0), 2),
-                    'rfc_cliente' => $facturaDatos['rfc_receptor'] ?? '',
-                    'rfc_empresa' => $facturaDatos['rfc_emisor'] ?? ''
+            } catch (Exception $ePdf) {
+                error_log("ERROR generando PDF: " . $ePdf->getMessage());
+                $respuesta['pdf_error'] = $ePdf->getMessage();
+            }
+        } else {
+            error_log("ADVERTENCIA: función facturaGenerarPdfArchivo no disponible o id_factura no definido");
+        }
+        
+        // 5.2 Obtener correo del receptor
+        $correo_receptor = '';
+        if (isset($id_factura)) {
+            try {
+                $stmtCorreo = $conn->prepare("SELECT correo_receptor FROM facturas WHERE id_factura = ?");
+                $stmtCorreo->execute([$id_factura]);
+                $facturaData = $stmtCorreo->fetch(PDO::FETCH_ASSOC);
+                $correo_receptor = $facturaData['correo_receptor'] ?? '';
+                error_log("Correo receptor obtenido: " . ($correo_receptor ?: 'NO ESPECIFICADO'));
+            } catch (Exception $eCorreo) {
+                error_log("ERROR obteniendo correo receptor: " . $eCorreo->getMessage());
+            }
+        }
+        
+        // 5.3 Enviar correo automáticamente si hay correo válido y PDF generado
+        if (!empty($correo_receptor) && filter_var($correo_receptor, FILTER_VALIDATE_EMAIL) && $pdfGenerado) {
+            try {
+                error_log("Intentando enviar correo a: $correo_receptor");
+                
+                // Obtener configuración SMTP
+                if (!function_exists('correoConfigGet')) {
+                    throw new Exception('Función correoConfigGet no disponible');
+                }
+                
+                // Obtener ID de usuario de la factura
+                $stmtUsuario = $conn->prepare("
+                    SELECT f.id_usuario, e.id_usuario as usuario_empresa 
+                    FROM facturas f 
+                    INNER JOIN empresas e ON f.id_empresa = e.id_empresa 
+                    WHERE f.id_factura = ?
+                ");
+                $stmtUsuario->execute([$id_factura]);
+                $datosUsuario = $stmtUsuario->fetch(PDO::FETCH_ASSOC);
+                $idUsuarioFactura = $datosUsuario['id_usuario'] ?? $datosUsuario['usuario_empresa'] ?? null;
+                
+                if (!$idUsuarioFactura) {
+                    throw new Exception('No se pudo determinar el usuario de la factura');
+                }
+                
+                $configCorreo = correoConfigGet($conn, (int)$idUsuarioFactura, true);
+                error_log("Config correo obtenida. SMTP Host: " . ($configCorreo['smtp_host'] ?? 'NO DEFINIDO'));
+                
+                // Si no hay configuración en BD, usar constantes de config.php como fallback
+                if (!$configCorreo || empty($configCorreo['smtp_host']) || empty($configCorreo['smtp_password'])) {
+                    if (defined('MAIL_HOST') && defined('MAIL_USER') && defined('MAIL_PSWD')) {
+                        $configCorreo = [
+                            'smtp_host' => MAIL_HOST,
+                            'smtp_port' => MAIL_PORT,
+                            'smtp_user' => MAIL_USER,
+                            'smtp_password' => MAIL_PSWD,
+                            'smtp_secure' => MAIL_SEC,
+                            'smtp_auth' => MAIL_AUT,
+                            'remitente_email' => MAIL_USER,
+                            'remitente_nombre' => 'Sistema de Facturación',
+                            'asunto_factura' => 'Factura Electrónica {folio} - {empresa}',
+                            'plantilla_correo' => 'Estimado/a {cliente},\n\nAdjuntamos su factura electrónica {folio} por un total de {total}.\n\nFecha: {fecha}\nRFC: {rfc_cliente}\n\nGracias por su preferencia.\n\nSaludos,\n{empresa}'
+                        ];
+                        error_log("Usando configuración SMTP de config.php: " . MAIL_HOST);
+                    } else {
+                        throw new Exception('Configuración SMTP no disponible ni en BD ni en config.php');
+                    }
+                }
+                
+                // Obtener datos completos de la factura para el email
+                $stmtFact = $conn->prepare("
+                    SELECT f.*, 
+                           e.nombre AS nombre_emisor, 
+                           e.razon_social AS razon_social_emisor,
+                           e.rfc AS rfc_emisor
+                    FROM facturas f 
+                    INNER JOIN empresas e ON f.id_empresa = e.id_empresa 
+                    WHERE f.id_factura = ?
+                ");
+                $stmtFact->execute([$id_factura]);
+                $facturaCompleta = $stmtFact->fetch(PDO::FETCH_ASSOC);
+                
+                $folio = ($facturaCompleta['serie_interno'] ?? 'A') . str_pad((string)($facturaCompleta['folio_interno'] ?? 0), 6, '0', STR_PAD_LEFT);
+                
+                $vars = [
+                    'folio' => $folio,
+                    'empresa' => $facturaCompleta['razon_social_emisor'] ?? $facturaCompleta['nombre_emisor'] ?? '',
+                    'cliente' => $facturaCompleta['razon_social_receptor'] ?? '',
+                    'fecha' => isset($facturaCompleta['fecha_emision']) ? date('d/m/Y H:i', strtotime($facturaCompleta['fecha_emision'])) : '',
+                    'total' => '$' . number_format((float)($facturaCompleta['total'] ?? 0), 2),
+                    'rfc_cliente' => $facturaCompleta['rfc_receptor'] ?? '',
+                    'rfc_empresa' => $facturaCompleta['rfc_emisor'] ?? ''
                 ];
-
-                $attachments = [
-                    [
+                
+                // Preparar adjuntos
+                $attachments = [];
+                if (isset($pdfInfo['absolute']) && file_exists($pdfInfo['absolute'])) {
+                    $attachments[] = [
                         'path' => $pdfInfo['absolute'],
                         'name' => basename($pdfInfo['absolute'])
-                    ]
-                ];
-
-                if (!empty($facturaDatos['xml_path'])) {
-                    $rutaXmlAbs = dirname(__DIR__, 1) . '/' . ltrim($facturaDatos['xml_path'], '/');
-                    if (!file_exists($rutaXmlAbs)) {
-                        $rutaXmlAbs = dirname(__DIR__, 2) . '/' . ltrim($facturaDatos['xml_path'], '/');
-                    }
-                    if (file_exists($rutaXmlAbs)) {
-                        $attachments[] = [
-                            'path' => $rutaXmlAbs,
-                            'name' => ($uuid ?: 'Factura') . '.xml'
-                        ];
-                    }
+                    ];
+                    error_log("Adjunto PDF agregado: " . $pdfInfo['absolute']);
                 }
-
-                $resultadoCorreo = facturaEnviarCorreo(
+                
+                // Adjuntar XML timbrado
+                if (file_exists($rutaFinal)) {
+                    $attachments[] = [
+                        'path' => $rutaFinal,
+                        'name' => $nombreArchivo
+                    ];
+                    error_log("Adjunto XML agregado: $rutaFinal");
+                }
+                
+                error_log("Total de adjuntos: " . count($attachments));
+                
+                // Enviar correo
+                if (!function_exists('facturaEnviarCorreo')) {
+                    throw new Exception('Función facturaEnviarCorreo no disponible');
+                }
+                
+                $resultado = facturaEnviarCorreo(
                     $configCorreo,
-                    $facturaDatos['correo_receptor'],
-                    $facturaDatos['razon_social_receptor'] ?? '',
-                    $varsCorreo,
+                    $correo_receptor,
+                    $facturaCompleta['razon_social_receptor'] ?? 'Cliente',
+                    $vars,
                     $attachments
                 );
-
-                $emailInfo['sent'] = $resultadoCorreo['success'];
-                $emailInfo['message'] = $resultadoCorreo['message'];
+                
+                if ($resultado['success']) {
+                    $correoEnviado = true;
+                    $mensajeCorreo = 'Correo enviado exitosamente';
+                    error_log("Correo enviado exitosamente a $correo_receptor");
+                } else {
+                    $mensajeCorreo = $resultado['message'];
+                    error_log("Error enviando correo: " . $mensajeCorreo);
+                }
+                
+            } catch (Exception $eMail) {
+                $mensajeCorreo = 'Error: ' . $eMail->getMessage();
+                error_log("EXCEPCIÓN al enviar correo: " . $mensajeCorreo);
             }
-        } catch (Exception $mailEx) {
-            $emailInfo['message'] = $mailEx->getMessage();
-            error_log('Error enviando correo de factura: ' . $mailEx->getMessage());
+        } else {
+            if (empty($correo_receptor)) {
+                $mensajeCorreo = 'No se especificó correo del receptor';
+                error_log("No se envió correo: correo receptor vacío");
+            } elseif (!filter_var($correo_receptor, FILTER_VALIDATE_EMAIL)) {
+                $mensajeCorreo = 'Correo del receptor inválido';
+                error_log("No se envió correo: correo receptor inválido - $correo_receptor");
+            } elseif (!$pdfGenerado) {
+                $mensajeCorreo = 'PDF no disponible';
+                error_log("No se envió correo: PDF no generado");
+            }
         }
+        
+        // Agregar información del correo a la respuesta
+        $respuesta['correo_enviado'] = $correoEnviado;
+        $respuesta['correo_mensaje'] = $mensajeCorreo;
+        error_log("=== FIN GENERACIÓN PDF Y ENVÍO CORREO ===");
 
         // RESPUESTA EXITOSA
         $respuesta = [
@@ -267,8 +378,7 @@ try {
             'uuid'    => $uuid,
             'xml_url' => $rutaParaBD,
             'ruta_xml'=> $rutaParaBD,
-            'fecha'   => $fechaTimbrado,
-            'email'   => $emailInfo
+            'fecha'   => $fechaTimbrado
         ];
 
     } else {

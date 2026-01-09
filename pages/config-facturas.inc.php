@@ -260,9 +260,9 @@
 </div>
 
 <script>
-    let listaSucursales = []; 
+    let listaSucursales = [];
 
-    
+
     async function cargarRegimenesFiscales() {
         try {
             const response = await fetch('core/listar-regimen-fiscal.php');
@@ -391,7 +391,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 limpiarFormulario();
-                document.getElementById('sucursalSelect').value = ""; 
+                document.getElementById('sucursalSelect').value = "";
             }
         });
     }
@@ -428,18 +428,19 @@
         try {
             // Obtener ID de sucursal seleccionada
             const sucursalId = document.getElementById('sucursalSelect').value;
-            
+
             if (!sucursalId) {
                 Swal.fire('Error', 'Selecciona una sucursal primero', 'warning');
                 return;
             }
 
             // Construir URL para la vista previa usando el formato correcto del panel
-            const url = `panel?pg=plantilla-factura&preview=1&id_sucursal=${sucursalId}`;
-            
+            // Apuntamos al archivo controlador que crea los datos falsos
+            const url = `core/ver-vista-previa.php?id_sucursal=${sucursalId}`;
+
             // Abrir en nueva ventana
             const win = window.open(url, '_blank', 'width=900,height=1200,scrollbars=yes');
-            
+
             if (!win) {
                 Swal.fire('Bloqueado', 'Permite ventanas emergentes para ver la vista previa', 'warning');
             }

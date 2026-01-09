@@ -413,13 +413,13 @@
         e.preventDefault();
 
         if (!idTicket) {
-            Swal.fire('Error', 'Primero debes buscar un ticket válido.', 'error');
+            mostrarErrorSweetAlert('Primero debes buscar un ticket válido.');
             return;
         }
 
         // Validar checkbox de confirmación
         if (!document.getElementById('confirmaDataos').checked) {
-            Swal.fire('Error', 'Debes confirmar que tus datos son correctos.', 'error');
+            mostrarErrorSweetAlert('Debes confirmar que tus datos son correctos.');
             return;
         }
 
@@ -437,19 +437,12 @@
             tipo_persona: document.getElementById('tipoPersona').value,
             reg_fiscal: document.getElementById('regimenFiscal').value,
             cp: parseInt(document.getElementById('cpFiscal').value),
-            uso_cfdi: document.getElementById('usoCFDI').value,
-
-            // Domicilio
-            calle: document.getElementById('calleFiscal').value.trim(),
-            num_ext: document.getElementById('numExtFiscal').value.trim(),
-            num_int: document.getElementById('numIntFiscal').value.trim(),
-            colonia: document.getElementById('coloniaFiscal').value.trim()
+            uso_cfdi: document.getElementById('usoCFDI').value
         };
 
-        // Mostrar loading
-        Swal.fire({
-            title: 'Generando factura...',
-            html: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div><p class="mt-3">Por favor espera mientras procesamos tu factura...</p>',
+        // Mostrar progreso
+        await Swal.fire({
+            title: 'Procesando Factura',
             allowOutsideClick: false,
             allowEscapeKey: false,
             didOpen: () => {
@@ -466,73 +459,222 @@
                 body: JSON.stringify(datosFactura)
             });
 
-            const result = await response.json();
-
-            if (result.success) {
-                // Actualizar steps
-                document.getElementById('step2').classList.remove('active');
-                document.getElementById('step2').querySelector('.step-circle').classList.remove('bg-primary', 'text-white');
-                document.getElementById('step2').querySelector('.step-circle').classList.add('bg-light', 'text-muted');
-                document.getElementById('step2').querySelector('h6').classList.remove('text-primary');
-                document.getElementById('step2').querySelector('h6').classList.add('text-muted');
-
-                document.getElementById('step3').classList.add('active');
-                document.getElementById('step3').querySelector('.step-circle').classList.remove('bg-light', 'text-muted');
-                document.getElementById('step3').querySelector('.step-circle').classList.add('bg-success', 'text-white');
-                document.getElementById('step3').querySelector('h6').classList.remove('text-muted');
-                document.getElementById('step3').querySelector('h6').classList.add('text-success');
-
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Factura Generada Exitosamente!',
-                    html: `
-                        <div class="alert alert-success border-0 mb-3">
-                            <h5 class="mb-3"><i class="bi bi-check-circle-fill me-2"></i>¡Tu factura ha sido procesada correctamente!</h5>
-                        </div>
-                        
-                        <div class="alert alert-light border border-primary mb-3 p-3 rounded">
-                            <div class="row text-start small">
-                                <div class="col-6">
-                                    <strong>Folio:</strong><br>
-                                    <span class="text-primary fw-bold" style="font-size: 1.1em;">A${String(result.folio).padStart(6, '0')}</span>
-                                </div>
-                                <div class="col-6">
-                                    <strong>ID Factura:</strong><br>
-                                    <code>${result.id_factura}</code>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info mb-3">
-                            <i class="bi bi-info-circle me-2"></i>
-                            Se ha enviado un correo de confirmación a:<br>
-                            <strong>${result.correo}</strong>
-                        </div>
-
-                        <div class="alert alert-warning">
-                            <i class="bi bi-hourglass-split me-2"></i>
-                            <strong>UUID (en proceso):</strong> Se asignará durante el timbrado automático
-                        </div>
-
-                        <p class="text-muted small mt-3">Tu factura será timbrada automáticamente en los próximos minutos y recibirás un correo con los archivos XML y PDF adjuntos.</p>
-                    `,
-                    confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#0d6efd'
-                }).then(() => {
-                    // Limpiar formularios y recargar
-                    document.getElementById('formBuscarTicket').reset();
-                    document.getElementById('formInfoFiscal').reset();
-                    document.getElementById('infoRegistroContainer').classList.add('d-none');
-                    location.reload();
-                });
-            } else {
-                Swal.fire('Error', result.message || 'No se pudo generar la factura.', 'error');
+            // Intentar parsear siempre la respuesta JSON
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (e) {
+                throw new Error('No se pudo interpretar la respuesta del servidor');
             }
+
+            // Si el backend devolvió éxito
+            if (response.ok && data.success) {
+                Swal.close();
+                mostrarModalExitoInvitado(data);
+                return;
+            }
+
+            // Manejar errores devueltos por el backend (aunque status sea 400)
+            Swal.close();
+            const errorInfo = mapearErrorFacturaBackend(data);
+
+            if (errorInfo.tipo === 'cliente') {
+                mostrarErrorClienteSweetAlert(errorInfo);
+            } else if (errorInfo.tipo === 'validacion') {
+                mostrarErrorValidacionSweetAlert(errorInfo);
+            } else {
+                mostrarErrorGeneralSweetAlert(errorInfo);
+            }
+
         } catch (error) {
-            console.error('Error:', error);
-            Swal.fire('Error de conexión', 'No se pudo conectar con el servidor. Intenta de nuevo.', 'error');
+            console.error('Error al facturar:', error);
+            mostrarErrorGeneralSweetAlert({
+                titulo: 'Error',
+                mensaje: error.message || 'Error desconocido al generar la factura'
+            });
         }
     });
+
+    // ========================================================================
+    // FUNCIONES DE MANEJO DE ERRORES
+    // ========================================================================
+    async function mostrarErrorSweetAlert(mensaje) {
+        await Swal.fire({
+            title: 'Error',
+            text: mensaje,
+            icon: 'error',
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Entendido'
+        });
+    }
+
+    async function mostrarErrorClienteSweetAlert(errorInfo) {
+        await Swal.fire({
+            title: 'No se puede generar la factura',
+            html: `
+                <div class="text-start">
+                    <p><strong>Motivo:</strong></p>
+                    <p class="text-danger">${errorInfo.mensaje}</p>
+                    <hr>
+                    <p class="small text-muted mb-3">Por favor, contacta a nuestro equipo de soporte para resolver este problema.</p>
+                </div>
+            `,
+            icon: 'warning',
+            confirmButtonColor: '#ffc107',
+            confirmButtonText: 'Entendido'
+        });
+    }
+
+    async function mostrarErrorValidacionSweetAlert(errorInfo) {
+        await Swal.fire({
+            title: 'Error de Validación',
+            html: `
+                <div class="text-start">
+                    <p><strong>El siguiente problema impide generar la factura:</strong></p>
+                    <p class="text-danger">${errorInfo.mensaje}</p>
+                    <p class="small text-muted mt-3">Revisa los datos ingresados y asegúrate de que sean correctos.</p>
+                </div>
+            `,
+            icon: 'error',
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Entendido'
+        });
+    }
+
+    async function mostrarErrorGeneralSweetAlert(errorInfo) {
+        await Swal.fire({
+            title: errorInfo.titulo || 'Error al generar factura',
+            html: `
+                <div class="text-start">
+                    <p>${errorInfo.mensaje}</p>
+                    <p class="small text-muted mt-3">Si el problema persiste, contacta a soporte.</p>
+                </div>
+            `,
+            icon: 'error',
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Entendido'
+        });
+    }
+
+    function mapearErrorFacturaBackend(data) {
+        // Si viene código específico del backend
+        if (data && data.codigo_error) {
+            // Régimen/uso CFDI
+            if (data.codigo_error === 'CFDI40161') {
+                return {
+                    tipo: 'validacion',
+                    titulo: 'Régimen Fiscal Inválido',
+                    mensaje: data.message || 'No se puede facturar con este régimen fiscal',
+                    controlableUsuario: true
+                };
+            }
+
+            // Problemas de timbres / suspensión => administrador
+            if (data.alcance === 'admin' || data.codigo_error === 'ADMIN_CUPO_TIMBRES') {
+                return {
+                    tipo: 'cliente',
+                    titulo: 'Cuenta de timbrado no disponible',
+                    mensaje: data.message || 'No se puede timbrar por disponibilidad de timbres o suspensión.',
+                    controlableUsuario: false
+                };
+            }
+        }
+
+        // Si el mensaje indica factura previa activa
+        if (data && data.message && data.message.toLowerCase().includes('factura activa')) {
+            return {
+                tipo: 'validacion',
+                titulo: 'Ticket ya facturado',
+                mensaje: 'Este ticket ya tiene una factura activa. Primero cancela la factura anterior para refacturar.',
+                controlableUsuario: true
+            };
+        }
+
+        // Error genérico
+        return {
+            tipo: 'general',
+            titulo: 'Error al generar factura',
+            mensaje: data.message || 'Ocurrió un error al procesar tu solicitud.',
+            controlableUsuario: false
+        };
+    }
+
+    async function mostrarModalExitoInvitado(data) {
+        // Actualizar steps
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step2').querySelector('.step-circle').classList.remove('bg-primary', 'text-white');
+        document.getElementById('step2').querySelector('.step-circle').classList.add('bg-light', 'text-muted');
+        document.getElementById('step2').querySelector('h6').classList.remove('text-primary');
+        document.getElementById('step2').querySelector('h6').classList.add('text-muted');
+
+        document.getElementById('step3').classList.add('active');
+        document.getElementById('step3').querySelector('.step-circle').classList.remove('bg-light', 'text-muted');
+        document.getElementById('step3').querySelector('.step-circle').classList.add('bg-success', 'text-white');
+        document.getElementById('step3').querySelector('h6').classList.remove('text-muted');
+        document.getElementById('step3').querySelector('h6').classList.add('text-success');
+
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Factura Generada Exitosamente!',
+            html: `
+                <div class="alert alert-success border-0 mb-3">
+                    <h5 class="mb-3"><i class="bi bi-check-circle-fill me-2"></i>¡Tu factura ha sido procesada correctamente!</h5>
+                </div>
+                
+                <div class="alert alert-light border border-primary mb-3 p-3 rounded">
+                    <div class="row text-start small">
+                        <div class="col-6">
+                            <strong>Folio:</strong><br>
+                            <span class="text-primary fw-bold" style="font-size: 1.1em;">${data.folio ? 'A' + String(data.folio).padStart(6, '0') : 'N/A'}</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>ID Factura:</strong><br>
+                            <code>${data.id_factura || 'N/A'}</code>
+                        </div>
+                    </div>
+                    ${data.uuid ? `
+                    <div class="row text-start small mt-2">
+                        <div class="col-12">
+                            <strong>UUID:</strong><br>
+                            <code class="small">${data.uuid}</code>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-envelope me-2"></i>
+                    Se ha enviado la factura a:<br>
+                    <strong>${data.correo || 'tu correo electrónico'}</strong>
+                </div>
+
+                ${!data.uuid ? `
+                <div class="alert alert-warning">
+                    <i class="bi bi-hourglass-split me-2"></i>
+                    <strong>Timbrado en proceso:</strong> Recibirás un correo con los archivos XML y PDF timbrados en los próximos minutos.
+                </div>
+                ` : `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong>Factura timbrada:</strong> Tu factura ha sido timbrada correctamente.
+                </div>
+                `}
+
+                <p class="text-muted small mt-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Los archivos XML y PDF han sido enviados a tu correo electrónico.
+                </p>
+            `,
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#198754'
+        }).then(() => {
+            // Limpiar formularios y recargar
+            document.getElementById('formBuscarTicket').reset();
+            document.getElementById('formInfoFiscal').reset();
+            document.getElementById('infoRegistroContainer').classList.add('d-none');
+            location.reload();
+        });
+    }
 
     // ========================================================================
     // VALIDACIÓN EN TIEMPO REAL
